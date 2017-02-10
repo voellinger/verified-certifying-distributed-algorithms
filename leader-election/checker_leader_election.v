@@ -106,12 +106,8 @@ Fixpoint forallb_neigbors (l:C_list) (c:Component) : bool :=
         | a::k => beq a c && forallb_neigbors k c
       end.
 
-Lemma forallb_forall : forall (l:C_list) (c:Component) , 
-(forallb_neigbors l c = true) -> (forall (x:Component), In x l ->  x = c).
-
-
-Axiom forallb_forall_ : forall (l:C_list) (c:Component)(x:Component), 
-(forallb_neigbors l c = true) <-> (forall (x:Component),In x l ->  x = c).
+Axiom forallb_forall_ : forall (l:C_list) (c:Component) (x:Component), 
+(forallb_neigbors l c = true) <-> (In x l ->  x = c).
 
 
 
@@ -464,5 +460,3 @@ apply forallb_forall_ with (x:=leader_i c).
 intros.
 trivial.
 Qed.
-
-
