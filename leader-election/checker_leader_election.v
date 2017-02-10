@@ -100,28 +100,24 @@ apply  parent_neighbors_ with (k:=parent c) (c:= c).
 trivial.
 Qed.
 
-Fixpoint forallb_neigbors (l:C_list) (c:Component) : bool :=
+Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
       match l with
         | nil => true
-        | a::k => beq a c && forallb_neigbors k c
+        | a::k => beq a c && forallb_neighbors k c
       end.
 
-Lemma forallb_forall : forall (l:C_list) (c:Component) , 
-(forallb_neigbors l c = true) -> (forall (x:Component), In x l ->  x = c).
-
-
-Axiom forallb_forall_ : forall (l:C_list) (c:Component)(x:Component), 
-(forallb_neigbors l c = true) <-> (forall (x:Component),In x l ->  x = c).
+Axiom forallb_forall_ : forall (l:C_list) (c:Component) (x:Component), 
+(forallb_neighbors l c = true) <-> (In x l ->  x = c).
 
 
 
 Definition checker (l: local_input) (c : checker_input) : bool :=
 (((negb (beq c.(leader_i) l.(i))) && beq c.(leader_i) c.(leader_parent_i))
  &&  beq_nat c.(distance_i) ( c.(distance_parent_i)+1 ) && In_bool c.(parent_i) l.(neighbours)) &&
-(forallb_neigbors c.(leader_neighbors_i) c.(leader_i))||
+(forallb_neighbors c.(leader_neighbors_i) c.(leader_i))||
 
 beq c.(leader_i) l.(i) && beq_nat c.(distance_i) 0 && beq  c.(parent_i) l.(i) &&
-(forallb_neigbors c.(leader_neighbors_i) c.(leader_i)).
+(forallb_neighbors c.(leader_neighbors_i) c.(leader_i)).
 
 
 Extraction beq_nat.
@@ -163,14 +159,14 @@ checker l c =
           (beq_nat (distance_i c)
             (add (distance_parent_i c) (S O))))
         (in_bool (parent_i c) (neighbours l)))
-      (forallb_neigbors (leader_neighbors_i c)
+      (forallb_neighbors (leader_neighbors_i c)
         (leader_i c)))
     (andb
       (andb
         (andb (beq (leader_i c) (i l))
           (beq_nat (distance_i c) O))
         (beq (parent_i c) (i l)))
-      (forallb_neigbors (leader_neighbors_i c)
+      (forallb_neighbors (leader_neighbors_i c)
         (leader_i c)))
 
 
@@ -464,5 +460,3 @@ apply forallb_forall_ with (x:=leader_i c).
 intros.
 trivial.
 Qed.
-
-
