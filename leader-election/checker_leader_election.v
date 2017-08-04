@@ -111,6 +111,9 @@ Axiom forallb_forall_ : forall (l:C_list) (c:Component) (x:Component),
 
 
 
+
+
+
 Definition checker (l: local_input) (c : checker_input) : bool :=
 (((negb (beq c.(leader_i) l.(i))) && beq c.(leader_i) c.(leader_parent_i))
  &&  beq_nat c.(distance_i) ( c.(distance_parent_i)+1 ) && In_bool c.(parent_i) l.(neighbours)) &&
