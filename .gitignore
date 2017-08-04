@@ -1,0 +1,2 @@
+#exclude temporary files by coqide (with a # at the start)
+\#*
