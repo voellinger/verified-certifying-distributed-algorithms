@@ -28,6 +28,7 @@ Variable g : Connected v a.
 Variable root: Component.
 Variable rootprop: v root.
 
+(*CA_list: all arcs of a Connected-graph*)
 Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
  A_list :=
   match c with
@@ -38,6 +39,7 @@ Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CA_list v' a' c'
   end.
 
+(*CV_list: all vertices of a Connected-graph*)
 Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
  V_list :=
   match c with
@@ -47,6 +49,7 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
   end.
 
+(*C_non_directed: each arc in a connected graph is bidirectional*)
 Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).
 Proof.
@@ -57,6 +60,7 @@ apply g0.
 apply H.
 Qed.
 
+(*neighbors: all neighboring vertices of a vertex*)
 Definition neighbors (g : Connected v a) (c: Component) : C_list :=
 (A_in_neighborhood c (CA_list v a g)) .
 
@@ -71,26 +75,28 @@ Variable distance : Component -> nat.
 Section CompositionProperty.
 
 
-(*local witness predicates*)
+(************************local witness predicates************************)
 
 (* (x) technical detail : collection of the values of the functions (parent, distance, leader) 
 in order to prove properties about the constructed functions  *) 
 
+(* gamma_i: local witness predicate of ordinary vertices (all but the root) *)
 Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
 (leader_neighbors : C_list)
 :Prop :=
-leader i <>  i /\ 
+leader i <>  i /\
 parent i = parent_i /\  (* (x) *)
-a (A_ends i parent_i) /\ 
+a (A_ends i parent_i) /\
 a (A_ends parent_i i) /\
-distance i = distance_i /\ (* (x) *) 
+distance i = distance_i /\ (* (x) *)
 distance_parent_i = distance parent_i /\ (* consistency in neighbourhood ) *)
 distance_i = distance_parent_i + 1 /\
 leader i = leader_parent_i /\ (* (x) *)
 leader_parent_i = leader (parent i)(* consistency in neighbourhood  *)
-/\ ((forall (k:Component), In k leader_neighbors-> k = leader i))
-/\ ((forall (c:Component) , In c (neighbors g i) -> In (leader c) leader_neighbors)). (*consistency in neighbourhood leader*)
+/\ ((forall (k:Component), In k leader_neighbors-> k = leader i))                     (*The leader of all neighbors is the same as the *)
+/\ ((forall (c:Component) , In c (neighbors g i) -> In (leader c) leader_neighbors)). (*leader of i itself.*)
 
+(* gamma_root: local witness predicate of the root node *)
 Definition gamma_root (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_neighbors : C_list)
 : Prop :=
 leader i = leader_i /\  (* (x) *)
@@ -99,13 +105,14 @@ parent i = parent_i /\  (* (x) *)
 parent_i =  i /\
 distance i = distance_i /\  (* (x) *)
 distance_i = 0
-/\ ((forall (k:Component), In k leader_neighbors-> k = leader i))
-/\  ((forall (c:Component) , In c (neighbors g i) -> In (leader c) leader_neighbors)). 
+/\ (forall (k:Component), In k leader_neighbors-> k = leader i)
+/\  (forall (c:Component) , In c (neighbors g i) -> In (leader c) leader_neighbors).
 
 
-(*Argument: Warum genau einmal gamma_root und ansonsten gamma_i*)
-
-(*local witness predicates*)
+(*Why gamma_root exactly once and in all other cases gamma_i?*)
+(* There is exactly one leader: the root. The leader is its own leader and has distance 0. All others have a leader different from themselves 
+and a distance of one more than their parent. *)
+(************************local witness predicates************************)
 
 Theorem composition_property:
 forall (leader_root parent_root: Component)( distance_root : nat)(leader_neighbors_root : C_list), (gamma_root root leader_root distance_root parent_root leader_neighbors_root)  ->
@@ -185,7 +192,7 @@ End CompositionProperty.
 Section GlobalWitnessProperty.
 
 
-(**********************Global Witness Predicate holds for global winess******************)
+(**********************Global Witness Predicate holds for global witness******************)
 (*LEADER PROPS*)
 Axiom leader_root : leader root = root.
 
@@ -779,18 +786,3 @@ Proof.
 Qed.
 End GlobalWitnessProperty2.
 *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
