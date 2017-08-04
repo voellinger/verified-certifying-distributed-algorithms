@@ -75,7 +75,7 @@ Variable distance : Component -> nat.
 Section CompositionProperty.
 
 
-(************************local witness predicates************************)
+(************************local witness predicates***********************)
 
 (* (x) technical detail : collection of the values of the functions (parent, distance, leader) 
 in order to prove properties about the constructed functions  *) 
