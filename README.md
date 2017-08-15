@@ -53,6 +53,6 @@ published at [SEFM15](https://link.springer.com/chapter/10.1007%2F978-3-319-2296
 
 Install [Coqide](https://coq.inria.fr/download) in version 8.5pl2 or 
 later. Start it with the parameter `coqide -impredicative-set`. Further 
-compile and install ![GraphBasics](https://github.com/coq-contribs/graph-basics). If you need further help, don't hesitate to contact us!
+compile and install ![GraphBasics](https://github.com/coq-contribs/graph-basics). If you need further help, do not hesitate to contact us!
 
 
