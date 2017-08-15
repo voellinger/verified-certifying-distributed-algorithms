@@ -26,15 +26,15 @@ theorem proving, and use Coq's program extraction.
 ## Case Studies
 
 ### Certifying Leader Election:
-This case study is published at ![NFM17](https://link.springer.com/chapter/10.1007%2F978-3-319-57288-8_27).
+This case study is published at [NFM17](https://link.springer.com/chapter/10.1007%2F978-3-319-57288-8_27).
 
 #### Files:
 
-composition_witness_prop_leader_election.v:
+**composition_witness_prop_leader_election.v**:
 the formalisation and machine checked proofs for the witness property and the
 composition property
 
-checker_leader_election.v:
+**checker_leader_election.v**:
 verified local checkers with possibility of program extraction
 
 
@@ -46,12 +46,12 @@ The coq formalisation is work in progress.
 
 ### Certifying Shortest Path Construction:
 The certifying variant of distributed shortest path construction is
-published at ![SEFM15](https://link.springer.com/chapter/10.1007%2F978-3-319-22969-0_14) but not the coq formalisation.
+published at [SEFM15](https://link.springer.com/chapter/10.1007%2F978-3-319-22969-0_14) but not the coq formalisation.
 
 
 ## How do I get set up?
 
-Install ![Coqide](https://coq.inria.fr/download) in version 8.5pl2 or 
+Install [Coqide](https://coq.inria.fr/download) in version 8.5pl2 or 
 later. Start it with the parameter `coqide -impredicative-set`. Further 
 compile and install ![GraphBasics](https://github.com/coq-contribs/graph-basics). If you need further help, don't hesitate to contact us!
 
