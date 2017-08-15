@@ -14,7 +14,7 @@ Rizkallah combines certifying algorithms with theorem proving for (1) and
 program verification for (2). Thus, if the verified checker program
 accepts for a triple (x,y,w), then there is a machine-checked proof that the
 input-output pair (x,y) is correct.
-For further informations check out the ![Wikipedia-page](https://en.wikipedia.org/wiki/Certifying_algorithm) 
+For further informations check out the [Wikipedia-page](https://en.wikipedia.org/wiki/Certifying_algorithm) 
 with its listed references from Mehlhorn, Rizkallah and others.
 
 We adapt Rizkallahs method to certifying distributed algorithms and build a
