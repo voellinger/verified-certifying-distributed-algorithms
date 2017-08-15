@@ -28,7 +28,7 @@ theorem proving, and use Coq's program extraction.
 ### Certifying Leader Election:
 This case study is published at ![NFM17](https://link.springer.com/chapter/10.1007%2F978-3-319-57288-8_27).
 
-####Files:
+#### Files:
 
 composition_witness_prop_leader_election.v:
 the formalisation and machine checked proofs for the witness property and the
