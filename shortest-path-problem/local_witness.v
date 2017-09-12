@@ -1,6 +1,6 @@
 Section LOCAL_WITNESS.
 
-Add LoadPath "/home/dash/Documents/diplom/coq/".
+
 Load witness_prop.
 
 Variable n : nat.

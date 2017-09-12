@@ -20,7 +20,7 @@ Definition C_set := U_set Component.
 Definition C_list := U_list Component.
 
 
-(*Axiom Component_Graph: forall (c:Component), v c.*)
+(* Axiom Component_Graph: forall (c:Component), v c. *)
 
 Variable a:A_set.
 Variable v:C_set.

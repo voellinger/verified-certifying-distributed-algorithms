@@ -4,11 +4,10 @@ Variable n : nat.
 Variable f : { m : nat | m < n } -> nat.
 Variable g : { m : nat | m < n } -> nat.
 
-Lemma arg_min_inequality : forall x,
+Axiom arg_min_inequality : forall x,
   (f x < g x) -> (exists x, f x < g x /\ 
                             forall y, f y < f x -> f y >= g y).
-Proof.
-Admitted.
+
 
 End ARG_MIN_INEQUALITY.
 (*
