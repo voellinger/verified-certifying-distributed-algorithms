@@ -20,7 +20,7 @@ Section Test.
 
 Variable root: Component.
 Variable distance : Component -> nat.
-Variable index : Component -> nat.
+
 Variable color : Component -> bool.
 
 
@@ -58,25 +58,6 @@ Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component)
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Vertex) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
-
-
-
-Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
-  v x -> v root.
-
-(* Definition root : (v: C_set) (a: A_set) (t: Tree v a) :=
-  v <> V_empty -> (root := die komponente mit niedrigstem Index) *)
-
-Axiom indices_diff : forall (c c' : Component), c <> c' -> index c <> index c'.
-
-Lemma ex_min : forall (c : Component), exists (root : Component), index root <= index c.
-Proof.
-  intros.
-  exists c.
-  intuition.
-Qed.
-
-Definition root_prop2 {v:V_set} (root : Component) := forall (c:Component), v root -> v c -> index root <= index c.
 
 
 (* 
@@ -245,7 +226,7 @@ Proof.
 
 
   assert (v0 root).
-  apply (nearly_all_trees_rooted v0 a0 t x) in H.
+  apply (nearly_all_trees_rooted root v0 a0 t x) in H.
   apply H.
 
   apply (tree_walk v0 a0 t x root) in H.

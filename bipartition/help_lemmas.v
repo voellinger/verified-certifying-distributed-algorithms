@@ -24,6 +24,7 @@ Section Help.
 
 Variable x y z: Component.
 Variable root: Component.
+Variable index : Component -> nat.
 Variable distance : Component -> nat.
 
 Lemma Path_isa_walk: 
@@ -124,6 +125,48 @@ Proof.
   inversion H.
   apply H1.
 Qed.
+
+
+Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
+  v x -> v root.
+
+(* Definition root : (v: C_set) (a: A_set) (t: Tree v a) :=
+  v <> V_empty -> (root := die komponente mit niedrigstem Index) *)
+
+Axiom indices_diff : forall (c c' : Component), c <> c' -> index c <> index c'.
+
+Definition is_root (r : Component) := forall (c : Component), index r <= index c.
+
+(* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
+Proof.
+  intros. *)
+
+(* Lemma nearly_all_trees_rooted2: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
+  exists (x : Component), v x -> (exists (root: Component), v root /\ is_root root).
+Proof.
+  intros v0 a0 t x. exists x. intro v. unfold is_root. intros. rename x into root2. apply (ex_min c). *)
+
+Definition root_prop2 {v:V_set} (root : Component) := forall (c:Component), v root -> v c -> index root <= index c.
+
+Definition shortest_path2 {v: V_set} {a:A_set} {vl : V_list} {el : E_list} (c0 c1 : Component) {p: Path v a c0 c1 vl el} := 
+  forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length vl <= length vl'.
+
+Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
+  forall (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), n <= length el.
+
+Lemma distance_root_0: forall (v: V_set) (a: A_set), distance2 v a root root 0.
+Proof.
+  intros v0 a0.
+  unfold distance2.
+  intros.
+  inversion p.
+  simpl.
+  reflexivity.
+  simpl.
+  intuition.
+Qed.
+
+
 
 (* Lemma distance_means_walk : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat) (w : Walk v a x root vl el),
   distance x = n -> length el = n.
