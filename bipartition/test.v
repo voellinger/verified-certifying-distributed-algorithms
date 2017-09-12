@@ -249,9 +249,9 @@ Proof.
   rename x1 into vly.
   rename x3 into ely.
 
-  apply (distance_means_walk2 root distance v0 a0 vlx elx x t (distance x) vlx elx) in H.
+  apply (distance_means_walk2 root distance v0 a0 vlx elx x t vlx elx) in H.
   destruct H.
-  apply (distance_means_walk2' root distance v0 a0 vly ely y t (distance y) vly ely) in H0.
+  apply (distance_means_walk2' root distance v0 a0 vly ely y t vly ely) in H0.
   destruct H0.
   apply (Walk_append v0 a0 x root y vlx vly elx ely) in x1.
   

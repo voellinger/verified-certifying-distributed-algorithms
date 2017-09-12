@@ -137,7 +137,7 @@ Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Com
   v x -> v root.
 
 Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
-  v x -> (exists (root : Component), is_root v root).
+  v x -> (exists (root : Component), is_root root).
 (* Proof.
   intros.
   unfold is_root.
@@ -217,18 +217,15 @@ Qed. *)
 
 
 
-Axiom connected_min_path: forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat),
+Axiom connected_min_path: forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a),
   {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
 
-Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
+Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (vl : V_list) (el : E_list),
   v x -> {p : Walk v a x root vl el & length el = distance x}.
 
-Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
+Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (vl : V_list) (el : E_list),
   v x -> {p : Walk v a root x vl el & length el = distance x}.
 
-
-
-(* Axiom Component_Graph: forall (c:Component), v c. *)
 
 (* Lemma distance_means_walk2' : forall (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
   v x -> {p : Walk v a root x vl el & length el = distance x}.
