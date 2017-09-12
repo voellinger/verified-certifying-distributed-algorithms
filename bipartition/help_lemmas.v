@@ -127,15 +127,23 @@ Proof.
 Qed.
 
 
-Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
-  v x -> v root.
 
-(* Definition root : (v: C_set) (a: A_set) (t: Tree v a) :=
-  v <> V_empty -> (root := die komponente mit niedrigstem Index) *)
 
 Axiom indices_diff : forall (c c' : Component), c <> c' -> index c <> index c'.
 
 Definition is_root (r : Component) := forall (c : Component), index r <= index c.
+
+Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
+  v x -> v root.
+
+Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
+  v x -> (exists (root : Component), is_root v root).
+(* Proof.
+  intros.
+  unfold is_root.
+  (* v0 is not empty ... minimum{index x | x in v0} exists ... take this minimum and show rest with it *)
+Admitted. *)
+
 
 (* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
 Proof.
