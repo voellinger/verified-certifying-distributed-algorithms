@@ -20,6 +20,7 @@ Section Test.
 
 Variable root: Component.
 Variable distance : Component -> nat.
+Variable index : Component -> nat.
 Variable color : Component -> bool.
 
 
@@ -65,6 +66,17 @@ Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Com
 
 (* Definition root : (v: C_set) (a: A_set) (t: Tree v a) :=
   v <> V_empty -> (root := die komponente mit niedrigstem Index) *)
+
+Axiom indices_diff : forall (c c' : Component), c <> c' -> index c <> index c'.
+
+Lemma ex_min : forall (c : Component), exists (root : Component), index root <= index c.
+Proof.
+  intros.
+  exists c.
+  intuition.
+Qed.
+
+Definition root_prop2 {v:V_set} (root : Component) := forall (c:Component), v root -> v c -> index root <= index c.
 
 
 (* 
@@ -359,6 +371,7 @@ Qed.
 *)
 
 (* TODO: 
+  - intros -> intro
   - organize Variables and Axioms usefully
   - how to use global Variables?
   - how to generate Tree of some Connected : a -> ta --- maybe use Samira's work?
