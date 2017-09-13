@@ -8,18 +8,6 @@ Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/leader-e
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 Section Help.
 
 Variable x y z: Component.
@@ -136,6 +124,18 @@ Definition is_root (r : Component) := forall (c : Component), index r <= index c
 Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
   v x -> v root.
 
+
+(* only one of the two vorbedingungen is needed*)
+Lemma set_have_min : forall (s : U_set nat) (n' : nat), s n' -> s <> Empty nat -> {n : nat & s n /\ s n' -> n <= n'}.
+Proof.
+  intros.
+  exists n'.
+  intros.
+  reflexivity.
+Qed.
+  
+
+
 Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
   v x -> (exists (root : Component), is_root root).
 (* Proof.
@@ -143,6 +143,8 @@ Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
   unfold is_root.
   (* v0 is not empty ... minimum{index x | x in v0} exists ... take this minimum and show rest with it *)
 Admitted. *)
+
+
 
 
 (* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
@@ -227,23 +229,61 @@ Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E
   v x -> {p : Walk v a root x vl el & length el = distance x}.
 
 
-Lemma distance_means_walk2'' : forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
+(* Lemma W_endy_endyel : forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (w : Walk v a x y vl el),
+  vl <> nil -> Walk v a x y (rev (y :: nil ++ cdr(rev(x :: vl)))) el.
+Proof.
+  intros.
+  apply Walk_reverse in w.
+  apply Walk_reverse in w.
+  simpl in w.
+  destruct vl.
+  intuition.
+  simpl in w.
+  rewrite rev_app_distr in w. *)
+
+
+
+(* Lemma distance_means_walk2'' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat),
   v x -> {p : Walk v a root x vl el & length el = distance x}.
 Proof.
   intros.
   apply (distance_means_walk2 v0 a0 (cdr (rev (root :: vl))) (E_reverse el) x0 t) in H.
+(* Walk v a x y vl el -> Walk v  a  (cdr (rev (x :: vl))) (E_reverse el) *)
   destruct H.
   apply Walk_reverse in x1.
 
-  destruct vl0.
+  
   simpl in x1.
-  assert (E_reverse (E_reverse el0) = el0).
+  assert (E_reverse (E_reverse el) = el).
   admit.
   rewrite H in x1.
+
+  destruct vl.
+  simpl in x1.
+  exists x1.
+  assert (length (E_reverse el) = length el).
+  admit.
+  rewrite H0 in e.
+  apply e.
+
+  simpl in x1.
+  rewrite <- rev_app_distr in x1.
+
+  assert (vl = vl ++ x0 :: nil).
+  admit.
+  rewrite H0 in x1.
+  rewrite rev_app_distr in x1.
+  simpl in x1. 
+  rewrite rev_app_distr in x1.
+  simpl in x1.
+  rewrite rev_involutive in x1.
+  symmetry in H0.
+  rewrite H0 in x1.
+  
   exists x1.
   admit.
   simpl in x1.
-Admitted.
+Admitted. *)
 
 Lemma tree_walk : forall (v: C_set) (a : A_set) (t : Tree v a) (x y: Component),
   v x -> v y -> {vl : V_list & {el : E_list & Walk v a x y vl el}}.
