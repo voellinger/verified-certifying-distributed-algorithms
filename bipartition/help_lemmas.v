@@ -220,18 +220,18 @@ Qed. *)
 Axiom connected_min_path: forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a),
   {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
 
-Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (vl : V_list) (el : E_list),
+Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a),
   v x -> {p : Walk v a x root vl el & length el = distance x}.
 
-Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (vl : V_list) (el : E_list),
+Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a),
   v x -> {p : Walk v a root x vl el & length el = distance x}.
 
 
-(* Lemma distance_means_walk2' : forall (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
+Lemma distance_means_walk2'' : forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a) (n : nat) (vl : V_list) (el : E_list),
   v x -> {p : Walk v a root x vl el & length el = distance x}.
 Proof.
   intros.
-  apply (distance_means_walk2 x0 t n (cdr (rev (root :: vl0))) (E_reverse el0)) in H.
+  apply (distance_means_walk2 v0 a0 (cdr (rev (root :: vl))) (E_reverse el) x0 t) in H.
   destruct H.
   apply Walk_reverse in x1.
 
@@ -243,7 +243,7 @@ Proof.
   exists x1.
   admit.
   simpl in x1.
-Admitted. *)
+Admitted.
 
 Lemma tree_walk : forall (v: C_set) (a : A_set) (t : Tree v a) (x y: Component),
   v x -> v y -> {vl : V_list & {el : E_list & Walk v a x y vl el}}.
