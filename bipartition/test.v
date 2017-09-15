@@ -53,7 +53,7 @@ Proof.
 Qed.
 
 
-Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) := 
+Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) :=
   v x /\ v y /\ ~ a (A_ends x y) /\ odd (distance x) = odd (distance y) /\ x <> y.
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Vertex) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
@@ -336,6 +336,23 @@ Proof.
 Qed.
 
 
+Lemma no_odd_closed_means_bi : forall (v : V_set) (a : A_set) (t : Tree v a) 
+(d : Connected v a),
+  ~(exists (x : Component) (el: E_list) (vl : V_list) (w: Walk v a x x vl el), odd_closed x x vl el w) -> "exists coloring which is bipartite / our coloring process is bipartite".
+Proof.
+  intros v a t d.
+  unfold not.
+  intros H.
+  unfold bipartite3.
+  intros ar.
+  intros aar.
+  unfold not.
+  intros diff.
+  apply H.
+  
+  
+
+
 (* INTUITION OF THIS FILE
   - neighbours in bipartite graph different
   - walk every node alternates
@@ -352,10 +369,18 @@ Qed.
 *)
 
 (* TODO: 
-  - intros -> intro
+  - intros -> intros v a ...
+  - define coloring
+    - from a connected c get root
+    - from root build a spanning tree t
+    - color t bipartite
+    - prove that: if there are no odd_closed in c -> this coloring is indeed a bipartition 
   - organize Variables and Axioms usefully
   - how to use global Variables?
   - how to generate Tree of some Connected : a -> ta --- maybe use Samira's work?
   - combine local and global properties:
-    - Connected that has Tree, with special_vertices and distances -> not bipartite d
+    - from a connected c v a' get root
+    - from root build a spanning tree t v a of c
+    - there exists a special_vertices v a t x y /\ a' (A_ends x y)
+    - it follows that c is not bipartite / there is no coloring for c that is bipartite
 *)

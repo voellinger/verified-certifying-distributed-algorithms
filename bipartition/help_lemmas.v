@@ -3,16 +3,21 @@ Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Prop.
 Require Import Coq.Arith.Even.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/leader-election/composition_witness_prop_leader_election".
-
-
+(* Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/leader-election/composition_witness_prop_leader_election". *)
 
 
 Section Help.
 
+Definition Component := Vertex.
+Definition c_index (c : Component):nat := match c with
+                          | index x => x
+                          end.
+
+
+
 Variable x y z: Component.
 Variable root: Component.
-Variable index : Component -> nat.
+
 Variable distance : Component -> nat.
 
 Lemma Path_isa_walk: 
@@ -97,7 +102,7 @@ Qed.
 Lemma W_endy_inv :
  forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
 Proof.
-        intros. elim H. intros. apply v1. intros. apply H0.
+        intros. elim H. intros. apply v0. intros. apply H0.
 Qed.
 
 Lemma S_even : forall n: nat, odd (S n) -> even n.
@@ -117,34 +122,49 @@ Qed.
 
 
 
-Axiom indices_diff : forall (c c' : Component), c <> c' -> index c <> index c'.
+Axiom indices_diff : forall (c c' : Component), c <> c' -> c_index c <> c_index c'.
 
-Definition is_root (r : Component) := forall (c : Component), index r <= index c.
+Definition is_root (r : Component) := forall (c : Component), c_index r <= c_index c.
 
-Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
-  v x -> v root.
+
 
 
 (* only one of the two vorbedingungen is needed*)
-Lemma set_have_min : forall (s : U_set nat) (n' : nat), s n' -> s <> Empty nat -> {n : nat & s n /\ s n' -> n <= n'}.
+Lemma set_has_min : forall (s : U_set nat) (n' : nat), s n' -> s <> Empty nat -> {n : nat & s n /\ n <= n'}.
 Proof.
   intros.
   exists n'.
-  intros.
+  split.
+  apply H.
   reflexivity.
 Qed.
-  
 
 
-Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
+
+
+
+(* Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
   v x -> (exists (root : Component), is_root root).
-(* Proof.
+
+Fixpoint indify (v : V_set) : (s : U_set nat) :=
+  match v with
+  | Empty => Empty
+  |  *)
+
+Lemma nearly_all_graphs_rooted': forall (v:V_set) (x : Component),
+  v x -> (exists (root : Component), is_root root).
+Proof.
   intros.
   unfold is_root.
+  exists x0.
+  intros.
+  exists x0.
+  
   (* v0 is not empty ... minimum{index x | x in v0} exists ... take this minimum and show rest with it *)
-Admitted. *)
+Admitted.
 
-
+Axiom nearly_all_trees_rooted: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
+  v x -> v root.
 
 
 (* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
