@@ -122,7 +122,30 @@ Qed.
 
 
 Axiom indices_diff : forall (c c' : Component), c <> c' -> c_index c <> c_index c'.
-Axiom v_not_empty : forall(v:V_set), exists (x : Component), v x.
+
+Lemma v_not_empty : forall (v:V_set) (a:A_set) (c:Connected v a),
+  exists (x:Component), v x.
+Proof.
+  intros v a c.
+  assert (c':=c).
+  induction c.
+  exists x0.
+  unfold V_single.
+  intuition.
+
+  exists x0.
+  apply V_in_right.
+  apply v0.
+  
+
+  exists x0.
+  apply v0.
+  
+  rewrite <- e.
+  apply IHc.
+  apply c.
+Qed.
+
 (* Inductive Connected : V_set -> A_set -> Set :=
   | C_isolated : forall x : Vertex, Connected (V_single x) A_empty *)
 
@@ -131,7 +154,7 @@ Definition is_root (v:V_set) (root : Component) := v root /\ forall (c:Component
 
 
 
-(* only one of the two vorbedingungen is needed*)
+(* only one of the two preconditions is needed*)
 Lemma set_has_min : forall (s : U_set nat) (n' : nat), s n' -> s <> Empty nat -> {n : nat & s n /\ n <= n'}.
 Proof.
   intros.
@@ -179,7 +202,9 @@ Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
 Proof.
   intros v a t.
   assert (exists (x : Component), v x).
-  apply v_not_empty.
+  apply (v_not_empty v a).
+  apply Tree_isa_connected in t.
+  apply t.
   destruct H.
   apply (nearly_all_trees_rooted v a x0 t).
   apply H.
