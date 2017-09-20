@@ -9,9 +9,6 @@ Require Import Coq.Arith.Even.
 Section Help.
 
 Definition Component := Vertex.
-Definition c_index (c : Component):nat := match c with
-                          | index x => x
-                          end.
 
 
 
@@ -118,11 +115,6 @@ Proof.
   apply H1.
 Qed.
 
-
-
-
-Axiom indices_diff : forall (c c' : Component), c <> c' -> c_index c <> c_index c'.
-
 Lemma v_not_empty : forall (v:V_set) (a:A_set) (c:Connected v a),
   exists (x:Component), v x.
 Proof.
@@ -146,49 +138,13 @@ Proof.
   apply c.
 Qed.
 
-(* Inductive Connected : V_set -> A_set -> Set :=
-  | C_isolated : forall x : Vertex, Connected (V_single x) A_empty *)
 
-
-Definition is_root (v:V_set) (root : Component) := v root /\ forall (c:Component), v c -> c_index root <= c_index c.
-
-
-
-(* only one of the two preconditions is needed*)
-Lemma set_has_min : forall (s : U_set nat) (n' : nat), s n' -> s <> Empty nat -> {n : nat & s n /\ n <= n'}.
-Proof.
-  intros.
-  exists n'.
-  split.
-  apply H.
-  reflexivity.
-Qed.
-
-
-
-
-(* Axiom nearly_all_graphs_rooted: forall (v:C_set) (x : Component),
-  v x -> (exists (root : Component), is_root root).
-
-Fixpoint indify (v : V_set) : (s : U_set nat) :=
-  match v with
-  | Empty => Empty
-  |  *)
-
-(* Lemma nearly_all_graphs_rooted': forall (v:V_set) (x : Component) (g:Graph v a),
-  v x -> (exists (root : Component), v root /\ is_root v root).
-Proof.
-  intros.
-  unfold is_root.
-  unfold V_set in v.
-  unfold U_set in v.
-  (* v0 is not empty ... minimum{index x | x in v0} exists ... take this minimum and show rest with it *)
-Admitted. *)
+Variable root : Component.
 Axiom nearly_all_graphs_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Graph v a),
-  v x -> (exists (root : Component), v root /\ is_root v root).
+  v x -> v root.
 
 Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (x:Component) (t: Tree v a),
-  v x -> (exists (root : Component), v root /\ is_root v root).
+  v x -> v root.
 Proof.
   intros v a x0 t vx.
   apply Tree_isa_graph in t.
@@ -198,7 +154,7 @@ Proof.
 Qed.
 
 Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
-  (exists (root : Component), v root /\ is_root v root).
+  v root.
 Proof.
   intros v a t.
   assert (exists (x : Component), v x).
@@ -209,15 +165,6 @@ Proof.
   apply (nearly_all_trees_rooted v a x0 t).
   apply H.
 Qed.
-
-(* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
-Proof.
-  intros. *)
-
-(* Lemma nearly_all_trees_rooted2: forall (v:C_set) (a:A_set) (t: Tree v a) (x : Component),
-  exists (x : Component), v x -> (exists (root: Component), v root /\ is_root root).
-Proof.
-  intros v0 a0 t x. exists x. intro v. unfold is_root. intros. rename x into root2. apply (ex_min c). *)
 
 Definition shortest_path2 {v: V_set} {a:A_set} {vl : V_list} {el : E_list} (c0 c1 : Component) {p: Path v a c0 c1 vl el} := 
   forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length vl <= length vl'.
@@ -278,13 +225,13 @@ Qed. *)
 
 
 Axiom connected_min_path: forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- is_root v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
+ v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
 
 Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- is_root v root -> v x -> {p : Walk v a x root vl el & length el = distance x}.
+ v root -> v x -> {p : Walk v a x root vl el & length el = distance x}.
 
 Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- is_root v root -> v x -> {p : Walk v a root x vl el & length el = distance x}.
+ v root -> v x -> {p : Walk v a root x vl el & length el = distance x}.
 
 
 (* Lemma W_endy_endyel : forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (w : Walk v a x y vl el),
