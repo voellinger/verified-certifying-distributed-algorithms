@@ -123,7 +123,8 @@ Qed.
 
 Axiom indices_diff : forall (c c' : Component), c <> c' -> c_index c <> c_index c'.
 Axiom v_not_empty : forall(v:V_set), exists (x : Component), v x.
-
+Inductive Connected : V_set -> A_set -> Set :=
+  | C_isolated : forall x : Vertex, Connected (V_single x) A_empty
 
 
 Definition is_root (v:V_set) (root : Component) := v root /\ forall (c:Component), v c -> c_index root <= c_index c.

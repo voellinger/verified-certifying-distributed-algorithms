@@ -221,7 +221,7 @@ Lemma special_vertices_make_odd_closed:
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v (A_union a (E_set x y)) y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
-  intros v a t x y root isr H.
+  intros v a t x y root H.
   unfold special_vertices in H.
   destruct H.
   destruct H0.
@@ -252,7 +252,11 @@ Proof.
   rename x1 into vly.
   rename x3 into ely.
 
-  apply (distance_means_walk2 distance v a vlx elx x root t isr) in H.
+  assert (exists (root : Component), v root /\ is_root v root).
+  apply (all_trees_rooted) in t.
+  destruct t.
+
+  apply (distance_means_walk2 distance v a vlx elx x root t H3) in H.
   destruct H.
   apply (distance_means_walk2' distance v a vly ely y root t isr) in H0.
   destruct H0.
