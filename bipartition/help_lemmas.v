@@ -114,6 +114,18 @@ Proof.
   apply H1.
 Qed.
 
+Lemma tree_walk : forall (v: V_set) (a : A_set) (t : Tree v a) (x y: Component),
+  v x -> v y -> {vl : V_list & {el : E_list & Walk v a x y vl el}}.
+Proof.
+  intros.
+  apply Tree_isa_connected in t.
+  apply Connected_walk.
+  apply t.
+  apply H.
+  apply H0.
+Qed.
+
+
 Lemma v_not_empty : forall (v:V_set) (a:A_set) (c:Connected v a),
   exists (x:Component), v x.
 Proof.
@@ -183,40 +195,60 @@ Proof.
   intuition.
 Qed.
 
-(* Lemma distance_means_walk : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat) (w : Walk v a x root vl el),
-  distance2 va x = n -> length el = n.
+Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
+  v x -> v y -> (vl = vl' /\ el = el').
 Proof.
-  intros.
-  apply W_endx_inv in w.
-  
-  apply (path_to_root n x0 w) in H.
+Admitted.
 
-(* Lemma Connected_min_path: forall (x : Component) (t : Tree v a) (n : nat),
-  distance x = n -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = n}}}.
-Proof.
-  intros.
-  induction n.
-  exists V_nil.
-  exists E_nil.
-  apply distance_root_ in H.
-  rewrite H.
-  assert (Path v a root root V_nil E_nil).
-  apply P_null.
-  apply rootprop.
-  exists H0.
-  trivial.
-Qed. *) *)
-
-
-
-Axiom connected_min_path: forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
+Axiom connected_min_path: forall (v: V_set) (a: A_set) (x root: Component) (t : Tree v a),
  v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
 
+Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
+ v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
+Proof.
+  intros v a xx t vxx.
+  assert (v root) as vroot.
+  apply (all_trees_rooted v a).
+  apply t.
+  assert (t2:=t).
+  apply Tree_isa_connected in t2.
+  assert (vxx2:=vxx).
+  apply (Connected_path v a t2 root xx) in vxx.
+  destruct vxx.
+  destruct s.
+  exists x0.
+  exists x1.
+  exists p.
+  unfold distance2.
+  intros vl el p2.
+  assert (vl = x0 /\ el = x1).
+  apply (Tree_only_one_path v a root xx t).
+  apply p2.
+  apply p.
+  apply vroot.
+  apply vxx2.
+  destruct H.
+  rewrite H0.
+  reflexivity.
+  apply vroot.
+Qed.
+
+Lemma Connected_path :
+ forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+ v x -> v y -> {vl : V_list &  {el : E_list &  Path v a x y vl el}}.
+Proof.
+        intros; elim (Connected_walk v a g x y H H0); intros.
+        elim p; intros.
+        apply (Walk_to_path v a x y x0 x1 p0).
+Qed.
+
+
 Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Walk v a x root vl el & length el = distance x}.
+ v root -> v x -> {p : Path v a x root vl el & length el = distance x}.
 
 Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Walk v a root x vl el & length el = distance x}.
+ v root -> v x -> {p : Path v a root x vl el & length el = distance x}.
 
 
 (* Lemma W_endy_endyel : forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (w : Walk v a x y vl el),
@@ -275,16 +307,7 @@ Proof.
   simpl in x1.
 Admitted. *)
 
-Lemma tree_walk : forall (v: V_set) (a : A_set) (t : Tree v a) (x y: Component),
-  v x -> v y -> {vl : V_list & {el : E_list & Walk v a x y vl el}}.
-Proof.
-  intros.
-  apply Tree_isa_connected in t.
-  apply Connected_walk.
-  apply t.
-  apply H.
-  apply H0.
-Qed.
+
 
 
 (* 
