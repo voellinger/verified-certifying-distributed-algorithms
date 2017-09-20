@@ -18,7 +18,7 @@ Section Test.
 
 
 
-Variable root: Component.
+
 Variable distance : Component -> nat.
 
 Variable color : Component -> bool.
@@ -98,11 +98,11 @@ Proof.
   inversion H0.
   reflexivity.
   
-  intros.
+  intros .
   simpl.
 
   destruct H0.
-  apply (neighbours_different v0 a0 y0 x0 c) in a1.
+  apply (neighbours_different v a y0 x0 c) in a0.
   split.
   
   destruct (color x0).
@@ -158,7 +158,7 @@ Proof.
 
   apply (W_endx_inv ) in w0.
   apply w0.
-  apply v1.
+  apply v0.
   apply H.
 Qed.
 
@@ -173,7 +173,7 @@ Proof.
   destruct H.
   unfold not.
   intros.
-  apply (walk_colored_ends v0 a0 vl el x x) in H1.
+  apply (walk_colored_ends v a vl el x x) in H1.
   destruct H1.
   apply H1 in H0.
   intuition.
@@ -184,7 +184,7 @@ Qed.
 (* is there a better subgraph function for this, maybe? *)
 (* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbours, 
 with the same color still exists in the smaller graph. Each arc added in fact can only possibly add new conflicts or be neutral at best. *)
-Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : C_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
+Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
   ~ bipartite3 a -> ~ bipartite3 (A_union a a').
 Proof.
   intros.
@@ -202,26 +202,26 @@ Qed.
 
 (* Here we just combine the last two lemmas: we know an odd_closed is not bipartite, if we add more arcs, then it still isn't bipartite, as per graph_not_bi_graph_plus_not_bi. *)
 Lemma odd_closed_rest_graph_not_bi: 
-  forall (v v' : C_set) (a a' : A_set) (c : Connected v a) (vl : V_list) (el: E_list) (x :Component) (w : Walk v a x x vl el) (o: odd_closed x x vl el w) 
+  forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (vl : V_list) (el: E_list) (x :Component) (w : Walk v a x x vl el) (o: odd_closed x x vl el w) 
     (d : Connected (V_union v v') (A_union a a')),
   ~ bipartite3 (A_union a a').
 Proof.
   intros.
   unfold not.
   intros.
-  apply (odd_closed_no_bipartitition v0 a0 vl el x c w) in o.
-  apply (graph_not_bi_graph_plus_not_bi v0 v' a0 a' c d) in o.
+  apply (odd_closed_no_bipartitition v a vl el x c w) in o.
+  apply (graph_not_bi_graph_plus_not_bi v v' a a' c d) in o.
   intuition.
 Qed.
 
 (* Here we show the following *)
 Lemma special_vertices_make_odd_closed: 
-  forall (v:V_set) (a:A_set) (t : Tree v a) (x y : Component), 
+  forall (v:V_set) (a:A_set) (t : Tree v a) (x y root: Component), 
   special_vertices v a t x y -> 
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v (A_union a (E_set x y)) y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
-  intros.
+  intros v a t x y root isr H.
   unfold special_vertices in H.
   destruct H.
   destruct H0.
@@ -230,12 +230,10 @@ Proof.
   
 
 
-  assert (v0 root).
-  apply (nearly_all_trees_rooted root v0 a0 t x) in H.
-  apply H.
 
-  apply (tree_walk v0 a0 t x root) in H.
-  apply (tree_walk v0 a0 t root y) in H0.
+
+  apply (tree_walk v a t x root) in H.
+  apply (tree_walk v a t root y) in H0.
   destruct H.
   exists x0.
   destruct H0.
@@ -246,7 +244,7 @@ Proof.
   exists x3.
   apply W_endx_inv in w.
   apply W_endy_inv in w0.
-  clear H4.
+  clear H3.
   rename w into H.
   rename w0 into H0.
   rename x0 into vlx.
@@ -254,14 +252,14 @@ Proof.
   rename x1 into vly.
   rename x3 into ely.
 
-  apply (distance_means_walk2 root distance v0 a0 vlx elx x t vlx elx) in H.
+  apply (distance_means_walk2 distance v a vlx elx x root t isr) in H.
   destruct H.
-  apply (distance_means_walk2' root distance v0 a0 vly ely y t vly ely) in H0.
+  apply (distance_means_walk2' distance v a vly ely y root t isr) in H0.
   destruct H0.
-  apply (Walk_append v0 a0 x root y vlx vly elx ely) in x1.
+  apply (Walk_append v a x root y vlx vly elx ely) in x1.
   
-  apply (Walk_subgraph v0 v0 a0 (A_union a0 (E_set x y)) x y) in x1.
-  apply (Walk_append v0 (A_union a0 (E_set x y)) y x y (x :: V_nil) (vlx ++ vly) (E_ends y x :: E_nil) (elx ++ ely)) in x1.
+  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x1.
+  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vly) (E_ends y x :: E_nil) (elx ++ ely)) in x1.
 
 
 
@@ -301,7 +299,7 @@ Proof.
   apply H.
   simpl.
 
-  apply (W_step v0 (A_union a0 (E_set x y)) y x x (V_nil) (E_nil)).
+  apply (W_step v (A_union a (E_set x y)) y x x (V_nil) (E_nil)).
   apply W_null.
   apply W_endx_inv in x0.
   apply x0.
@@ -320,7 +318,12 @@ Proof.
   apply A_in_left.
   apply H.
   apply x0.
+
+  unfold is_root in isr.
+  destruct isr.
   apply H4.
+  unfold is_root in isr.
+  destruct isr.
   apply H4.
 Qed.
 

@@ -122,8 +122,11 @@ Qed.
 
 
 Axiom indices_diff : forall (c c' : Component), c <> c' -> c_index c <> c_index c'.
+Axiom v_not_empty : forall(v:V_set), exists (x : Component), v x.
 
-Definition is_root (v:V_set) (root : Component) := forall (c:Component), v root -> v c -> c_index root <= c_index c.
+
+
+Definition is_root (v:V_set) (root : Component) := v root /\ forall (c:Component), v c -> c_index root <= c_index c.
 
 
 
@@ -148,7 +151,7 @@ Fixpoint indify (v : V_set) : (s : U_set nat) :=
   | Empty => Empty
   |  *)
 
-(* Lemma nearly_all_graphs_rooted': forall (v:V_set) (x : Component),
+(* Lemma nearly_all_graphs_rooted': forall (v:V_set) (x : Component) (g:Graph v a),
   v x -> (exists (root : Component), v root /\ is_root v root).
 Proof.
   intros.
@@ -157,18 +160,29 @@ Proof.
   unfold U_set in v.
   (* v0 is not empty ... minimum{index x | x in v0} exists ... take this minimum and show rest with it *)
 Admitted. *)
-Axiom nearly_all_graphs_rooted': forall (v:V_set) (x : Component),
+Axiom nearly_all_graphs_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Graph v a),
   v x -> (exists (root : Component), v root /\ is_root v root).
 
-Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
+Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (x:Component) (t: Tree v a),
   v x -> (exists (root : Component), v root /\ is_root v root).
 Proof.
-  intros v a t vx.
+  intros v a x0 t vx.
   apply Tree_isa_graph in t.
-  apply nearly_all_graphs_rooted' in vx.
+  apply (nearly_all_graphs_rooted' v a) in vx.
   apply vx.
+  apply t.
 Qed.
 
+Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
+  (exists (root : Component), v root /\ is_root v root).
+Proof.
+  intros v a t.
+  assert (exists (x : Component), v x).
+  apply v_not_empty.
+  destruct H.
+  apply (nearly_all_trees_rooted v a x0 t).
+  apply H.
+Qed.
 
 (* Lemma ex_min : forall (v: V_set), exists (root2 : Component), v root2 -> forall (c : Component), v c -> index root2 <= index c.
 Proof.
