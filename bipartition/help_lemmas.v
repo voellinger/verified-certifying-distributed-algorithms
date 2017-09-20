@@ -13,7 +13,6 @@ Definition Component := Vertex.
 
 
 Variable x y z: Component.
-
 Variable distance : Component -> nat.
 
 Lemma Path_isa_walk: 
@@ -140,15 +139,15 @@ Qed.
 
 
 Variable root : Component.
-Axiom nearly_all_graphs_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Graph v a),
+Axiom nearly_all_connected_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Connected v a),
   v x -> v root.
 
 Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (x:Component) (t: Tree v a),
   v x -> v root.
 Proof.
   intros v a x0 t vx.
-  apply Tree_isa_graph in t.
-  apply (nearly_all_graphs_rooted' v a) in vx.
+  apply Tree_isa_connected in t.
+  apply (nearly_all_connected_rooted' v a) in vx.
   apply vx.
   apply t.
 Qed.
@@ -184,27 +183,13 @@ Proof.
   intuition.
 Qed.
 
-
-
 (* Lemma distance_means_walk : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat) (w : Walk v a x root vl el),
-  distance x = n -> length el = n.
+  distance2 va x = n -> length el = n.
 Proof.
   intros.
   apply W_endx_inv in w.
+  
   apply (path_to_root n x0 w) in H.
-
-Lemma path_to_root:
-forall (n:nat) (x:Component) (prop1 : v x),
-distance x = n -> {el : A_list & Connection x root el n }.
-
-  assert (forall (vl'' : V_list) (el'' :E_list) (w' : Walk v a x0 root vl'' el''),  length el'' = n).
-  admit.
-  apply (H0 vl el w).
-  apply W_endx_inv in w.
-  admit.
-Qed. *)
-
-
 
 (* Lemma Connected_min_path: forall (x : Component) (t : Tree v a) (n : nat),
   distance x = n -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = n}}}.
@@ -220,7 +205,7 @@ Proof.
   apply rootprop.
   exists H0.
   trivial.
-Qed. *)
+Qed. *) *)
 
 
 

@@ -214,6 +214,8 @@ Proof.
   intuition.
 Qed.
 
+Variable root : Component.
+
 (* Here we show the following *)
 Lemma special_vertices_make_odd_closed: 
   forall (v:V_set) (a:A_set) (t : Tree v a) (x y: Component), 
@@ -230,15 +232,8 @@ Proof.
   destruct H2.
   
 
-  assert (H7:=t).
-  apply (all_trees_rooted x v a t) in H7.
-
-Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
-  v root.
-
-  destruct H7.
-  exists x0.
-  apply H4.
+  assert (rooted:=H).
+  apply (nearly_all_trees_rooted root v a x t) in rooted.
 
 
 
@@ -266,9 +261,9 @@ Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
 
 
 
-  apply (distance_means_walk2 distance v a vlx elx x root t H3) in H.
+  apply (distance_means_walk2 distance v a vlx elx x root t rooted) in H.
   destruct H.
-  apply (distance_means_walk2' distance v a vly ely y root t isr) in H0.
+  apply (distance_means_walk2' distance v a vly ely y root t rooted) in H0.
   destruct H0.
   apply (Walk_append v a x root y vlx vly elx ely) in x1.
   
@@ -333,12 +328,8 @@ Lemma all_trees_rooted: forall (v:V_set) (a:A_set) (t: Tree v a),
   apply H.
   apply x0.
 
-  unfold is_root in isr.
-  destruct isr.
-  apply H4.
-  unfold is_root in isr.
-  destruct isr.
-  apply H4.
+  apply rooted.
+  apply rooted.
 Qed.
 
 
@@ -346,7 +337,7 @@ Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set) (t : 
   (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list),
   special_vertices v a t x y -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
 Proof.
-  intros.
+  intros v0 v' a0 a' t x y c d vl el H.
   apply special_vertices_make_odd_closed in H.
   destruct H.
   destruct s.
