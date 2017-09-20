@@ -30,18 +30,18 @@ Definition bipartite4 (a: A_set) := ~exists (ar : Arc), a ar /\ color (A_tail ar
 
 Lemma bipar3_eq_bipar4: forall (a: A_set), bipartite3 a <-> bipartite4 a.
 Proof.
-  intros.
+  intros a.
   unfold bipartite3; unfold bipartite4.
   split.
-  intros.
-  intro.
+  intros H.
+  intros H0.
   destruct H0.
   specialize (H x).
   destruct H0.
   apply H in H0.
   intuition.
 
-  intros.
+  intros H ar H0.
   unfold not in H.
   unfold not.
   intros.
@@ -67,13 +67,13 @@ Definition odd_closed {v : V_set} {a : A_set} (x y : Vertex) (vl : V_list) (el :
 Lemma neighbours_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
   a (A_ends y x) -> v x -> v y -> bipartite3 a -> color x <> color y.
 Proof.
-  intros.
-  unfold bipartite3 in H2.
-  specialize (H2 (A_ends y x)).
-  unfold A_tail in H2.
-  unfold A_head in H2.
+  intros v a x y c ar vx vy bi.
+  unfold bipartite3 in bi.
+  specialize (bi (A_ends y x)).
+  unfold A_tail in bi.
+  unfold A_head in bi.
   unfold not.
-  intros.
+  intros cxcy.
   intuition.
 Qed.
 
@@ -89,12 +89,12 @@ Qed.
 Lemma walk_colored_ends: forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (c : Connected v a) (w: Walk v a x y vl el),
   bipartite3 a -> ((odd (length el) -> color x <> color y) /\ (even (length el) -> color x = color y)).
 Proof.
-  intros.
+  intros v a vl el x y c w H.
 
   elim w.
   intros.
   split.
-  intros.
+  intros H0.
   inversion H0.
   reflexivity.
   
@@ -162,7 +162,9 @@ Proof.
   apply H.
 Qed.
 
-
+(* odd_closed is an odd cycle, meaning it ends at the same component, it startet at and of odd length. Suppose the graph containing the closed_walk is bipartite.
+Call the first and last component of the odd_closed x. As it is a walk of odd length, we know by walk_colored_ends, that the first and last component 
+must have different colors. As both first and last components are the same, we have a contradiction and the graph cannot be bipartite after all. *)
 Lemma odd_closed_no_bipartitition: forall (v : V_set) (a : A_set) (vl : V_list) (el: E_list) (x : Component) (c : Connected v a) (w: Walk v a x x vl el),
   odd_closed x x vl el w -> ~ bipartite3 a.
 Proof.
@@ -180,6 +182,8 @@ Proof.
 Qed.
 
 (* is there a better subgraph function for this, maybe? *)
+(* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbours, 
+with the same color still exists in the smaller graph. Each arc added in fact can only possibly add new conflicts or be neutral at best. *)
 Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : C_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
   ~ bipartite3 a -> ~ bipartite3 (A_union a a').
 Proof.
@@ -192,11 +196,11 @@ Proof.
   unfold bipartite3.
   intros.
   apply H0.
-  unfold V_union.
   apply A_in_left.
   apply H1.
 Qed.
 
+(* Here we just combine the last two lemmas: we know an odd_closed is not bipartite, if we add more arcs, then it still isn't bipartite, as per graph_not_bi_graph_plus_not_bi. *)
 Lemma odd_closed_rest_graph_not_bi: 
   forall (v v' : C_set) (a a' : A_set) (c : Connected v a) (vl : V_list) (el: E_list) (x :Component) (w : Walk v a x x vl el) (o: odd_closed x x vl el w) 
     (d : Connected (V_union v v') (A_union a a')),
@@ -210,6 +214,7 @@ Proof.
   intuition.
 Qed.
 
+(* Here we show the following *)
 Lemma special_vertices_make_odd_closed: 
   forall (v:V_set) (a:A_set) (t : Tree v a) (x y : Component), 
   special_vertices v a t x y -> 
@@ -335,6 +340,9 @@ Proof.
   apply (odd_closed_rest_graph_not_bi v0 v' (A_union a0 (E_set x y)) a' c (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
 Qed.
 
+
+Definition colorable : forall (v : V_set) (a : A_set) (c: Connected v a) (x y : Component),
+  exists c : color, bipartite3 a.
 
 Lemma no_odd_closed_means_bi : forall (v : V_set) (a : A_set) (t : Tree v a) 
 (d : Connected v a),
