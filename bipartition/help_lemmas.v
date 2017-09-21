@@ -195,6 +195,28 @@ Proof.
 Qed.
 
 
+
+Lemma Path_append2 :
+ forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+ Path v a x y vl el ->
+ Path v a y z vl' el' -> Path v a x z (vl ++ vl') (el ++ el').
+Proof.
+Admitted.
+(*         intros x y z vl vl' el el' Hw; elim Hw; simpl; intros.
+        trivial.
+
+        apply W_step; auto.
+Qed. *)
+
+Lemma Path_reverse :
+ forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
+Proof.
+  intros v a x y vl el p.
+  apply (Path_isa_walk) in p.
+Admitted.
+
+
 (* There can only be one path in a tree t, ending in vertices x and y.
 Suppose there are two paths from x to y: p1 and p2. Let p2rev be the reversed path p2. Then p1p2rev connects x and x. Because 
 t is acyclic p1p2rev must be the empty path. As p1p2rev is the empty path p1 must be the empty path. Let p1rev be the reversed 
@@ -205,19 +227,38 @@ Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tre
   v x -> v y -> (vl = vl' /\ el = el').
 Proof.
   intros v a x y t vl vl' el el' p1 p2 vx vy.
-  
+  assert (p1':= p1). assert (p2':= p2).
+  assert (p3: Path v a x x (vl ++ (cdr (rev (x :: vl')))) (el ++ (E_reverse el'))).
+  apply (Path_append2 v a x y x).
+  apply p1.
+  apply (Path_reverse ) in p2.
+  apply p2.
 
 
+  apply (Path_reverse ) in p1'.
+  assert (p3': Path v a y y ((cdr (rev (x :: vl))) ++ vl') ((E_reverse el) ++ el')).
+  apply (Path_append2 v a y x y).
+  apply p1'.
+  apply p2'.
+
+  apply (Tree_isa_acyclic ) in t.
+(*   rewrite Cycle in p3.
+  apply (Acyclic_no_cycle v a t x x (vl ++ cdr (rev (x :: vl'))) (el ++ E_reverse el')) in p3.
+
+
+Definition Cycle (x y : Vertex) (vl : V_list) (el : E_list)
+  (p : Path x y vl el) := x = y.
+
+
+Lemma Acyclic_no_cycle :
+ forall (v : V_set) (a : A_set) (Ac : Acyclic v a) 
+   (x y : Vertex) (vl : V_list) (el : E_list) (p : Path v a x y vl el),
+ Cycle v a x y vl el p -> vl = V_nil.
+
+  apply (Tree_isa_graph ) in t.
+  apply t. *)
 Admitted.
 
-
-(* Inductive Path : Vertex -> Vertex -> V_list -> E_list -> Set :=
-  | P_null : forall x : Vertex, v x -> Path x x V_nil E_nil *)
-
-
-(* Axiom connected_min_path: forall (v: V_set) (a: A_set) (x root: Component) (t : Tree v a),
- v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
- *)
 Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
  v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
 Proof.
@@ -231,12 +272,12 @@ Proof.
   apply (Connected_path v a t2 root xx) in vxx.
   destruct vxx.
   destruct s.
+  exists x.
   exists x0.
-  exists x1.
   exists p.
   unfold distance2.
   intros vl el p2.
-  assert (vl = x0 /\ el = x1).
+  assert (vl = x /\ el = x0).
   apply (Tree_only_one_path v a root xx t).
   apply p2.
   apply p.
