@@ -194,38 +194,20 @@ Proof.
   intuition.
 Qed.
 
+
+(* There can only be one path in a tree t, ending in vertices x and y.
+Suppose there are two paths from x to y: p1 and p2. Let p2rev be the reversed path p2. Then p1p2rev connects x and x. Because 
+t is acyclic p1p2rev must be the empty path. As p1p2rev is the empty path p1 must be the empty path. Let p1rev be the reversed 
+path p1. Then p2p1rev connects y and y. Because t is acyclic p2p1rev must be the empty path. As p2p1rev is the empty path p2 
+must be the empty path. Therefore p1 = p2 = empty path. *)
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   v x -> v y -> (vl = vl' /\ el = el').
 Proof.
   intros v a x y t vl vl' el el' p1 p2 vx vy.
-  elim t.
-  intros vertex.
-  inversion p1.
-  inversion p2.
   
-  split.
-  reflexivity.
-  reflexivity.
-  rewrite H13.
-  rewrite H14.
-  rewrite H1 in p2.
-  apply (Tree_isa_acyclic) in t.
 
-  assert (cycle: Cycle v a y y vl' el' p2).
-  admit.
 
-  split.
-  symmetry.
-  apply (Acyclic_no_cycle v a t y y vl' el' p2 cycle).
-  admit.
-  admit.
-
-  intros.
-  apply H.
-
-  intros.
-  apply H.
 Admitted.
 
 
@@ -338,36 +320,5 @@ Proof.
   admit.
   simpl in x1.
 Admitted. *)
-
-
-
-
-(* 
-
-  maybe rewrite Samira's stuff like this ... ??
-
-  Inductive Component: Vertex -> Set :=
-  | root  : forall x : Vertex, v x -> Component x
-  | other : forall x : Vertex, v x -> Component x.
-
-
-
-  Definition leader : (c : Component) := parent c = c.
-  Function distance : (c : Component) :=
-
-
-*)
-
-
-(* 
-
-Variable g : Connected v a.
-Variable root: Component.
-
-
-
-Variable leader :Component -> Component.
-Variable parent : Component -> Component.
-Variable distance : Component -> nat. *)
 
 End Help.

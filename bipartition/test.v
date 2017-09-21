@@ -348,6 +348,7 @@ Proof.
   apply (odd_closed_rest_graph_not_bi v0 v' (A_union a0 (E_set x y)) a' c (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
 Qed.
 
+Definition spanning_tree: forall (v:V_set) (a:A_set) (c: Connected v a) := Tree v (sub_set a).
 
 Definition colorable : forall (v : V_set) (a : A_set) (c: Connected v a) (x y : Component),
   exists c : color, bipartite3 a.
