@@ -131,16 +131,16 @@ Proof.
   intros v a c.
   assert (c':=c).
   induction c.
-  exists x0.
+  exists x.
   unfold V_single.
   intuition.
 
-  exists x0.
+  exists x.
   apply V_in_right.
   apply v0.
   
 
-  exists x0.
+  exists x.
   apply v0.
   
   rewrite <- e.
@@ -199,8 +199,39 @@ Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tre
   v x -> v y -> (vl = vl' /\ el = el').
 Proof.
   intros v a x y t vl vl' el el' p1 p2 vx vy.
+  elim t.
+  intros vertex.
+  inversion p1.
+  inversion p2.
   
+  split.
+  reflexivity.
+  reflexivity.
+  rewrite H13.
+  rewrite H14.
+  rewrite H1 in p2.
+  apply (Tree_isa_acyclic) in t.
+
+  assert (cycle: Cycle v a y y vl' el' p2).
+  admit.
+
+  split.
+  symmetry.
+  apply (Acyclic_no_cycle v a t y y vl' el' p2 cycle).
+  admit.
+  admit.
+
+  intros.
+  apply H.
+
+  intros.
+  apply H.
 Admitted.
+
+
+(* Inductive Path : Vertex -> Vertex -> V_list -> E_list -> Set :=
+  | P_null : forall x : Vertex, v x -> Path x x V_nil E_nil *)
+
 
 (* Axiom connected_min_path: forall (v: V_set) (a: A_set) (x root: Component) (t : Tree v a),
  v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
