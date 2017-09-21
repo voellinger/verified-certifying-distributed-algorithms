@@ -12,8 +12,7 @@ Definition Component := Vertex.
 
 
 
-Variable x y z: Component.
-Variable distance : Component -> nat.
+
 
 Lemma Path_isa_walk: 
   forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
@@ -43,14 +42,14 @@ Qed.
 
 
 
-Definition append_w (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (w1: Walk v a x y vl el) (w2: Walk v a y z vl' el') :=
+Definition append_w (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (w1: Walk v a x y vl el) (w2: Walk v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
-Definition append_p (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') :=
+Definition append_p (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
-Lemma Path_append (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (p1: Path v a x y vl el) (p2: Path v a y z vl' el'):
- Walk v a x z (vl ++ vl') (el ++ el') = append_p v a vl vl' el el' p1 p2.
+Lemma Path_append (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el'):
+ Walk v a x z (vl ++ vl') (el ++ el') = append_p v a vl vl' el el' x y z p1 p2.
 Proof.
   intros.
   unfold append_p.
@@ -62,7 +61,7 @@ Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Compo
 (* Function distance {v: V_set} {a: A_set} (c: Component) := minimum length of all sets of Walks from c to root*)
 
 
-Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' p1 p2):
+Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' x y z p1 p2):
   length_p p1 + length_p p2 = length_w p3.
 Proof.
   intros.
@@ -173,7 +172,7 @@ Proof.
   apply Tree_isa_connected in t.
   apply t.
   destruct H.
-  apply (nearly_all_trees_rooted v a x0 t).
+  apply (nearly_all_trees_rooted v a x t).
   apply H.
 Qed.
 
@@ -199,11 +198,13 @@ Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tre
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   v x -> v y -> (vl = vl' /\ el = el').
 Proof.
+  intros v a x y t vl vl' el el' p1 p2 vx vy.
+  
 Admitted.
 
-Axiom connected_min_path: forall (v: V_set) (a: A_set) (x root: Component) (t : Tree v a),
+(* Axiom connected_min_path: forall (v: V_set) (a: A_set) (x root: Component) (t : Tree v a),
  v root -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & length el = distance x}}}.
-
+ *)
 Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
  v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
 Proof.
