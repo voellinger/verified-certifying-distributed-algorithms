@@ -198,6 +198,7 @@ Qed.
 
 Lemma Path_append2 :
  forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+  (* el != el' /\ vl != vl' *)
  Path v a x y vl el ->
  Path v a y z vl' el' -> Path v a x z (vl ++ vl') (el ++ el').
 Proof.
@@ -218,10 +219,17 @@ Admitted.
 
 
 (* There can only be one path in a tree t, ending in vertices x and y.
-Suppose there are two paths from x to y: p1 and p2. Let p2rev be the reversed path p2. Then p1p2rev connects x and x. Because 
-t is acyclic p1p2rev must be the empty path. As p1p2rev is the empty path p1 must be the empty path. Let p1rev be the reversed 
-path p1. Then p2p1rev connects y and y. Because t is acyclic p2p1rev must be the empty path. As p2p1rev is the empty path p2 
-must be the empty path. Therefore p1 = p2 = empty path. *)
+
+Suppose there are two paths from x to y: p1 and p2. p1 and p2 must be out of three parts: el_p1 = a b1 c, el_p2 = a b2 c.
+With b1 completely different from b2.
+b1 (rev b2) makes a cycle. This cycle must be of length 0, because t is acyclic as it is a tree. therefore el_p1 = el_p2.
+
+I Suppose we only have a root. There is only the path from root to root and that is equivalent to all other such paths.
+II Suppose we add v as a leaf to t. For all paths not containing v we use IS. If v is contained in a path, then at its start
+or at its end, otherwise it is no path, as v is a leaf and only has degree 1. Let v = y. All paths from x to the neighbor of
+y are the same. As y has degree of 1, there is only one possible extension to those paths. Therefore all paths from x to y
+are the same.
+ *)
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   v x -> v y -> (vl = vl' /\ el = el').
@@ -300,10 +308,10 @@ Qed.
 
 
 Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Path v a x root vl el & length el = distance x}.
+ v root -> v x -> {p : Path v a x root vl el &  distance2 v a x root (length el)}.
 
 Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Path v a root x vl el & length el = distance x}.
+ v root -> v x -> {p : Path v a root x vl el & distance2 v a root x (length el)}.
 
 
 (* Lemma W_endy_endyel : forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (w : Walk v a x y vl el),
