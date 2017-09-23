@@ -211,13 +211,12 @@ Qed.
 
 
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
-  (forall (c: Component), In c vl -> ~ In c vl') -> (forall (c: Component), In c vl' -> ~ In c vl) ->
-  (forall (u: Edge), In u el -> ~ In u el') -> (forall (u: Edge), In u el' -> ~ In u el) ->
+  (forall (c: Component), In c vl -> ~ In c vl') -> (forall (u: Edge), In u el' -> ~ In u el) ->
   (x = y -> vl = V_nil) -> (y = z -> vl' = V_nil) -> 
   Path v a x y vl el ->  Path v a y z vl' el' -> ~ In x vl' ->
   Path v a x z (vl ++ vl') (el ++ el').
 Proof.
-  intros v a x y z vl vl' el el' H0 H1 H2 H3 c1 c2 p1 p2 lasso.
+  intros v a x y z vl vl' el el' H0 H3 c1 c2 p1 p2 lasso.
 
 
 
@@ -234,21 +233,7 @@ Proof.
   unfold In.
   right.
   apply H.
-  intros.
-  apply H1 in H.
-  unfold not.
-  unfold not in H.
-  intros.
-  apply H.
-  unfold In.
-  right.
-  apply H4.
 
-  intros.
-  apply H2.
-  unfold In.
-  right.
-  apply H.
 
   intros.
   apply H3 in H.
@@ -258,7 +243,7 @@ Proof.
   apply H.
   unfold In.
   right.
-  apply H4.
+  apply H1.
 
   intros.
   rewrite <- H in p1.
@@ -269,7 +254,7 @@ Proof.
   intuition.
   unfold not.
   intros.
-  inversion H4.
+  inversion H1.
 
   intros.
   apply c2.
@@ -333,7 +318,7 @@ Proof.
   unfold In.
   left.
   apply E_eq2.
-  apply H4.
+  apply H1.
 Qed.
 
 Lemma Path_reverse :
