@@ -194,38 +194,11 @@ Proof.
   intuition.
 Qed.
 
-Lemma edges_are_equal : forall (x y : Component),
-  E_ends x y = E_ends y x.
-Proof.
-  intros x y.
-Admitted.
 
-Lemma E_eq2 : forall (x y : Component) (u : Edge),
-  E_eq u (E_ends x y) -> E_ends x y = u.
-Proof.
-  intros x y u e.
-  inversion e.
-  reflexivity.
-  apply edges_are_equal.
-Qed.
-
-
-
-
-
-(* TODO
-  maybe not only In u el' -> ~ In u el .... ALSO ...... In u el' -> ~ In u E_reverse el
-  also only edges, or only vertices would be way nicer
-
-Fixpoint E_reverse (el : E_list) : E_list :=
-  match el with
-  | nil => E_nil
-  | E_ends x y :: el' => E_reverse el' ++ E_ends y x :: E_nil
-  end. *)
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
-  (forall (c: Component), In c vl -> ~ In c vl') -> (forall (u: Edge), In u el' -> ~ In u el) ->
+  (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
   (x = y -> vl = V_nil) -> (y = z -> vl' = V_nil) -> 
-  Path v a x y vl el ->  Path v a y z vl' el' -> ~ In x vl' ->
+  Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
   Path v a x z (vl ++ vl') (el ++ el').
 Proof.
   intros v a x y z vl vl' el el' H0 H3 c1 c2 p1 p2 lasso.
@@ -248,13 +221,10 @@ Proof.
 
 
   intros.
-  apply H3 in H.
-  unfold not.
-  unfold not in H.
-  intros.
-  apply H.
+  apply H3.
   unfold In.
   right.
+  apply H.
   apply H1.
 
   intros.
@@ -275,14 +245,12 @@ Proof.
   apply p2.
 
 
-  unfold not.
   intros.
-  unfold not in H0.
-  apply (H0 y).
-  simpl.
+  apply (H0 y) in H.
+  inversion H.
+  unfold In.
   left.
   reflexivity.
-  apply H.
 
 
 
@@ -311,6 +279,7 @@ Proof.
   
   apply lasso in H.
   inversion H.
+  reflexivity.
   
   intros.
   apply in_app_or in H.
@@ -322,15 +291,11 @@ Proof.
   apply n1.
   apply H.
 
-  apply H3 in H.
-  unfold not.
-  unfold not in H.
-  intros.
-  apply H.
+  apply (H3 (E_ends x y) u).
   unfold In.
   left.
-  apply E_eq2.
-  apply H1.
+  reflexivity.
+  apply H.
 Qed.
 
 Lemma Path_reverse :
