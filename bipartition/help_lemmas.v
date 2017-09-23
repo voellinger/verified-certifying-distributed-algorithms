@@ -152,7 +152,6 @@ Qed.
 Variable root : Component.
 Axiom nearly_all_connected_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Connected v a),
   v x -> v root.
-Axiom edges_are_equal: forall (x y : Component), E_ends x y = E_ends y x.
 
 Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (x:Component) (t: Tree v a),
   v x -> v root.
@@ -195,50 +194,37 @@ Proof.
   intuition.
 Qed.
 
+Lemma edges_are_equal : forall (x y : Component),
+  E_ends x y = E_ends y x.
+Proof.
+  intros x y.
+Admitted.
+
+Lemma E_eq2 : forall (x y : Component) (u : Edge),
+  E_eq u (E_ends x y) -> E_ends x y = u.
+Proof.
+  intros x y u e.
+  inversion e.
+  reflexivity.
+  apply edges_are_equal.
+Qed.
+
 
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
-  (forall (c: Component), In c vl -> ~ In c vl') -> (forall (ed: Edge), In ed el -> ~ In ed el') ->
-  Path v a x y vl el ->  Path v a y z vl' el' -> ((x = y \/ y = z) -> (vl = V_nil \/ vl' = V_nil)) ->
+  (forall (c: Component), In c vl -> ~ In c vl') -> (forall (c: Component), In c vl' -> ~ In c vl) ->
+  (forall (u: Edge), In u el -> ~ In u el') -> (forall (u: Edge), In u el' -> ~ In u el) ->
+  Path v a x y vl el ->  Path v a y z vl' el' ->
   Path v a x z (vl ++ vl') (el ++ el').
 Proof.
-  intros v a x y z vl vl' el el' H0 H1 p1 p2 nocycle.
-(*   induction p1.
-  simpl.
-  apply p2.
-
-
-  induction p2.
-  simpl.
-  unfold V_nil.
-  unfold E_nil.
-  rewrite app_nil_r.
-  rewrite app_nil_r.
-  apply P_step.
-
-  apply p1.
-  apply v0.
-  apply a0.
-  apply n.
-  apply n0.
-  apply e.
-  apply n1.
-  simpl.
-  apply P_step.
-  (* apply IHp1. *)
-  admit.
-  apply v0.
-  apply a0.
-  apply n.
-  admit.
-  admit.
-  intros.
-  apply n1. *)
+  intros v a x y z vl vl' el el' H0 H1 H2 H3 p1 p2.
 
 
 
   induction p1.
   simpl.
   apply p2.
+
+
   simpl.
   apply P_step.
   apply IHp1.
@@ -248,35 +234,34 @@ Proof.
   right.
   apply H.
   intros.
-  apply H1.
+  apply H1 in H.
+  unfold not.
+  unfold not in H.
+  intros.
+  apply H.
+  unfold In.
+  right.
+  apply H4.
+
+  intros.
+  apply H2.
   unfold In.
   right.
   apply H.
-  apply p2.
 
-  admit.
-
-(*   intros.
-
-  destruct H.
-  admit.
-  apply nocycle in H.
+  intros.
+  apply H3 in H.
+  unfold not.
+  unfold not in H.
+  intros.
+  apply H.
+  unfold In.
+  right.
+  apply H4.
   
 
-  rewrite <- H in p1.
-  rewrite <- H in e.
-  rewrite <- H in p2.
-  rewrite <- H in nocycle.
-  rewrite <- H in IHp1.
-  clear H.
-  apply (P_iny_vl ) in p1.
-  intuition.
+  apply p2.
 
-
-
-Lemma P_iny_vl :
- forall (x y : Vertex) (vl : V_list) (el : E_list),
- Path x y vl el -> vl <> V_nil -> In y vl. *)
 
   apply v0.
   apply a0.
@@ -295,7 +280,37 @@ Lemma P_iny_vl :
 
   intros.
   apply in_app_or in H.
+  destruct H.
+  apply e in H.
+  rewrite <- H in p2.
+  rewrite <- H in p1.
+  rewrite <- H in e.
+  clear IHp1.
+  clear H.
+  clear z0.
+
+  admit.
+  admit.
   
+  intros.
+  apply in_app_or in H.
+  destruct H.
+  assert (In u (E_ends x y :: el)).
+  unfold In.
+  right.
+  apply H.
+  apply n1.
+  apply H.
+
+  apply H3 in H.
+  unfold not.
+  unfold not in H.
+  intros.
+  apply H.
+  unfold In.
+  left.
+  apply E_eq2.
+  apply H4.
 Admitted.
 
 Lemma Path_reverse :
@@ -303,7 +318,15 @@ Lemma Path_reverse :
  Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
 Proof.
   intros v a x y vl el p.
-  apply (Path_isa_walk) in p.
+  elim p.
+  intros.
+  simpl.
+  apply P_null.
+  apply v0.
+  
+  intros.
+  simpl.
+
 Admitted.
 
 
