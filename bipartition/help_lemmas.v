@@ -213,10 +213,11 @@ Qed.
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall (c: Component), In c vl' -> ~ In c vl) ->
   (forall (u: Edge), In u el -> ~ In u el') -> (forall (u: Edge), In u el' -> ~ In u el) ->
-  Path v a x y vl el ->  Path v a y z vl' el' ->
+  (x = y -> vl = V_nil) -> (y = z -> vl' = V_nil) -> 
+  Path v a x y vl el ->  Path v a y z vl' el' -> ~ In x vl' ->
   Path v a x z (vl ++ vl') (el ++ el').
 Proof.
-  intros v a x y z vl vl' el el' H0 H1 H2 H3 p1 p2.
+  intros v a x y z vl vl' el el' H0 H1 H2 H3 c1 c2 p1 p2 lasso.
 
 
 
@@ -258,9 +259,35 @@ Proof.
   unfold In.
   right.
   apply H4.
-  
+
+  intros.
+  rewrite <- H in p1.
+  destruct vl.
+  reflexivity.
+
+  apply P_iny_vl in p1.
+  intuition.
+  unfold not.
+  intros.
+  inversion H4.
+
+  intros.
+  apply c2.
+  apply H.  
 
   apply p2.
+
+
+  unfold not.
+  intros.
+  unfold not in H0.
+  apply (H0 y).
+  simpl.
+  left.
+  reflexivity.
+  apply H.
+
+
 
 
   apply v0.
@@ -282,15 +309,11 @@ Proof.
   apply in_app_or in H.
   destruct H.
   apply e in H.
-  rewrite <- H in p2.
-  rewrite <- H in p1.
-  rewrite <- H in e.
-  clear IHp1.
-  clear H.
-  clear z0.
-
-  admit.
-  admit.
+  apply c1 in H.
+  inversion H.
+  
+  apply lasso in H.
+  inversion H.
   
   intros.
   apply in_app_or in H.
@@ -311,7 +334,7 @@ Proof.
   left.
   apply E_eq2.
   apply H4.
-Admitted.
+Qed.
 
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
