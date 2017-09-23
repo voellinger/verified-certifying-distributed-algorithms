@@ -197,11 +197,11 @@ Qed.
 
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
-  (x = y -> vl = V_nil) -> (y = z -> vl' = V_nil) -> 
+  (x = y -> vl = V_nil) -> 
   Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
   Path v a x z (vl ++ vl') (el ++ el').
 Proof.
-  intros v a x y z vl vl' el el' H0 H3 c1 c2 p1 p2 lasso.
+  intros v a x y z vl vl' el el' H0 H3 c1 p1 p2 lasso.
 
 
 
@@ -237,10 +237,6 @@ Proof.
   unfold not.
   intros.
   inversion H1.
-
-  intros.
-  apply c2.
-  apply H.  
 
   apply p2.
 
