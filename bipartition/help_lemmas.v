@@ -210,6 +210,18 @@ Proof.
 Qed.
 
 
+
+
+
+(* TODO
+  maybe not only In u el' -> ~ In u el .... ALSO ...... In u el' -> ~ In u E_reverse el
+  also only edges, or only vertices would be way nicer
+
+Fixpoint E_reverse (el : E_list) : E_list :=
+  match el with
+  | nil => E_nil
+  | E_ends x y :: el' => E_reverse el' ++ E_ends y x :: E_nil
+  end. *)
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall (u: Edge), In u el' -> ~ In u el) ->
   (x = y -> vl = V_nil) -> (y = z -> vl' = V_nil) -> 
@@ -334,9 +346,49 @@ Proof.
   
   intros.
   simpl.
+  rewrite cdr_app.
+  apply (Path_append2 v a z y0 x0).
+  intros.
+  unfold not.
+  intros.
+  unfold In in H1.
+  destruct H1.
+  rewrite <- H1 in H0.
+  clear H1.
+  simpl in H0.
 
+  admit.
+  inversion H1.
+
+
+  admit.
+  admit.
+  admit.
+  admit.
+  admit.
+  admit.
+  case (rev vl0); intros; discriminate.
 Admitted.
+(* Lemma Walk_reverse :
+ forall (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el -> Walk v a y x (cdr (rev (x :: vl))) (E_reverse el).
+Proof.
+        intros; elim H; simpl; intros.
+        apply W_null; trivial.
 
+        rewrite cdr_app.
+        apply (Walk_append v a z y0 x0).
+        trivial.
+
+        apply W_step.
+        apply W_null; trivial.
+
+        apply (G_ina_inv2 v a g x0 y0); trivial.
+
+        apply (G_non_directed v a g); trivial.
+
+        case (rev vl0); intros; simpl; discriminate.
+Qed. *)
 
 (* There can only be one path in a tree t, ending in vertices x and y.
 
