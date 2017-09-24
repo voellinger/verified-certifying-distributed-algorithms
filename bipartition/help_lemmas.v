@@ -340,7 +340,27 @@ Proof.
   inversion H0.
 
   intros.
+  assert (E_eq u' u -> E_eq u u').
+  intros.
+  inversion H1.
+  apply E_refl.
+  apply E_rev.
+  unfold not.
+  intros.
+  apply H1 in H2.
+  unfold not in n1. 
+  assert (In u (E_reverse el) -> In u el).
   admit.
+  apply H3 in H.
+  apply n1 in H.
+  inversion H.
+  unfold In in H0.
+  destruct H0.
+  rewrite <- H0 in H2.
+  inversion H2.
+  apply E_rev.
+  apply E_refl.
+  inversion H0.
 
   intros.
   rewrite H in p.
@@ -368,7 +388,6 @@ Proof.
   apply p.
   apply (G_non_directed v a g) in a0.
   apply a0.
-  admit.
   auto.
   auto.
   intros.
@@ -388,31 +407,6 @@ Proof.
   apply app_cons_not_nil in H.
   inversion H.
 Admitted.
-
-
-
-
-
-(* Lemma Walk_reverse :
- forall (x y : Vertex) (vl : V_list) (el : E_list),
- Walk v a x y vl el -> Walk v a y x (cdr (rev (x :: vl))) (E_reverse el).
-Proof.
-        intros; elim H; simpl; intros.
-        apply W_null; trivial.
-
-        rewrite cdr_app.
-        apply (Walk_append v a z y0 x0).
-        trivial.
-
-        apply W_step.
-        apply W_null; trivial.
-
-        apply (G_ina_inv2 v a g x0 y0); trivial.
-
-        apply (G_non_directed v a g); trivial.
-
-        case (rev vl0); intros; simpl; discriminate.
-Qed. *)
 
 (* There can only be one path in a tree t, ending in vertices x and y.
 
