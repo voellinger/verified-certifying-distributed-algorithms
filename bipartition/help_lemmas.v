@@ -295,41 +295,104 @@ Proof.
 Qed.
 
 Lemma Path_reverse :
- forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
  Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
 Proof.
-  intros v a x y vl el p.
-  elim p.
-  intros.
+  intros v a x y vl el g p.
+
+  induction p.
   simpl.
   apply P_null.
   apply v0.
   
-  intros.
+
   simpl.
   rewrite cdr_app.
-  apply (Path_append2 v a z y0 x0).
+  apply (Path_append2 v a z y x).
+  
   intros.
   unfold not.
   intros.
-  unfold In in H1.
-  destruct H1.
-  rewrite <- H1 in H0.
-  clear H1.
-  simpl in H0.
-
+  unfold In in H0.
+  destruct H0.
+  destruct vl.
+  simpl in H.
+  inversion H.
+  rewrite cdr_app in H.
+  apply in_app_or in H.
+  destruct H.
+  rewrite <- H0 in H.
+  clear H0. clear c.
   admit.
+  simpl in H.
+  destruct H.
+  rewrite <- H in H0.
+  apply n in H0.
+  inversion H0.
+  inversion H.
+  simpl.
+  unfold not.
+  intros.
+  symmetry in H1.
+  unfold V_nil in H1.
+  apply app_cons_not_nil in H1.
   inversion H1.
+  inversion H0.
 
+  intros.
+  admit.
 
+  intros.
+  rewrite H in p.
+  inversion p.
+  simpl.
+  reflexivity.
+  assert (vl <> nil).
+  rewrite <- H9.
+  unfold not.
+  intros.
+  symmetry in H11.
+  apply nil_cons in H11.
+  inversion H11. 
+  fold V_nil in H11.
+  apply (P_iny_vl v a y y vl el p) in H11.
+  apply n0 in H11.
+  inversion H11.
+
+  apply IHp.
+  
+  apply P_step.
+  apply P_null.
+  apply v0.
+  apply P_endx_inv in p.
+  apply p.
+  apply (G_non_directed v a g) in a0.
+  apply a0.
   admit.
-  admit.
-  admit.
-  admit.
-  admit.
-  admit.
-  case (rev vl0); intros; discriminate.
+  auto.
+  auto.
+  intros.
+  inversion H.
+  intros.
+  inversion H.
+
+  intros.
+  inversion H.
+  symmetry.
+  apply H0.
+  inversion H0.
+
+  unfold not.
+  intros.
+  symmetry in H.
+  apply app_cons_not_nil in H.
+  inversion H.
 Admitted.
+
+
+
+
+
 (* Lemma Walk_reverse :
  forall (x y : Vertex) (vl : V_list) (el : E_list),
  Walk v a x y vl el -> Walk v a y x (cdr (rev (x :: vl))) (E_reverse el).
