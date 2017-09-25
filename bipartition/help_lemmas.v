@@ -302,6 +302,16 @@ Proof.
   apply E_rev.
 Qed.
 
+Lemma neq_symm: forall {p q: V_list}, p <> q -> q <> p.
+Proof.
+  intros p q pq.
+  unfold not.
+  intros.
+  apply pq.
+  symmetry.
+  apply H.
+Qed.
+
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
   Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
@@ -395,18 +405,6 @@ Proof.
   inversion H.
 Qed.
 
-  
-P_step :
-      forall (x y z : Vertex) (vl : V_list) (el : E_list),
-      Path y z vl el ->
-      v x ->
-      a (A_ends x y) ->
-      x <> y ->
-      ~ In y vl ->
-      (In x vl -> x = z) ->
-      (forall u : Edge, In u el -> ~ E_eq u (E_ends x y)) ->
-      Path x z (y :: vl) (E_ends x y :: el).
-
 
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
@@ -422,6 +420,31 @@ Proof.
 
   simpl.
   rewrite cdr_app.
+  apply (Path_cons).
+  apply v0.
+  apply (G_non_directed v a g) in a0.
+  apply a0.
+  intros.
+  rewrite H in p.
+  inversion p.
+  reflexivity.
+  apply P_iny_vl in p.
+  apply n0 in p.
+  inversion p.
+  unfold not.
+  intros.
+  rewrite H11 in H9.
+  inversion H9.
+  auto.
+  admit.
+  admit. (* n1 *)
+  apply IHp.
+  apply neq_symm.
+  apply app_cons_not_nil.
+Admitted.
+  
+
+
   apply (Path_append2 v a z y x).
   
   intros.
