@@ -194,7 +194,6 @@ Proof.
   intuition.
 Qed.
 
-
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
   (x = y -> vl = V_nil) -> 
@@ -311,33 +310,44 @@ Proof.
   apply (Path_append2 v a z y x).
   
   intros.
+  (* Path v a y z vl el -> (vl = V_nil \/ vl = vl' :: z :: nil) *)
   unfold not.
   intros.
   unfold In in H0.
   destruct H0.
-  destruct vl.
-  simpl in H.
-  inversion H.
-  rewrite cdr_app in H.
-  apply in_app_or in H.
-  destruct H.
-  rewrite <- H0 in H.
-  clear H0. clear c.
-  admit.
-  simpl in H.
-  destruct H.
-  rewrite <- H in H0.
-  apply n in H0.
-  inversion H0.
-  inversion H.
-  simpl.
-  unfold not.
-  intros.
-  symmetry in H1.
-  unfold V_nil in H1.
-  apply app_cons_not_nil in H1.
-  inversion H1.
-  inversion H0.
+    rewrite <- H0 in H.
+    clear H0. clear c. clear n1. clear a0. clear v0.
+    
+  
+(*     destruct vl.
+      simpl in H.
+      inversion H.
+
+      rewrite cdr_app in H.
+      apply in_app_or in H.
+      destruct H.
+        rewrite <- H0 in H.
+        clear H0. clear c.
+        admit.
+
+        simpl in H.
+        destruct H.
+          rewrite <- H in H0.
+          apply n in H0.
+          inversion H0.
+
+          inversion H.
+      simpl.
+      unfold not.
+      intros.
+      symmetry in H1.
+      unfold V_nil in H1.
+      apply app_cons_not_nil in H1.
+      inversion H1. *)
+
+    inversion H0.
+
+
 
   intros.
   assert (E_eq u' u -> E_eq u u').
