@@ -293,6 +293,113 @@ Proof.
   apply H.
 Qed.
 
+Lemma E_eq2 : forall (e1 e2 : Edge),
+  E_eq e1 e2 -> E_eq e2 e1.
+Proof.
+  intros e1 e2 eq.
+  inversion eq.
+  apply E_refl.
+  apply E_rev.
+Qed.
+
+Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+  v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
+  Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
+Proof.
+  intros v a x y z vl el vz ayz xy yz zvl uu p.
+
+  induction p.
+  simpl.
+  apply P_step.
+  apply P_null.
+  apply vz.
+  apply v0.
+  apply ayz.
+  apply yz.
+  unfold not.
+  intros.
+  inversion H.
+  intros.
+  inversion H.
+  apply uu.
+
+  simpl.
+  apply P_step.
+  apply IHp.
+  apply ayz.
+  intros.
+  rewrite <- H in p.
+  inversion p.
+  reflexivity.
+  apply P_iny_vl in p.
+  apply n0 in p.
+  inversion p.
+  symmetry in H9.
+  unfold not.
+  intros.
+  rewrite H11 in H9.
+  inversion H9.
+  apply yz.
+  unfold not.
+  intros.
+  apply zvl.
+  unfold In.
+  right.
+  apply H.
+  intros.
+  apply uu.
+  unfold In.
+  right.
+  apply H.
+  apply v0.
+  apply a0.
+  apply n.
+  unfold not.
+  intros.
+  apply in_app_or in H.
+  destruct H.
+  apply n0 in H.
+  inversion H.
+  inversion H.
+  rewrite H0 in zvl.
+  apply zvl.
+  simpl.
+  left.
+  reflexivity.
+  inversion H0.
+
+  intros.
+  apply in_app_or in H.
+  destruct H.
+  apply e in H.
+  admit.
+  inversion H.
+  symmetry.
+  apply H0.
+  inversion H0.
+  intros.
+  apply n1.
+  apply in_app_or in H.
+  destruct H.
+  apply H.
+  destruct H.
+  admit.
+  inversion H.
+Admitted.
+
+  
+P_step :
+      forall (x y z : Vertex) (vl : V_list) (el : E_list),
+      Path y z vl el ->
+      v x ->
+      a (A_ends x y) ->
+      x <> y ->
+      ~ In y vl ->
+      (In x vl -> x = z) ->
+      (forall u : Edge, In u el -> ~ E_eq u (E_ends x y)) ->
+      Path x z (y :: vl) (E_ends x y :: el).
+
+
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
  Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
@@ -316,8 +423,19 @@ Proof.
   unfold In in H0.
   destruct H0.
     rewrite <- H0 in H.
-    clear H0. clear c. clear n1. clear a0. clear v0.
-    
+    clear H0. clear c.
+    assert (x = z) as H0.
+    admit.
+    rewrite <- H0 in IHp.
+    rewrite <- H0 in p.
+    inversion IHp.
+    apply n in H3.
+    assert (vl = V_nil). (* H0 *)
+    admit.
+    inversion p.
+    symmetry in H9.
+    apply n in H9.
+    inversion H9.
   
 (*     destruct vl.
       simpl in H.
