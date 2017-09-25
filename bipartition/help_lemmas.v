@@ -377,35 +377,23 @@ Proof.
   symmetry.
   apply H0.
   inversion H0.
-
-  assert (Path v a y z (vl ++ z :: nil) (el ++ E_ends z0 z :: nil)).
-  apply IHp.
-  apply ayz.
-  admit.
-  apply yz.
-  unfold not.
   intros.
-  apply zvl.
-  apply (in_cons y z vl H).
-  unfold not.
-  intros.
-  apply (uu u).
-  unfold In.
-  right.
+  apply in_app_or in H.
+  destruct H.
+  apply n1 in H.
   apply H.
-  apply H0.
-
-
-
+  destruct H.
+  unfold not.
   intros.
-  apply n1.
-  apply in_app_or in H0.
-  destruct H0.
-  apply H0.
-  destruct H0.
-  admit.
+  rewrite <- H in H0.
+  apply E_eq2 in H0.
+  apply uu in H0.
   inversion H0.
-Admitted.
+  unfold In.
+  left.
+  reflexivity.
+  inversion H.
+Qed.
 
   
 P_step :
