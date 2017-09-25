@@ -367,24 +367,44 @@ Proof.
   left.
   reflexivity.
   inversion H0.
-
   intros.
   apply in_app_or in H.
   destruct H.
   apply e in H.
-  admit.
+  apply xy in H.
+  inversion H.
   inversion H.
   symmetry.
   apply H0.
   inversion H0.
+
+  assert (Path v a y z (vl ++ z :: nil) (el ++ E_ends z0 z :: nil)).
+  apply IHp.
+  apply ayz.
+  admit.
+  apply yz.
+  unfold not.
+  intros.
+  apply zvl.
+  apply (in_cons y z vl H).
+  unfold not.
+  intros.
+  apply (uu u).
+  unfold In.
+  right.
+  apply H.
+  apply H0.
+
+
+
   intros.
   apply n1.
-  apply in_app_or in H.
-  destruct H.
-  apply H.
-  destruct H.
+  apply in_app_or in H0.
+  destruct H0.
+  apply H0.
+  destruct H0.
   admit.
-  inversion H.
+  inversion H0.
 Admitted.
 
   
