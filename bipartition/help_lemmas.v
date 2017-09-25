@@ -312,6 +312,46 @@ Proof.
   apply H.
 Qed.
 
+Lemma E_rev_cons: forall(u:Edge)(el:E_list),
+  E_reverse (u :: el) = (E_reverse el) ++ (E_reverse (u :: nil)).
+Proof.
+  intros u el.
+  induction el.
+  simpl.
+  reflexivity.
+  destruct u.
+  destruct a.
+  unfold E_reverse.
+  reflexivity.
+Qed.
+
+Lemma E_rev_in: forall (u : Edge) (x y : Vertex) (el : E_list),
+(forall v : Edge, In v el -> ~ E_eq v (E_ends x y)) -> In u (E_reverse el) -> ~ E_eq u (E_ends y x).
+Proof.
+  intros.
+  induction el.
+  simpl in H0.
+  inversion H0.
+  rewrite E_rev_cons in H0.
+Admitted.
+(*   apply IHel.
+  intros.
+  apply H.
+  unfold In.
+  right.
+  apply H1.
+  rewrite E_rev_cons in H0.
+  apply in_app_or in H0.
+  destruct H0.
+  apply H0.
+  destruct a.
+  simpl in H0.
+  destruct H0.
+  rewrite H0 in H.
+  inversion H0. *)
+
+
+
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
   Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
@@ -436,8 +476,27 @@ Proof.
   rewrite H11 in H9.
   inversion H9.
   auto.
+
+  unfold not.
+  intros.
+  rewrite cdr_app in H.
+  apply in_app_or in H.
+  destruct H. (* H is false: x cannot be in vl. x can only be last element in vl and will then be deleted. x cannot be in rest of vl *)
   admit.
-  admit. (* n1 *)
+  inversion H.
+  symmetry in H0.
+  apply n in H0.
+  inversion H0.
+  inversion H0.
+  destruct vl.
+  simpl in H.
+  inversion H.
+  apply neq_symm.
+  apply app_cons_not_nil.
+  intros.
+  apply (E_rev_in u x y el).
+  apply n1.
+  apply H.
   apply IHp.
   apply neq_symm.
   apply app_cons_not_nil.
