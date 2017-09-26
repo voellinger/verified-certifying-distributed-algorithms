@@ -446,6 +446,32 @@ Proof.
 Qed.
 
 
+Lemma cdr_rev: forall (x:Vertex) (vl:V_list),
+  In x (cdr (rev vl)) -> In x vl.
+Proof.
+  intros x vl i.
+  induction vl.
+  simpl in i.
+  inversion i.
+  unfold In.
+  simpl in i.
+  destruct vl.
+  simpl in i.
+  inversion i.
+  rewrite cdr_app in i.
+  apply in_app_or in i.
+  destruct i.
+  right.
+  apply IHvl.
+  apply H.
+  left.
+  inversion H.
+  apply H0.
+  inversion H0.
+  apply neq_symm.
+  apply app_cons_not_nil.
+Qed.
+
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
  Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
@@ -482,7 +508,33 @@ Proof.
   rewrite cdr_app in H.
   apply in_app_or in H.
   destruct H. (* H is false: x cannot be in vl. x can only be last element in vl and will then be deleted. x cannot be in rest of vl *)
+              (* In x vl -> vl = vl' ++ x::nil *)
+  assert (Path v a x z (y :: vl) ((E_ends x y)::el)).
+  apply P_step.
+  apply p.
+  apply v0.
+  apply a0.
+  apply n.
+  apply n0.
+  apply e.
+  apply n1.
+  assert 
+  
   admit.
+  apply H1 in H0.
+  destruct H0.
+  destruct H0.
+  destruct H0.
+  rewrite H0 in H.
+  rewrite rev_unit in H.
+  simpl in H.
+  rewrite <- in_rev in H.
+  apply H2 in H.
+  inversion H.
+  apply cdr_rev in H.
+  apply H0 in H.
+  inversion H.
+
   inversion H.
   symmetry in H0.
   apply n in H0.
