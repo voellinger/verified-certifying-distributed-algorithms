@@ -472,8 +472,25 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
+Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
+  Path v a x z (y :: vl) (E_ends x y :: el) -> ~ In x (cdr (rev vl)).
+Proof.
+  intros v a x y z vl el p.
+  unfold not.
+  intros.
+  assert (x = z \/ x <> z).
+  apply classic.
+  destruct H0.
+  admit.
+  apply cdr_rev in H.
+  inversion p.
+  apply H11 in H.
+  apply H0 in H.
+  inversion H.
+Admitted.
+  
 
-Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl vl' : V_list) (el : E_list),
+(* Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl vl' : V_list) (el : E_list),
   Path v a x z (y :: vl) (E_ends x y :: el) -> ((exists vl' : V_list, vl = vl' ++ x::nil /\ ~ In x vl') \/ ~ In x vl).
 Proof.
   intros v a x y z vl vl' el p.
@@ -511,7 +528,7 @@ Proof.
   (* apply (app_removelast_last Vertex H12 v0). *)
   admit.
 
-  admit.
+
   right.
   inversion p.
   unfold not.
@@ -519,12 +536,12 @@ Proof.
   apply H10 in H12.
   apply H in H12.
   inversion H12.
-Qed.
+Admitted. *)
 
-removelast_app
+(* removelast_app
 forall (A : Type) (l l' : list A), l' <> nil -> removelast (l ++ l') = l ++ removelast l'
 app_removelast_last
-forall (A : Type) (l : list A) (d : A), l <> nil -> l = removelast l ++ last l d :: nil
+forall (A : Type) (l : list A) (d : A), l <> nil -> l = removelast l ++ last l d :: nil *)
 
 
 
@@ -563,8 +580,7 @@ Proof.
   intros.
   rewrite cdr_app in H.
   apply in_app_or in H.
-  destruct H. (* H is false: x cannot be in vl. x can only be last element in vl and will then be deleted. x cannot be in rest of vl *)
-              (* In x vl -> vl = vl' ++ x::nil *)
+  destruct H.
   assert (Path v a x z (y :: vl) ((E_ends x y)::el)).
   apply P_step.
   apply p.
@@ -574,22 +590,10 @@ Proof.
   apply n0.
   apply e.
   apply n1.
-  assert 
-  
-  admit.
-  apply H1 in H0.
-  destruct H0.
-  destruct H0.
-  destruct H0.
-  rewrite H0 in H.
-  rewrite rev_unit in H.
-  simpl in H.
-  rewrite <- in_rev in H.
-  apply H2 in H.
-  inversion H.
-  apply cdr_rev in H.
+  apply P_xz_or_xnz in H0.
   apply H0 in H.
   inversion H.
+
 
   inversion H.
   symmetry in H0.
@@ -608,131 +612,7 @@ Proof.
   apply IHp.
   apply neq_symm.
   apply app_cons_not_nil.
-Admitted.
-  
-
-
-  apply (Path_append2 v a z y x).
-  
-  intros.
-  (* Path v a y z vl el -> (vl = V_nil \/ vl = vl' :: z :: nil) *)
-  unfold not.
-  intros.
-  unfold In in H0.
-  destruct H0.
-    rewrite <- H0 in H.
-    clear H0. clear c.
-    assert (x = z) as H0.
-    admit.
-    rewrite <- H0 in IHp.
-    rewrite <- H0 in p.
-    inversion IHp.
-    apply n in H3.
-    assert (vl = V_nil). (* H0 *)
-    admit.
-    inversion p.
-    symmetry in H9.
-    apply n in H9.
-    inversion H9.
-  
-(*     destruct vl.
-      simpl in H.
-      inversion H.
-
-      rewrite cdr_app in H.
-      apply in_app_or in H.
-      destruct H.
-        rewrite <- H0 in H.
-        clear H0. clear c.
-        admit.
-
-        simpl in H.
-        destruct H.
-          rewrite <- H in H0.
-          apply n in H0.
-          inversion H0.
-
-          inversion H.
-      simpl.
-      unfold not.
-      intros.
-      symmetry in H1.
-      unfold V_nil in H1.
-      apply app_cons_not_nil in H1.
-      inversion H1. *)
-
-    inversion H0.
-
-
-
-  intros.
-  assert (E_eq u' u -> E_eq u u').
-  intros.
-  inversion H1.
-  apply E_refl.
-  apply E_rev.
-  unfold not.
-  intros.
-  apply H1 in H2.
-  unfold not in n1. 
-  assert (In u (E_reverse el) -> In u el).
-  admit.
-  apply H3 in H.
-  apply n1 in H.
-  inversion H.
-  unfold In in H0.
-  destruct H0.
-  rewrite <- H0 in H2.
-  inversion H2.
-  apply E_rev.
-  apply E_refl.
-  inversion H0.
-
-  intros.
-  rewrite H in p.
-  inversion p.
-  simpl.
-  reflexivity.
-  assert (vl <> nil).
-  rewrite <- H9.
-  unfold not.
-  intros.
-  symmetry in H11.
-  apply nil_cons in H11.
-  inversion H11. 
-  fold V_nil in H11.
-  apply (P_iny_vl v a y y vl el p) in H11.
-  apply n0 in H11.
-  inversion H11.
-
-  apply IHp.
-  
-  apply P_step.
-  apply P_null.
-  apply v0.
-  apply P_endx_inv in p.
-  apply p.
-  apply (G_non_directed v a g) in a0.
-  apply a0.
-  auto.
-  auto.
-  intros.
-  inversion H.
-  intros.
-  inversion H.
-
-  intros.
-  inversion H.
-  symmetry.
-  apply H0.
-  inversion H0.
-
-  unfold not.
-  intros.
-  symmetry in H.
-  apply app_cons_not_nil in H.
-  inversion H.
-Admitted.
+Qed.
 
 (* There can only be one path in a tree t, ending in vertices x and y.
 
