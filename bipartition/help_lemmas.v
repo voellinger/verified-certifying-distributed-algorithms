@@ -497,6 +497,23 @@ Proof.
 Qed.
 
 Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
+  Path v a x z vl el -> ~ In x (cdr (rev vl)).
+Proof.
+  intros v a x y z vl el p.
+  unfold not.
+  intros.
+  assert (x = z \/ x <> z).
+  apply classic.
+  destruct H0.
+
+  induction p.
+  inversion H.
+  rewrite <- H0 in p. rewrite <- H0 in e. rewrite <- H0 in IHp. clear H0. clear z.
+
+  apply IHp.
+Admitted.
+
+(* Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
   Path v a x z (y :: vl) (E_ends x y :: el) -> ~ In x (cdr (rev vl)).
 Proof.
   intros v a x y z vl el p.
@@ -505,8 +522,44 @@ Proof.
   assert (x = z \/ x <> z).
   apply classic.
   destruct H0.
-  apply P_backstep in p.
-  destruct p.
+
+  induction (y :: vl).
+  rewrite H0 in p.
+  inversion p.
+  
+
+  rewrite <- H0 in p.
+  clear H0. clear z.
+
+  assert (p' := p).
+  inversion p'.
+  induction p'.
+  apply cdr_rev in H.
+  inversion p.
+  admit.
+  apply IHp'.
+  
+  simpl in H.
+  inversion H.
+  apply IHvl.
+  apply P_step.
+  inversion p.
+  
+
+  assert ({z: Vertex & {vl' : V_list & {el': E_list & {p: Path v a x z vl' el' & ~ In x vl'}}}}).
+  admit.
+  destruct H0.
+  destruct s.
+  destruct s.
+  destruct s.
+  
+  
+
+  assert (p' := p).
+  apply P_backstep in p'.
+  destruct p'.
+  inversion p.
+  
 
 Lemma P_backstep :
  forall (x y z : Vertex) (vl : V_list) (el : E_list),
@@ -521,7 +574,7 @@ Lemma P_backstep :
   apply H11 in H.
   apply H0 in H.
   inversion H.
-Admitted.
+Admitted. *)
   
 
 (* Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl vl' : V_list) (el : E_list),
@@ -624,8 +677,17 @@ Proof.
   apply n0.
   apply e.
   apply n1.
-  apply P_xz_or_xnz in H0.
-  apply H0 in H.
+  apply (P_xz_or_xnz v a x y z) in H0.
+  apply H0.
+  simpl.
+  rewrite cdr_app.
+  apply in_or_app.
+  left.
+  apply H.
+  unfold not.
+  intros.
+  rewrite H1 in H.
+  simpl in H.
   inversion H.
 
 
