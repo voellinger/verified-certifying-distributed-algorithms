@@ -472,6 +472,18 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
+
+Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl vl' : V_list) (el : E_list),
+  Path v a x z (y :: vl) (E_ends x y :: el) -> ((exists vl' : V_list, vl = vl' ++ x::nil /\ ~ In x vl') \/ ~ In x vl).
+Proof.
+  intros v a x y z vl vl' el p.
+  assert (x = z \/ x <> z).
+  apply classic.
+  destruct H.
+  induction p.
+  intros.
+
+
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
  Path v a x y vl el -> Path v a y x (cdr (rev (x :: vl))) (E_reverse el).
