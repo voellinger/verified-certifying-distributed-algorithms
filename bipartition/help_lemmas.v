@@ -325,30 +325,54 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma E_rev_in: forall (u : Edge) (x y : Vertex) (el : E_list),
-(forall v : Edge, In v el -> ~ E_eq v (E_ends x y)) -> In u (E_reverse el) -> ~ E_eq u (E_ends y x).
+
+Lemma E_rev_in2: forall (x y : Vertex) (el : E_list),
+  In (E_ends x y) (E_reverse el) -> In (E_ends y x) el.
 Proof.
-  intros.
+  intros x y el i.
   induction el.
-  simpl in H0.
-  inversion H0.
-  rewrite E_rev_cons in H0.
-Admitted.
-(*   apply IHel.
-  intros.
-  apply H.
-  unfold In.
-  right.
-  apply H1.
-  rewrite E_rev_cons in H0.
-  apply in_app_or in H0.
-  destruct H0.
-  apply H0.
+  simpl in i.
+  inversion i.
+
   destruct a.
-  simpl in H0.
-  destruct H0.
-  rewrite H0 in H.
-  inversion H0. *)
+  simpl.
+  simpl in i.
+  apply in_app_or in i.
+  destruct i.
+  right.
+  apply IHel.
+  apply H.
+  left.
+  unfold In in H.
+  destruct H.
+  inversion H.
+  reflexivity.
+  inversion H.
+Qed.
+
+Lemma E_rev_in: forall (u: Edge) (x y : Vertex) (el : E_list),
+(forall v:Edge, In v el -> ~ E_eq v (E_ends x y)) -> In u (E_reverse el) -> ~ E_eq u (E_ends y x).
+Proof.
+  intros u x y el vv uu.
+  unfold not.
+  intros.
+  destruct u.
+  apply E_rev_in2 in uu.
+  apply vv in uu.
+  inversion H.
+  rewrite H2 in uu.
+  rewrite H3 in uu.
+  assert (E_eq (E_ends x y) (E_ends x y)).
+  apply E_refl.
+  apply uu in H1.
+  inversion H1.
+  rewrite H3 in uu.
+  rewrite H4 in uu.
+  assert (E_eq (E_ends y x) (E_ends x y)).
+  apply E_rev.
+  apply uu in H0.
+  inversion H0.
+Qed.
 
 
 
@@ -481,6 +505,16 @@ Proof.
   assert (x = z \/ x <> z).
   apply classic.
   destruct H0.
+  apply P_backstep in p.
+  destruct p.
+
+Lemma P_backstep :
+ forall (x y z : Vertex) (vl : V_list) (el : E_list),
+ Path x z (y :: vl) el -> {el' : E_list &  Path y z vl el'}.
+
+(*   induction p.
+  intros. *)
+
   admit.
   apply cdr_rev in H.
   inversion p.
