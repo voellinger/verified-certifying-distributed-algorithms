@@ -496,15 +496,18 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
-Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
+Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x z : Vertex) (vl : V_list) (el : E_list),
   Path v a x z vl el -> ~ In x (cdr (rev vl)).
 Proof.
-  intros v a x y z vl el p.
+  intros v a x z vl el p.
   unfold not.
   intros.
   assert (x = z \/ x <> z).
   apply classic.
   destruct H0.
+
+  rewrite <- H0 in p. clear H0. clear z. clear y.
+  
 
   induction p.
   inversion H.
@@ -677,7 +680,7 @@ Proof.
   apply n0.
   apply e.
   apply n1.
-  apply (P_xz_or_xnz v a x y z) in H0.
+  apply (P_xz_or_xnz v a x z) in H0.
   apply H0.
   simpl.
   rewrite cdr_app.
