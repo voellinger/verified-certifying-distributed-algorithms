@@ -480,8 +480,52 @@ Proof.
   assert (x = z \/ x <> z).
   apply classic.
   destruct H.
-  induction p.
+  destruct vl.
+  right.
+  unfold not.
   intros.
+  inversion H0.
+  left.
+  inversion p.
+  induction vl.
+  exists nil.
+  simpl.
+  split.
+  rewrite <- H in p.
+  apply P_iny_vl in p.
+  unfold In in p.
+  destruct p.
+  symmetry in H12.
+  apply H6 in H12.
+  inversion H12.
+  destruct H12.
+  rewrite H12.
+  reflexivity.
+  inversion H12.
+  apply neq_symm.
+  apply nil_cons.
+  intuition.
+
+  assert (vl <> nil).
+  admit.
+  (* apply (app_removelast_last Vertex H12 v0). *)
+  admit.
+
+  admit.
+  right.
+  inversion p.
+  unfold not.
+  intros.
+  apply H10 in H12.
+  apply H in H12.
+  inversion H12.
+Qed.
+
+removelast_app
+forall (A : Type) (l l' : list A), l' <> nil -> removelast (l ++ l') = l ++ removelast l'
+app_removelast_last
+forall (A : Type) (l : list A) (d : A), l <> nil -> l = removelast l ++ last l d :: nil
+
 
 
 Lemma Path_reverse :
