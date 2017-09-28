@@ -585,9 +585,6 @@ Lemma P_y_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_l
 Proof.
   intros v a x y vl el p.
 
-
-
-
   unfold not.
   intros.
   induction p.
@@ -598,8 +595,20 @@ Proof.
   apply (cdr_rev3 vl z y) in IHp.
   apply IHp in H.
   inversion H.
-  
-Admitted.
+  unfold not.
+  intros.
+  rewrite H0 in p. rewrite H0 in e. rewrite H0 in IHp. rewrite H0 in H. clear H0. clear z.
+  inversion p.
+  rewrite <- H3 in H.
+  simpl in H.
+  inversion H.
+  apply P_iny_vl in p.
+  apply n0 in p.
+  inversion p.
+  rewrite <- H9.
+  apply neq_symm.
+  apply nil_cons.
+Qed.
 
 
 
@@ -663,7 +672,7 @@ Proof.
   apply i.
   apply P_backstep in p2.
   inversion p2.
-
+Admitted.
 
 
 Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
