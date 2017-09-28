@@ -568,10 +568,76 @@ Proof.
   inversion H1.
 Qed.
 
-(*  In x vl -> x = last (length vl) v0 vl
+(* Lemma cdr_rev4: forall (vl : V_list) (x y : Vertex),
+  In x (cdr (rev vl)) -> In x (cdr (rev (y :: vl))).
+Proof.
+  intros vl x y i.
+  induction vl.
+  intuition.
+  
+  
+
+Lemma cdr_rev3: forall (vl : V_list) (x y : Vertex),
+  ~ In x (cdr (rev (y::vl))) -> ~ In x (cdr (rev vl)).
+Proof.
+  intros vl x y i.
+  unfold not. intros.
+  apply i.
+  destruct vl.
+  intuition.
+
+  simpl.
+
+  induction vl.
+  intuition.
+  apply IHvl.
+  unfold not. intros.
+  apply i.
+  admit.
+  simpl in H.
+  rewrite cdr_app in H.
+  apply in_app_or in H.
+  destruct H.
+  apply H.
+  inversion H.
+  simpl in i.
+  rewrite cdr_app in i.
+  rewrite cdr_app in i.
+(*   assert ~ In (a ++ b) -> ~ In a /\ ~ In b. *)
+  admit. *)
+  
+
+(*  P_xz_or_xnz: In x vl -> x = last (length vl) v0 vl
     no element can be in vl twice *)
-(* Lemma not_twice: forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
-  Path v a x y vl el -> In z vl -> list z vl < 2. *)
+
+
+(* Lemma P_not_y_in_cdrvl : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+  Path v a y z vl el -> ~ In z (cdr (rev vl)) -> Path v a x z (y::vl) ((E_ends x y :: el)) ->
+  ~ In z (cdr (rev (y :: vl))).
+Proof.
+  intros v a x y z vl el p1 i p2.
+
+  assert (x = z \/ x <> z).
+  apply classic.
+  destruct H.
+
+  induction p1.
+  unfold not.
+  intros.
+  simpl in H0.
+  inversion H0.
+
+  apply (cdr_rev2 (y::vl) z x0) in i.
+  apply i.
+  apply P_backstep in p2.
+  inversion p2.
+
+Lemma P_not_y_in_cdrvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+  Path v a x y vl el -> ~ In y (cdr (rev vl)).
+Proof.
+  intros v a x y vl el p.
+  unfold not. intros. *)
+
 
 Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr (rev vl)).
@@ -602,10 +668,10 @@ Proof.
   induction p.
   simpl in H.
   inversion H.
-  assert (
+  (* assert (
 
 Lemma cdr_rev2: forall (vl : V_list) (x y : Vertex),
-  ~ In x (cdr (rev vl)) -> x <> y -> ~ In x (cdr (rev (y::vl))).
+  ~ In x (cdr (rev vl)) -> x <> y -> ~ In x (cdr (rev (y::vl))). *)
 
 
 Admitted.
@@ -702,39 +768,10 @@ are the same.
  *)
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
-  v x -> v y -> (vl = vl' /\ el = el').
+  vl = vl' /\ el = el'.
 Proof.
-  intros v a x y t vl vl' el el' p1 p2 vx vy.
-  assert (p1':= p1). assert (p2':= p2).
-  assert (p3: Path v a x x (vl ++ (cdr (rev (x :: vl')))) (el ++ (E_reverse el'))).
-  apply (Path_append2 v a x y x).
-  apply p1.
-  apply (Path_reverse ) in p2.
-  apply p2.
-
-
-  apply (Path_reverse ) in p1'.
-  assert (p3': Path v a y y ((cdr (rev (x :: vl))) ++ vl') ((E_reverse el) ++ el')).
-  apply (Path_append2 v a y x y).
-  apply p1'.
-  apply p2'.
-
-  apply (Tree_isa_acyclic ) in t.
-(*   rewrite Cycle in p3.
-  apply (Acyclic_no_cycle v a t x x (vl ++ cdr (rev (x :: vl'))) (el ++ E_reverse el')) in p3.
-
-
-Definition Cycle (x y : Vertex) (vl : V_list) (el : E_list)
-  (p : Path x y vl el) := x = y.
-
-
-Lemma Acyclic_no_cycle :
- forall (v : V_set) (a : A_set) (Ac : Acyclic v a) 
-   (x y : Vertex) (vl : V_list) (el : E_list) (p : Path v a x y vl el),
- Cycle v a x y vl el p -> vl = V_nil.
-
-  apply (Tree_isa_graph ) in t.
-  apply t. *)
+  intros v a x y t vl vl' el el' p1 p2.
+  
 Admitted.
 
 Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
@@ -759,8 +796,6 @@ Proof.
   apply (Tree_only_one_path v a root xx t).
   apply p2.
   apply p.
-  apply vroot.
-  apply vxx2.
   destruct H.
   rewrite H0.
   reflexivity.
