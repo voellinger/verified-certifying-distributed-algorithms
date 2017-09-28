@@ -766,12 +766,24 @@ or at its end, otherwise it is no path, as v is a leaf and only has degree 1. Le
 y are the same. As y has degree of 1, there is only one possible extension to those paths. Therefore all paths from x to y
 are the same.
  *)
+
+Lemma Paths_into_three_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
+  (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
+  exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
+  (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
+  vla = vl1 ++ vl2a ++ vl3 /\ vlb = vl1 ++ vl2b ++ vl3 /\ 
+  (forall z: Vertex, In z vl2a -> ~ In z vl2b) /\ (forall z: Vertex, In z vl2b -> ~ In z vl2a).
+Proof.
+  intros.
+Admitted.
+
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   vl = vl' /\ el = el'.
 Proof.
   intros v a x y t vl vl' el el' p1 p2.
-  
+  assert (three_parts := p2).
+  apply (Paths_into_three_parts v a x y vl vl' el el' p1) in three_parts.
 Admitted.
 
 Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
