@@ -58,8 +58,6 @@ Qed.
 
 Function length_w {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Walk v a c1 c2 vl el) := length vl.
 Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Path v a c1 c2 vl el) := length vl.
-(* Function distance {v: V_set} {a: A_set} (c: Component) := minimum length of all sets of Walks from c to root*)
-
 
 Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' x y z p1 p2):
   length_p p1 + length_p p2 = length_w p3.
@@ -380,35 +378,15 @@ Proof.
   inversion H1.
 Qed.
 
-(*
+
 Lemma cdr_rev4: forall (vl : V_list) (x y : Vertex),
   ~ In x (cdr (rev (y::vl))) -> ~ In x (cdr (rev vl)).
 Proof.
   intros vl x y i.
   unfold not. intros.
-  apply i.
-  destruct vl.
+  apply (cdr_rev2 vl x y) in H.
   intuition.
-
-  simpl.
-
-  induction vl.
-  intuition.
-  apply IHvl.
-  unfold not. intros.
-  apply i.
-  admit.
-  simpl in H.
-  rewrite cdr_app in H.
-  apply in_app_or in H.
-  destruct H.
-  apply H.
-  inversion H.
-  simpl in i.
-  rewrite cdr_app in i.
-  rewrite cdr_app in i.
-(*   assert ~ In (a ++ b) -> ~ In a /\ ~ In b. *)
-  admit. *)
+Qed.
 
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
@@ -602,6 +580,29 @@ Proof.
   apply H.
 Qed.
 
+Lemma P_y_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+  Path v a x y vl el -> ~ In y (cdr (rev vl)).
+Proof.
+  intros v a x y vl el p.
+
+
+
+
+  unfold not.
+  intros.
+  induction p.
+  simpl in H.
+  inversion H.
+  apply IHp.
+
+  apply (cdr_rev3 vl z y) in IHp.
+  apply IHp in H.
+  inversion H.
+  
+Admitted.
+
+
+
 Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr (rev vl)) -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil) ->
   ~ In x (cdr (rev (vl ++ z :: nil))).
@@ -642,7 +643,7 @@ Admitted.
     no element can be in vl twice *)
 
 
-(* Lemma P_not_y_in_cdrvl : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+Lemma P_not_y_in_cdrvl : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   Path v a y z vl el -> ~ In z (cdr (rev vl)) -> Path v a x z (y::vl) ((E_ends x y :: el)) ->
   ~ In z (cdr (rev (y :: vl))).
 Proof.
@@ -663,11 +664,6 @@ Proof.
   apply P_backstep in p2.
   inversion p2.
 
-Lemma P_not_y_in_cdrvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
-  Path v a x y vl el -> ~ In y (cdr (rev vl)).
-Proof.
-  intros v a x y vl el p.
-  unfold not. intros. *)
 
 
 Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
@@ -699,12 +695,6 @@ Proof.
   induction p.
   simpl in H.
   inversion H.
-  (* assert (
-
-Lemma cdr_rev2: forall (vl : V_list) (x y : Vertex),
-  ~ In x (cdr (rev vl)) -> x <> y -> ~ In x (cdr (rev (y::vl))). *)
-
-
 Admitted.
 
 Lemma Path_reverse :
