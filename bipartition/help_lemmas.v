@@ -784,7 +784,57 @@ Proof.
   intros v a x y t vl vl' el el' p1 p2.
   assert (three_parts := p2).
   apply (Paths_into_three_parts v a x y vl vl' el el' p1) in three_parts.
+  destruct three_parts.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H0.
+  destruct H1.
+  apply Path_reverse in x9.
+  apply (Path_append2 v a x4 x5 x4 x1 (cdr (rev (x4 :: x2))) x6 (E_reverse x7)) in x9.
+  assert (Cycle v a x4 x4 (x1 ++ cdr (rev (x4 :: x2))) (x6 ++ E_reverse x7) x9).
+  unfold Cycle.
+  reflexivity.
+  apply (Acyclic_no_cycle ) in H3.
+  apply app_eq_nil in H3.
+  destruct H3.
+  simpl in H4.
+  assert(x2 = nil).
+  admit.
+  rewrite H3 in H.
+  rewrite H5 in H0.
+  rewrite <- H0 in H.
+  split.
+  apply H.
+  admit. (* H, p1, p2 -> el = el'*)
+  apply Tree_isa_acyclic in t.
+  apply t.
+  intros.
+  apply H1 in H3.
+  unfold not. intros. apply H3.
+  admit.
+  admit.
+  admit. (* Critical *)
+  apply x8.
+  reflexivity.
+  apply Tree_isa_graph in t.
+  apply t.
 Admitted.
+
+
+Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+  (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
+  (x = y -> vl = V_nil) -> 
+  Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
+  Path v a x z (vl ++ vl') (el ++ el').
+
 
 Lemma connected_min_path': forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
  v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
