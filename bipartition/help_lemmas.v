@@ -496,144 +496,119 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
-Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x z : Vertex) (vl : V_list) (el : E_list),
-  Path v a x z vl el -> ~ In x (cdr (rev vl)).
+Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+  Path v a x y vl el -> ~ In x (cdr (rev vl)) -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil) ->
+  ~ In x (cdr (rev (vl ++ z :: nil))).
 Proof.
-  intros v a x z vl el p.
+  intros v a x y z vl el p1 i p2.
+  induction p1.
   unfold not.
   intros.
-  assert (x = z \/ x <> z).
-  apply classic.
-  destruct H0.
-
-  rewrite <- H0 in p. clear H0. clear z. clear y.
-  
-
-  induction p.
-  inversion H.
-  rewrite <- H0 in p. rewrite <- H0 in e. rewrite <- H0 in IHp. clear H0. clear z.
-
-  apply IHp.
-Admitted.
-
-(* Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
-  Path v a x z (y :: vl) (E_ends x y :: el) -> ~ In x (cdr (rev vl)).
-Proof.
-  intros v a x y z vl el p.
-  unfold not.
-  intros.
-  assert (x = z \/ x <> z).
-  apply classic.
-  destruct H0.
-
-  induction (y :: vl).
-  rewrite H0 in p.
-  inversion p.
-  
-
-  rewrite <- H0 in p.
-  clear H0. clear z.
-
-  assert (p' := p).
-  inversion p'.
-  induction p'.
-  apply cdr_rev in H.
-  inversion p.
-  admit.
-  apply IHp'.
-  
+  rewrite rev_unit in H.
   simpl in H.
   inversion H.
-  apply IHvl.
-  apply P_step.
-  inversion p.
-  
 
-  assert ({z: Vertex & {vl' : V_list & {el': E_list & {p: Path v a x z vl' el' & ~ In x vl'}}}}).
+  unfold not. intros.
+  rewrite rev_unit in H.
+  simpl in H.
+  (* H & n -> x in vl, x in vl & e -> x = z0, x = z0 & p2 -> p1 empty (vl = V_nil), 
+    vl = V_nil $%&\u00a7 H *)
+
+  apply in_app_or in H.
+  destruct H.
+  apply in_rev in H.
+  assert (H' := H).
+  apply e in H'.
+  rewrite <- H' in p2.
+  assert (vl = V_nil).
   admit.
-  destruct H0.
-  destruct s.
-  destruct s.
-  destruct s.
-  
-  
-
-  assert (p' := p).
-  apply P_backstep in p'.
-  destruct p'.
-  inversion p.
-  
-
-Lemma P_backstep :
- forall (x y z : Vertex) (vl : V_list) (el : E_list),
- Path x z (y :: vl) el -> {el' : E_list &  Path y z vl el'}.
-
-(*   induction p.
-  intros. *)
-
-  admit.
-  apply cdr_rev in H.
-  inversion p.
-  apply H11 in H.
-  apply H0 in H.
+  rewrite H0 in H.
   inversion H.
-Admitted. *)
-  
+  inversion H.
+  symmetry in H0.
+  apply n in H0.
+  inversion H0.
+  inversion H0.
+Admitted.
 
-(* Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y z : Vertex) (vl vl' : V_list) (el : E_list),
-  Path v a x z (y :: vl) (E_ends x y :: el) -> ((exists vl' : V_list, vl = vl' ++ x::nil /\ ~ In x vl') \/ ~ In x vl).
+Lemma cdr_rev2: forall (vl : V_list) (x y : Vertex),
+  ~ In x (cdr (rev vl)) -> x <> y -> ~ In x (cdr (rev (y::vl))).
 Proof.
-  intros v a x y z vl vl' el p.
+  intros vl x y i xy.
+  unfold not. intros.
+
+  assert (vl = nil \/ vl <> nil).
+  apply classic.
+  destruct H0.
+  rewrite H0 in H.
+  inversion H.
+  
+  simpl in H.
+  rewrite cdr_app in H.
+  apply in_app_or in H.
+  destruct H.
+  apply i in H.
+  inversion H.
+  inversion H.
+  intuition.
+  intuition.
+  unfold not.
+  intros.
+  unfold V_nil in H1.
+  assert (rev vl = nil -> vl = nil).
+  intros.
+  induction vl.
+  reflexivity.
+  inversion H1.
+  symmetry in H4.
+  apply app_cons_not_nil in H4.
+  inversion H4.
+  apply H2 in H1.
+  apply H0 in H1.
+  inversion H1.
+Qed.
+
+(*  In x vl -> x = last (length vl) v0 vl
+    no element can be in vl twice *)
+(* Lemma not_twice: forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+  Path v a x y vl el -> In z vl -> list z vl < 2. *)
+
+Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+  Path v a x y vl el -> ~ In x (cdr (rev vl)).
+Proof.
+  intros v a x y vl el p.
+(*   elim p.
+  unfold not.
+  intros.
+  inversion H.
+  unfold not.
+  intros.
+  clear p. clear x. clear y. clear vl. clear el.
+  rename x0 into x.
+  rename y0 into y.
+  rename vl0 into vl.
+  rename el0 into el.
+
+  unfold not.
+  intros.
   assert (x = z \/ x <> z).
   apply classic.
-  destruct H.
-  destruct vl.
-  right.
+  destruct H1. *)
+
+
+
   unfold not.
   intros.
-  inversion H0.
-  left.
-  inversion p.
-  induction vl.
-  exists nil.
-  simpl.
-  split.
-  rewrite <- H in p.
-  apply P_iny_vl in p.
-  unfold In in p.
-  destruct p.
-  symmetry in H12.
-  apply H6 in H12.
-  inversion H12.
-  destruct H12.
-  rewrite H12.
-  reflexivity.
-  inversion H12.
-  apply neq_symm.
-  apply nil_cons.
-  intuition.
+  induction p.
+  simpl in H.
+  inversion H.
+  assert (
 
-  assert (vl <> nil).
-  admit.
-  (* apply (app_removelast_last Vertex H12 v0). *)
-  admit.
+Lemma cdr_rev2: forall (vl : V_list) (x y : Vertex),
+  ~ In x (cdr (rev vl)) -> x <> y -> ~ In x (cdr (rev (y::vl))).
 
 
-  right.
-  inversion p.
-  unfold not.
-  intros.
-  apply H10 in H12.
-  apply H in H12.
-  inversion H12.
-Admitted. *)
-
-(* removelast_app
-forall (A : Type) (l l' : list A), l' <> nil -> removelast (l ++ l') = l ++ removelast l'
-app_removelast_last
-forall (A : Type) (l : list A) (d : A), l <> nil -> l = removelast l ++ last l d :: nil *)
-
-
+Admitted.
 
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
