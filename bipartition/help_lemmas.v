@@ -612,7 +612,7 @@ Qed.
 
 
 
-Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+(* Lemma P_xz_or_xnz2 : forall (v: V_set) (a:A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr (rev vl)) -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil) ->
   ~ In x (cdr (rev (vl ++ z :: nil))).
 Proof.
@@ -672,39 +672,28 @@ Proof.
   apply i.
   apply P_backstep in p2.
   inversion p2.
-Admitted.
+Admitted. *)
 
 
-Lemma P_xz_or_xnz : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+Lemma P_x_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr (rev vl)).
 Proof.
   intros v a x y vl el p.
-(*   elim p.
-  unfold not.
-  intros.
-  inversion H.
-  unfold not.
-  intros.
-  clear p. clear x. clear y. clear vl. clear el.
-  rename x0 into x.
-  rename y0 into y.
-  rename vl0 into vl.
-  rename el0 into el.
-
-  unfold not.
-  intros.
-  assert (x = z \/ x <> z).
+  assert (x = y \/ x <> y).
   apply classic.
-  destruct H1. *)
-
-
-
-  unfold not.
-  intros.
+  destruct H.
+  rewrite H.
+  apply (P_y_not_in_cdrrevvl v a x y vl el p).
+  unfold not. intros.
   induction p.
-  simpl in H.
-  inversion H.
-Admitted.
+  inversion H0.
+  apply cdr_rev in H0.
+  unfold In in H0.
+  destruct H0.
+  intuition.
+  apply e in H0.
+  intuition.
+Qed.
 
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
@@ -751,7 +740,7 @@ Proof.
   apply n0.
   apply e.
   apply n1.
-  apply (P_xz_or_xnz v a x z) in H0.
+  apply (P_x_not_in_cdrrevvl v a x z) in H0.
   apply H0.
   simpl.
   rewrite cdr_app.
