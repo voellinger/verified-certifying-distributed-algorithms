@@ -150,6 +150,7 @@ Qed.
 Variable root : Component.
 Axiom nearly_all_connected_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Connected v a),
   v x -> v root.
+(* Axiom root_is_unique ?? *)
 
 Lemma nearly_all_trees_rooted: forall (v:V_set) (a:A_set) (x:Component) (t: Tree v a),
   v x -> v root.
@@ -483,6 +484,12 @@ Qed.
 
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
+  (x = y -> vl = V_nil \/ vl' = V_nil) -> 
+  Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
+  Path v a x z (vl ++ vl') (el ++ el').
+
+Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+  (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
   (x = y -> vl = V_nil) -> 
   Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
   Path v a x z (vl ++ vl') (el ++ el').
@@ -722,7 +729,7 @@ y are the same. As y has degree of 1, there is only one possible extension to th
 are the same.
  *)
 
-Lemma Paths_into_three_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
+Lemma Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
   (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
   exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
   (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
@@ -730,6 +737,13 @@ Lemma Paths_into_three_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla
   (forall z: Vertex, In z vl2a -> ~ In z vl2b) /\ (forall z: Vertex, In z vl2b -> ~ In z vl2a).
 Proof.
   intros.
+  exists nil.
+  exists nil.
+  exists nil.
+  exists vla.
+  exists x.
+  exists x.
+  exists nil
 Admitted.
 
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
@@ -738,7 +752,7 @@ Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tre
 Proof.
   intros v a x y t vl vl' el el' p1 p2.
   assert (three_parts := p2).
-  apply (Paths_into_three_parts v a x y vl vl' el el' p1) in three_parts.
+  apply (Paths_into_parts v a x y vl vl' el el' p1) in parts.
   destruct three_parts.
   destruct H.
   destruct H.
