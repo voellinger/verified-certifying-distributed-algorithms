@@ -501,12 +501,6 @@ Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_l
   (x = y -> vl = V_nil \/ vl' = V_nil) -> 
   Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
   Path v a x z (vl ++ vl') (el ++ el').
-
-Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
-  (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
-  (x = y -> vl = V_nil) -> 
-  Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
-  Path v a x z (vl ++ vl') (el ++ el').
 Proof.
   intros v a x y z vl vl' el el' H0 H3 c1 p1 p2 lasso.
 
@@ -537,6 +531,7 @@ Proof.
   intros.
   rewrite <- H in p1.
   destruct vl.
+  left.
   reflexivity.
 
   apply P_iny_vl in p1.
@@ -577,8 +572,15 @@ Proof.
   apply in_app_or in H.
   destruct H.
   apply e in H.
+  assert (H10 := H).
   apply c1 in H.
+  destruct H.
   inversion H.
+  rewrite <- H10 in p2.
+  rewrite H in p2.
+  inversion p2.
+  reflexivity.
+
   
   apply lasso in H.
   inversion H.
