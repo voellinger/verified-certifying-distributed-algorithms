@@ -276,6 +276,20 @@ Proof.
   inversion H0.
 Qed.
 
+Lemma E_rev_len: forall(el:E_list),
+  length (E_reverse el) = length el.
+Proof.
+  intros el.
+  induction el.
+  reflexivity.
+  destruct a.
+  simpl.
+  rewrite app_length.
+  simpl.
+  rewrite IHel.
+  apply plus_comm.
+Qed.
+
 Lemma rev_nil: forall (l : list Vertex),
   rev l = nil <-> l = nil.
 Proof.
@@ -838,10 +852,35 @@ Proof.
 Qed.
 
 
-Lemma connected_min_path: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
- v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
+Lemma connected_min_path2: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
+ v x -> {vl : V_list &  {el : E_list &  {p : Path v a x root vl el & distance2 v a root x (length el)}}}.
 Proof.
-  intros v a xx t vxx.
+  intros v a x t vx.
+  apply (connected_min_path v a x t) in vx.
+  destruct vx.
+  destruct s.
+  destruct s.
+  rename x0 into vl. rename x1 into el.
+  exists (cdr(rev(root::vl))).
+  exists (E_reverse el).
+  assert (Path v a x root (cdr (rev (root :: vl))) (E_reverse el)).
+  apply Path_reverse in x2.
+  apply x2.
+  apply Tree_isa_graph in t.
+  apply t.
+  exists H.
+  unfold distance2.
+  intros vl0 el0 p2.
+  assert (vl = vl0 /\ el = el0).
+  apply (Tree_only_one_path v a root x t).
+  apply x2.
+  apply p2.
+  destruct H0.
+  rewrite H1.
+  rewrite E_rev_len.
+  reflexivity.
+Qed.
+
 
 
 Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
