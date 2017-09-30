@@ -403,6 +403,24 @@ Proof.
   intuition.
 Qed.
 
+Fixpoint sub_starts_in_list (sublist superlist : list nat) : Prop :=
+  match sublist with
+  |nil => True
+  |a::tla => match superlist with
+    |nil => False
+    |b::tlb => (a = b) /\ (sub_starts_in_list tla tlb)
+    end
+  end.
+
+Fixpoint sub_in_list (sublist superlist : list nat) : Prop :=
+  match sublist with
+  |nil => True
+  |a::tla => match superlist with
+    |nil => False
+    |b::tlb => ((a = b) /\ (sub_starts_in_list tla tlb)) \/ (sub_in_list sublist tlb)
+    end
+  end.
+
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
   Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
