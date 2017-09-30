@@ -403,7 +403,7 @@ Proof.
   intuition.
 Qed.
 
-Fixpoint sub_starts_in_list (sublist superlist : list nat) : Prop :=
+Fixpoint sub_starts_in_list (sublist superlist : list Vertex) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
@@ -412,7 +412,7 @@ Fixpoint sub_starts_in_list (sublist superlist : list nat) : Prop :=
     end
   end.
 
-Fixpoint sub_in_list (sublist superlist : list nat) : Prop :=
+Fixpoint sub_in_list (sublist superlist : list Vertex) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
@@ -420,6 +420,80 @@ Fixpoint sub_in_list (sublist superlist : list nat) : Prop :=
     |b::tlb => ((a = b) /\ (sub_starts_in_list tla tlb)) \/ (sub_in_list sublist tlb)
     end
   end.
+
+(* Lemma sub_one_less: forall (sub super : list Vertex) (a : Vertex),
+  sub_in_list (a :: sub) super -> sub_in_list sub super.
+Proof.
+  intros sub super a sinl.
+  induction super.
+  inversion sinl.
+  induction sub.
+  reflexivity.
+  unfold sub_in_list.
+  right.
+  apply IHsuper.
+
+
+Lemma sub_for_all : forall (sub super : list Vertex),
+  sub_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
+Proof.
+  intros sub super sss x i.
+  induction sub.
+  inversion i.
+  induction super.
+  inversion sss.
+  apply IHsub.
+  admit.
+  admit.
+
+Lemma sub_exists_one : forall (sub super : list Vertex),
+  (exists x : Vertex, In x sub /\ ~ In x super) -> ~ sub_in_list sub super.
+Proof.
+  intros sub super ex.
+  destruct ex.
+  destruct H.
+  unfold not.
+  intros.
+  apply H0.
+(*   induction super.
+  destruct sub.
+  inversion H.
+  inversion H1.
+  unfold In.
+  right.
+  apply IHsuper.
+  unfold not. intros. apply H0.
+  unfold In. right. apply H2.
+
+  induction sub.
+  inversion H. *)
+  
+
+  induction sub.
+  inversion H.
+  induction super.
+  inversion H1.
+  apply IHsub.
+  unfold In in H.
+  destruct H.
+  rewrite H in H1.
+  unfold In in H0.
+  apply not_or_and in H0.
+  destruct H0.
+
+  apply H2 in IHsuper.
+  inversion IHsuper.
+  apply H2.
+  admit.
+  intros.
+  admit.
+  
+  apply H.
+  admit.
+  (* use H1 *)
+
+
+Lemma sub_ *)
 
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
