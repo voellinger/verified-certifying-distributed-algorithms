@@ -421,6 +421,17 @@ Fixpoint sub_in_list (sublist superlist : list Vertex) : Prop :=
     end
   end.
 
+Lemma sub_one_more: forall (sub super : list Vertex) (a : Vertex),
+  sub_in_list sub super -> sub_in_list sub (a::super).
+Proof.
+  intros sub super a sinl.
+  destruct sub.
+  reflexivity.
+  unfold sub_in_list.
+  right.
+  apply sinl.
+Qed.
+
 (* Lemma sub_one_less: forall (sub super : list Vertex) (a : Vertex),
   sub_in_list (a :: sub) super -> sub_in_list sub super.
 Proof.
@@ -490,10 +501,33 @@ Proof.
   
   apply H.
   admit.
-  (* use H1 *)
+  (* use H1 *) *)
 
+Lemma sub_nil_super: forall(superlist : list Vertex),
+  sub_in_list nil superlist.
+Proof.
+  intros superlist.
+  induction superlist.
+  reflexivity.
+  reflexivity.
+Qed.
 
-Lemma sub_ *)
+Lemma sub_exists_start: forall (sublist superlist : list Vertex),
+  sub_in_list sublist superlist -> (exists (l1 l3 : V_list), superlist = l1 ++ sublist ++ l3).
+Proof.
+  intros sublist superlist sinl.
+  induction superlist.
+  destruct sublist.
+  exists nil. exists nil. reflexivity.
+  inversion sinl.
+  induction sublist.
+  apply imply_to_or in IHsuperlist.
+  destruct IHsuperlist.
+  assert (sub_in_list nil superlist).
+  apply sub_nil_super.
+  intuition.
+  inversion IHsuperlist.
+  
 
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
