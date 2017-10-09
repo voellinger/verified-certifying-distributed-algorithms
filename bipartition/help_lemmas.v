@@ -465,7 +465,7 @@ Proof.
 Qed.
 
 
-(*
+
 Lemma sub_for_all : forall (sub super : list Vertex),
   sub_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
 Proof.
@@ -477,6 +477,7 @@ Proof.
   apply IHsub.
   admit.
   admit.
+Admitted.
 
 Lemma sub_exists_one : forall (sub super : list Vertex),
   (exists x : Vertex, In x sub /\ ~ In x super) -> ~ sub_in_list sub super.
@@ -486,43 +487,10 @@ Proof.
   destruct H.
   unfold not.
   intros.
-  apply H0.
-(*   induction super.
-  destruct sub.
+  apply (sub_for_all sub super H1 x) in H.
+  apply H0 in H.
   inversion H.
-  inversion H1.
-  unfold In.
-  right.
-  apply IHsuper.
-  unfold not. intros. apply H0.
-  unfold In. right. apply H2.
-
-  induction sub.
-  inversion H. *)
-  
-
-  induction sub.
-  inversion H.
-  induction super.
-  inversion H1.
-  apply IHsub.
-  unfold In in H.
-  destruct H.
-  rewrite H in H1.
-  unfold In in H0.
-  apply not_or_and in H0.
-  destruct H0.
-
-  apply H2 in IHsuper.
-  inversion IHsuper.
-  apply H2.
-  admit.
-  intros.
-  admit.
-  
-  apply H.
-  admit.
-  (* use H1 *) *)
+Qed.
 
 Lemma sub_nil_super: forall(superlist : list Vertex),
   sub_in_list nil superlist.
@@ -553,7 +521,7 @@ Proof.
   inversion sinl.
 Qed.
 
-Lemma sub_exists_end: forall (sublist superlist : list Vertex),
+Lemma subs_exists_end: forall (sublist superlist : list Vertex),
   sub_starts_in_list sublist superlist -> (exists (l : V_list), superlist = sublist ++ l).
 Proof.
   intros sublist superlist sinl.
@@ -561,10 +529,10 @@ Proof.
   induction superlist.
   apply subs_sub_nil in sinl.
   exists nil. rewrite sinl. reflexivity.
-(*   unfold sub_starts_in_list in sinl.
+  unfold sub_starts_in_list in sinl.
   induction sublist.
   exists (a :: superlist). reflexivity.
-  destruct sinl. *)
+  destruct sinl.
 Admitted.
 
 Lemma sub_starts_or_in_rest : forall (sublist superlist : list Vertex) (a : Vertex),
@@ -597,7 +565,7 @@ Proof.
 
   apply sub_starts_or_in_rest in sinl.
   destruct sinl.
-  apply sub_exists_end in H.
+  apply subs_exists_end in H.
   destruct H.
   rewrite H. exists nil. exists x. reflexivity.
   apply IHsuperlist in H.
