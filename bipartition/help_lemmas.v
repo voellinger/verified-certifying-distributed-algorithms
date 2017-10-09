@@ -512,7 +512,52 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma sub_exists_start: forall (sublist superlist : list Vertex),
+Lemma sub_sub_nil: forall (sublist : list Vertex),
+  sub_in_list sublist nil -> sublist = nil.
+Proof.
+  intros sublist sinl.
+  unfold sub_in_list in sinl.
+  destruct sublist.
+  reflexivity.
+  inversion sinl.
+Qed.
+
+Lemma subs_sub_nil: forall (sublist : list Vertex),
+  sub_starts_in_list sublist nil -> sublist = nil.
+Proof.
+  intros sublist sinl.
+  unfold sub_in_list in sinl.
+  destruct sublist.
+  reflexivity.
+  inversion sinl.
+Qed.
+
+Lemma sub_exists_end: forall (sublist superlist : list Vertex),
+  sub_starts_in_list sublist superlist -> (exists (l : V_list), superlist = sublist ++ l).
+Proof.
+  intros sublist superlist sinl.
+Admitted.
+
+Lemma sub_starts_or_in_rest : forall (sublist superlist : list Vertex) (a : Vertex),
+  sub_in_list sublist (a :: superlist) -> sub_starts_in_list sublist (a :: superlist) \/ sub_in_list sublist superlist.
+Proof.
+  intros sublist superlist a sinl.
+  destruct sublist.
+  left.
+  reflexivity.
+  unfold sub_in_list in sinl.
+  destruct sinl.
+  destruct H.
+  left.
+  simpl.
+  split.
+  apply H.
+  apply H0.
+  right.
+  apply H.
+Qed.
+
+Lemma sub_exists_embedding: forall (sublist superlist : list Vertex),
   sub_in_list sublist superlist -> (exists (l1 l3 : V_list), superlist = l1 ++ sublist ++ l3).
 Proof.
   intros sublist superlist sinl.
@@ -520,14 +565,16 @@ Proof.
   destruct sublist.
   exists nil. exists nil. reflexivity.
   inversion sinl.
-  induction sublist.
-  apply imply_to_or in IHsuperlist.
-  destruct IHsuperlist.
-  assert (sub_in_list nil superlist).
-  apply sub_nil_super.
-  intuition.
-  inversion IHsuperlist.
-  
+
+  apply sub_starts_or_in_rest in sinl.
+  destruct sinl.
+  apply sub_exists_end in H.
+  destruct H.
+  rewrite H. exists nil. exists x. reflexivity.
+  apply IHsuperlist in H.
+  destruct H. destruct H.
+  rewrite H. exists (a :: x). exists x0. reflexivity.
+Qed.
 
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
