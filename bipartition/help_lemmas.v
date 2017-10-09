@@ -432,19 +432,40 @@ Proof.
   apply sinl.
 Qed.
 
-(* Lemma sub_one_less: forall (sub super : list Vertex) (a : Vertex),
+Lemma subs_means_sub : forall (sub super : list Vertex),
+  sub_starts_in_list sub super -> sub_in_list sub super.
+Proof.
+  intros sub super sinl.
+  destruct sub. destruct super.
+  reflexivity. reflexivity.
+  destruct super. inversion sinl.
+  unfold sub_in_list.
+  left.
+  inversion sinl.
+  split.
+  apply H.
+  apply H0.
+Qed.
+
+Lemma sub_one_less: forall (sub super : list Vertex) (a : Vertex),
   sub_in_list (a :: sub) super -> sub_in_list sub super.
 Proof.
   intros sub super a sinl.
   induction super.
   inversion sinl.
-  induction sub.
-  reflexivity.
-  unfold sub_in_list.
-  right.
-  apply IHsuper.
+  simpl in sinl.
+  destruct sinl.
+  destruct H.
+  apply subs_means_sub in H0.
+  apply (sub_one_more sub super a0) in H0.
+  apply H0.
+  apply IHsuper in H.
+  apply (sub_one_more sub super a0) in H.
+  apply H.
+Qed.
 
 
+(*
 Lemma sub_for_all : forall (sub super : list Vertex),
   sub_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
 Proof.
@@ -536,6 +557,14 @@ Lemma sub_exists_end: forall (sublist superlist : list Vertex),
   sub_starts_in_list sublist superlist -> (exists (l : V_list), superlist = sublist ++ l).
 Proof.
   intros sublist superlist sinl.
+
+  induction superlist.
+  apply subs_sub_nil in sinl.
+  exists nil. rewrite sinl. reflexivity.
+(*   unfold sub_starts_in_list in sinl.
+  induction sublist.
+  exists (a :: superlist). reflexivity.
+  destruct sinl. *)
 Admitted.
 
 Lemma sub_starts_or_in_rest : forall (sublist superlist : list Vertex) (a : Vertex),
