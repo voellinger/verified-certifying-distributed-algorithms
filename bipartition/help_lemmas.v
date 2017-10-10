@@ -466,31 +466,7 @@ Qed.
 
 
 
-Lemma sub_for_all : forall (sub super : list Vertex),
-  sub_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
-Proof.
-  intros sub super sss x i.
-  induction sub.
-  inversion i.
-  induction super.
-  inversion sss.
-  apply IHsub.
-  admit.
-  admit.
-Admitted.
 
-Lemma sub_exists_one : forall (sub super : list Vertex),
-  (exists x : Vertex, In x sub /\ ~ In x super) -> ~ sub_in_list sub super.
-Proof.
-  intros sub super ex.
-  destruct ex.
-  destruct H.
-  unfold not.
-  intros.
-  apply (sub_for_all sub super H1 x) in H.
-  apply H0 in H.
-  inversion H.
-Qed.
 
 Lemma sub_nil_super: forall(superlist : list Vertex),
   sub_in_list nil superlist.
@@ -520,6 +496,151 @@ Proof.
   reflexivity.
   inversion sinl.
 Qed.
+
+Lemma in_means_embedded : forall (l : list Vertex) (x : Vertex),
+  In x l <-> (exists (l1 l2 : list Vertex), l = l1 ++ (x :: l2)).
+Proof.
+  intros l.
+  split.
+
+  intros.
+  induction l.
+  inversion H.
+  unfold In in H.
+  destruct H.
+  exists nil. exists l. rewrite H. reflexivity.
+  apply IHl in H.
+  destruct H. destruct H.
+  exists (a :: x0). exists x1. rewrite H. reflexivity.
+
+  intros.
+  destruct H. destruct H.
+  rewrite H.
+  apply in_or_app.
+  right.
+  simpl.
+  left.
+  reflexivity.
+Qed.
+
+Lemma subs_app : forall (sub super : list Vertex),
+  sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
+Proof.
+  intros sub super sinl.
+  (* exists (cut length(sub) super) *)
+  induction super.
+  apply subs_sub_nil in sinl.
+  exists nil. rewrite sinl. reflexivity.
+
+  induction sub.
+  exists (a :: super). reflexivity.
+  inversion sinl.
+
+Admitted.
+
+
+
+Lemma subs_app2 : forall (sub1 sub2 super : list Vertex),
+  sub_starts_in_list (sub1 ++ sub2) super -> (exists (super2 : list Vertex), super = sub1 ++ super2).
+Proof.
+  intros s1 s2 super sinl.
+  apply subs_app in sinl.
+  destruct sinl.
+  exists (s2 ++ x). rewrite H. rewrite <- app_assoc. reflexivity.
+Qed.
+
+
+Lemma subs_minus : forall (s1 s2 s3 : list Vertex),
+  sub_starts_in_list s2 s3 <-> sub_starts_in_list (s1 ++ s2) (s1 ++ s3).
+Proof.
+  intros s1 s2 s3.
+  split.
+
+  intros.
+  induction s1.
+  simpl. apply H.
+  simpl.
+  split.
+  reflexivity.
+  apply IHs1.
+
+  intros.
+  induction s1.
+  simpl. apply H.
+  simpl in H.
+  destruct H.
+  apply IHs1.
+  apply H0.
+Qed.
+
+
+
+Lemma subs_for_all : forall (sub super : list Vertex),
+  sub_starts_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
+Proof.
+  intros sub super sss x i.
+  apply in_means_embedded in i.
+  destruct i.
+  destruct H.
+  rewrite H in sss. assert (sss' := sss). apply subs_app2 in sss.
+  destruct sss.
+  rewrite H0 in sss'.
+  rewrite H0.
+  apply <- subs_minus in sss'.
+  destruct x2.
+  inversion sss'.
+  inversion sss'.
+  apply in_or_app.
+  right.
+  unfold In.
+  left.
+  symmetry.
+  apply H1.
+Qed.
+
+Lemma sub_for_all : forall (sub super : list Vertex),
+  sub_in_list sub super -> (forall x : Vertex, In x sub -> In x super).
+Proof.
+  intros sub super sss x i.
+  induction super.
+  apply sub_sub_nil in sss.
+  rewrite sss in i.
+  inversion i.
+  unfold In.
+
+
+  induction sub.
+  inversion i.
+
+  apply IHsub.
+  apply sub_one_less in sss.
+  apply sss.
+  unfold In in i.
+  destruct i.
+  admit.
+  apply H.
+
+  induction super.
+  inversion sss.
+  apply IHsub.
+  admit.
+  admit.
+Admitted.
+
+Lemma sub_exists_one : forall (sub super : list Vertex),
+  (exists x : Vertex, In x sub /\ ~ In x super) -> ~ sub_in_list sub super.
+Proof.
+  intros sub super ex.
+  destruct ex.
+  destruct H.
+  unfold not.
+  intros.
+  apply (sub_for_all sub super H1 x) in H.
+  apply H0 in H.
+  inversion H.
+Qed.
+
+
 
 Lemma subs_exists_end: forall (sublist superlist : list Vertex),
   sub_starts_in_list sublist superlist -> (exists (l : V_list), superlist = sublist ++ l).
