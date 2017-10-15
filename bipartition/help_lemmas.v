@@ -178,16 +178,18 @@ Qed.
 Definition shortest_path2 {v: V_set} {a:A_set} {vl : V_list} {el : E_list} (c0 c1 : Component) {p: Path v a c0 c1 vl el} := 
   forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length vl <= length vl'.
 
-Function distance (v: V_set) (a: A_set) (c0 c1 : Component) (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el) (t : Tree v a): nat := 
-  length el.
+
 
 Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
   forall (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), n <= length el.
 
-Lemma distance_root_0: forall (v: V_set) (a: A_set) (root:Component), distance2 v a root root 0.
+Definition distance (v: V_set) (a: A_set) (c0 : Component) (n : nat) :=
+  forall (vl : V_list) (el : E_list) (p: Path v a root c0 vl el), n <= length el.
+
+Lemma distance_root_0: forall (v: V_set) (a: A_set) (root:Component), distance v a root 0.
 Proof.
   intros v0 a0.
-  unfold distance2.
+  unfold distance.
   intros.
   inversion p.
   simpl.
@@ -1198,6 +1200,12 @@ Proof.
   rewrite E_rev_len.
   reflexivity.
 Qed.
+
+(* Lemma exists_distance: forall (v: V_set) (a:A_set) (x:Component) (t: Tree v a),
+  v x -> {n : nat & distance2 v a root x n}.
+Proof.
+  intros v a x t vx. *)
+  
 
 (* Lemma path_in_tree_has_distance: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
   (Path v a x root vl el \/ Path v a root x vl el) ->  *)

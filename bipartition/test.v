@@ -19,8 +19,8 @@ Section Test.
 
 
 
-Variable distance : Component -> nat.
 
+Variable root : Component.
 Variable color : Component -> bool.
 
 
@@ -53,8 +53,8 @@ Proof.
 Qed.
 
 
-Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) :=
-  v x /\ v y /\ ~ a (A_ends x y) /\ odd (distance x) = odd (distance y) /\ x <> y.
+Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) (n m : nat) :=
+  v x /\ v y /\ ~ a (A_ends x y) /\ distance root v a x m /\ distance root v a y n /\ odd m = odd n /\ x <> y.
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Vertex) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
@@ -214,66 +214,61 @@ Proof.
   intuition.
 Qed.
 
-Variable root : Component.
+
 
 (* Here we show the following *)
 Lemma special_vertices_make_odd_closed: 
-  forall (v:V_set) (a:A_set) (t : Tree v a) (x y: Component), 
-  special_vertices v a t x y -> 
+  forall (v:V_set) (a:A_set) (t : Tree v a) (x y: Component) (m n : nat), 
+  special_vertices v a t x y m n -> 
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v (A_union a (E_set x y)) y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
-  intros v a t x y H.
+  intros v a t x y m n H.
 
   unfold special_vertices in H.
   destruct H.
   destruct H0.
   destruct H1.
   destruct H2.
-  
+  destruct H3.
+  destruct H4.
 
   assert (rooted:=H).
   apply (nearly_all_trees_rooted root v a x t) in rooted.
 
 
 
-  apply (tree_walk v a t x root) in H.
-  apply (tree_walk v a t root y) in H0.
+
+
+
+  apply (connected_min_path2 root v a x t) in H.
   destruct H.
-  exists x0.
-  destruct H0.
-  exists x1.
   destruct s.
-  exists x2.
-  destruct s0.
-  exists x3.
-  apply W_endx_inv in w.
-  apply W_endy_inv in w0.
-  clear H3.
-  rename w into H.
-  rename w0 into H0.
-  rename x0 into vlx.
-  rename x2 into elx.
-  rename x1 into vly.
-  rename x3 into ely.
-
-
-
-
-
-  apply (distance_means_walk2 distance v a vlx elx x root t rooted) in H.
-  destruct H.
-  apply (distance_means_walk2' distance v a vly ely y root t rooted) in H0.
+  destruct s.
+  apply (connected_min_path root v a y t) in H0.
   destruct H0.
-  apply (Walk_append v a x root y vlx vly elx ely) in x1.
+  destruct s.
+  destruct s.
+  rename x0 into vlx.
+  rename x1 into elx.
+  rename x3 into vly.
+  rename x4 into ely.
+  exists vlx.
+  exists vly.
+  exists elx.
+  exists ely.
+
+
+  apply Path_isa_walk in x2.
+  apply (Walk_append v a x root y vlx vly elx ely) in x2.
   
-  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x1.
-  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vly) (E_ends y x :: E_nil) (elx ++ ely)) in x1.
+  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x2.
+  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vly) (E_ends y x :: E_nil) (elx ++ ely)) in x2.
 
 
 
-  simpl in x1.
-  exists x1.
+  simpl in x2.
+  exists x2.
 
   unfold odd_closed.
   split.
@@ -281,6 +276,11 @@ Proof.
   reflexivity.
 
   simpl.
+  apply odd_S.
+  unfold distance in H2.
+  unfold distance in H3.
+
+  unfold distance2 in d.
   rewrite <- e0 in H2.
   rewrite <- e in H2.
   assert (even (length elx) \/ odd (length elx)).
@@ -288,7 +288,6 @@ Proof.
   destruct H.
 
 
-  apply odd_S.
   rewrite app_length.
   apply even_even_plus.
   apply H.
