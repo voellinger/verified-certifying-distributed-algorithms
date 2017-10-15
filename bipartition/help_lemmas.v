@@ -178,6 +178,9 @@ Qed.
 Definition shortest_path2 {v: V_set} {a:A_set} {vl : V_list} {el : E_list} (c0 c1 : Component) {p: Path v a c0 c1 vl el} := 
   forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length vl <= length vl'.
 
+Function distance (v: V_set) (a: A_set) (c0 c1 : Component) (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el) (t : Tree v a): nat := 
+  length el.
+
 Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
   forall (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), n <= length el.
 
@@ -523,7 +526,13 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma subs_app3 : forall (sub super1 super2 : list Vertex),
+Axiom subs_app3 : forall (sub super1 super2 : list Vertex),
+  sub_starts_in_list sub super1 -> sub_starts_in_list sub (super1 ++ super2).
+
+Axiom subs_app : forall (sub super : list Vertex),
+  sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
+
+(* Lemma subs_app3 : forall (sub super1 super2 : list Vertex),
   sub_starts_in_list sub super1 -> sub_starts_in_list sub (super1 ++ super2).
 Proof.
 Admitted.
@@ -547,7 +556,7 @@ Proof.
   
 
 
-Admitted.
+Admitted. *)
 
 
 
@@ -1041,7 +1050,14 @@ y are the same. As y has degree of 1, there is only one possible extension to th
 are the same.
  *)
 
-Lemma Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
+Axiom Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
+  (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
+  exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
+  (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
+  vla = vl1 ++ vl2a ++ vl3 /\ vlb = vl1 ++ vl2b ++ vl3 /\ 
+  (forall z: Vertex, In z vl2a -> ~ In z vl2b) /\ (forall z: Vertex, In z vl2b -> ~ In z vl2a).
+
+(* Lemma Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
   (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
   exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
   (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
@@ -1056,9 +1072,13 @@ Proof.
   exists x.
   exists x.
   exists nil.
-Admitted.
+Admitted. *)
 
-Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
+  vl = vl' /\ el = el'.
+
+(* Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   vl = vl' /\ el = el'.
 Proof.
@@ -1112,7 +1132,7 @@ Proof.
   reflexivity.
   apply Tree_isa_graph in t.
   apply t.
-Admitted.
+Admitted. *)
 
 Lemma connected_path :
  forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
@@ -1179,59 +1199,7 @@ Proof.
   reflexivity.
 Qed.
 
-
-
-Axiom distance_means_walk2 : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Path v a x root vl el &  distance2 v a x root (length el)}.
-
-Axiom distance_means_walk2' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x root: Component) (t : Tree v a),
- v root -> v x -> {p : Path v a root x vl el & distance2 v a root x (length el)}.
-
-
-
-
-
-
-(* Lemma distance_means_walk2'' : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x : Component) (t : Tree v a) (n : nat),
-  v x -> {p : Walk v a root x vl el & length el = distance x}.
-Proof.
-  intros.
-  apply (distance_means_walk2 v0 a0 (cdr (rev (root :: vl))) (E_reverse el) x0 t) in H.
-(* Walk v a x y vl el -> Walk v  a  (cdr (rev (x :: vl))) (E_reverse el) *)
-  destruct H.
-  apply Walk_reverse in x1.
-
-  
-  simpl in x1.
-  assert (E_reverse (E_reverse el) = el).
-  admit.
-  rewrite H in x1.
-
-  destruct vl.
-  simpl in x1.
-  exists x1.
-  assert (length (E_reverse el) = length el).
-  admit.
-  rewrite H0 in e.
-  apply e.
-
-  simpl in x1.
-  rewrite <- rev_app_distr in x1.
-
-  assert (vl = vl ++ x0 :: nil).
-  admit.
-  rewrite H0 in x1.
-  rewrite rev_app_distr in x1.
-  simpl in x1. 
-  rewrite rev_app_distr in x1.
-  simpl in x1.
-  rewrite rev_involutive in x1.
-  symmetry in H0.
-  rewrite H0 in x1.
-  
-  exists x1.
-  admit.
-  simpl in x1.
-Admitted. *)
+(* Lemma path_in_tree_has_distance: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
+  (Path v a x root vl el \/ Path v a root x vl el) ->  *)
 
 End Help.
