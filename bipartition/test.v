@@ -258,7 +258,7 @@ Proof.
   exists elx.
   exists ely.
 
-
+  assert (temp := x2).
   apply Path_isa_walk in x2.
   apply (Walk_append v a x root y vlx vly elx ely) in x2.
   
@@ -279,10 +279,12 @@ Proof.
   apply odd_S.
   unfold distance in H2.
   unfold distance in H3.
+  apply (distance_no_dup v a root x (length elx) n d) in H2.
+  apply (distance_no_dup v a root y (length ely) m d0) in H3.
 
-  unfold distance2 in d.
-  rewrite <- e0 in H2.
-  rewrite <- e in H2.
+  rewrite <- H2 in H4.
+  rewrite <- H3 in H4.
+
   assert (even (length elx) \/ odd (length elx)).
   apply even_or_odd.
   destruct H.
@@ -295,24 +297,24 @@ Proof.
   apply even_or_odd.
   destruct H0.
   apply H0.
-  rewrite <- H2 in H0.
+  rewrite <- H4 in H0.
   apply not_even_and_odd in H0.
   inversion H0.
   apply H.
-  apply odd_S.
+
   rewrite app_length.
   apply odd_even_plus.
   apply H.
-  rewrite H2 in H.
+  rewrite H4 in H.
   apply H.
   simpl.
 
   apply (W_step v (A_union a (E_set x y)) y x x (V_nil) (E_nil)).
   apply W_null.
-  apply W_endx_inv in x0.
-  apply x0.
-  apply W_endy_inv in x1.
-  apply x1.
+  apply (P_endx_inv v a x root vlx elx) in temp.
+  apply temp.
+  apply (P_endy_inv v a root y vly ely) in x5.
+  apply x5.
   unfold A_union.
   apply A_in_right.
   apply E_left.
@@ -325,18 +327,16 @@ Proof.
   intros.
   apply A_in_left.
   apply H.
-  apply x0.
-
-  apply rooted.
-  apply rooted.
+  apply Path_isa_walk in x5.
+  apply x5.
 Qed.
 
 
 Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set) (t : Tree v a) (x y : Component) (c: Connected v (A_union a (E_set x y)))
-  (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list),
-  special_vertices v a t x y -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
+  (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list) (m n : nat),
+  special_vertices v a t x y m n -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
 Proof.
-  intros v0 v' a0 a' t x y c d vl el H.
+  intros v0 v' a0 a' t x y c d vl el m n H.
   apply special_vertices_make_odd_closed in H.
   destruct H.
   destruct s.
