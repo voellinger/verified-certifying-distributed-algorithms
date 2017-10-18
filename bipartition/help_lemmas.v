@@ -1123,6 +1123,22 @@ Qed.
 Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component) (p: Path v a c0 c1 vl el) := 
   forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length el <= length el'.
 
+Lemma shortest_path2_rev: forall (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component)
+  (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
+  shortest_path2 v a vl el c0 c1 p0 -> 
+  shortest_path2 v a (cdr (rev (c0 :: vl))) (E_reverse el) c1 c0 p1.
+Proof.
+  intros v a vl el c0 c1 p0 p1 g s.
+  unfold shortest_path2. unfold shortest_path2 in s.
+  intros.
+  rewrite E_rev_len.
+  apply Path_reverse in H.
+  apply s in H.
+  rewrite E_rev_len in H.
+  apply H.
+  apply g.
+Qed.
+
 Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
   exists (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), shortest_path2 v a vl el c0 c1 p /\ length el = n.
 
@@ -1205,24 +1221,22 @@ Proof.
 Qed.
 
 
-Lemma distance_root_0: forall (v: V_set) (a: A_set), distance v a root 0.
+Lemma distance_root_0: forall (v: V_set) (a: A_set), v root -> distance v a root 0.
 Proof.
   intros v0 a0.
   unfold distance.
   unfold distance2.
   intros.
-  inversion p.
-  simpl.
+  assert (Path v0 a0 root root V_nil E_nil).
+  apply P_null.
+  apply H.
+  exists V_nil. exists E_nil. exists H0.
   split.
-  reflexivity.
-  intuition.
-  destruct H4.
-  intuition.
+  unfold shortest_path2.
+  intros.
   simpl.
   intuition.
-  destruct H10.
-  destruct H10.
-  intuition.
+  reflexivity.
 Qed.
 
 Lemma distance_refl: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n:nat) (g: Graph v a),
@@ -1232,18 +1246,35 @@ Proof.
   unfold distance2 in dis.
   unfold distance2.
   intros.
+  destruct dis.
+  destruct H. destruct H. destruct H.
+  assert (p := x1).
   apply Path_reverse in p.
-  apply dis in p.
-  rewrite E_rev_len in p.
-  apply p.
+  exists (cdr (rev (c0 :: x))).
+  exists (E_reverse x0).
+  exists p.
+  split.
+
+  apply (shortest_path2_rev v a x x0 c0 c1 x1 p g) in H.
+  apply H.
+  rewrite E_rev_len.
+  apply H0.
   apply g.
 Qed.
 
-Lemma distance_: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n m:nat),
+Lemma distance_no_dup: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n m:nat),
   distance2 v a c0 c1 n -> distance2 v a c0 c1 m -> n = m.
 Proof.
   intros v a c0 c1 n m dis1 dis2.
   unfold distance2 in dis1. unfold distance2 in dis2.
-  
+  destruct dis1. destruct H. destruct H. destruct H.
+  destruct dis2. destruct H1. destruct H1. destruct H1.
+  unfold shortest_path2 in H. unfold shortest_path2 in H1.
+  apply H in x4.
+  apply H1 in x1.
+  rewrite <- H2.
+  rewrite <- H0.
+  intuition.
+Qed.
 
 End Help.
