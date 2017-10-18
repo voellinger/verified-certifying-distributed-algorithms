@@ -52,7 +52,7 @@ Proof.
   apply H1.
 Qed.
 
-
+(* could be remade without m and n, just use shortest_path *)
 Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) (n m : nat) :=
   v x /\ v y /\ ~ a (A_ends x y) /\ distance root v a x m /\ distance root v a y n /\ odd m = odd n /\ x <> y.
 
@@ -216,7 +216,10 @@ Qed.
 
 
 
-(* Here we show the following *)
+(* Here we show that if there are two vertices in a tree, with both odd or both even distance to the root and they share an edge,
+  (together they are special_vertices) that there must be an odd_closed altogether.
+  Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
+  Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
 Lemma special_vertices_make_odd_closed: 
   forall (v:V_set) (a:A_set) (t : Tree v a) (x y: Component) (m n : nat), 
   special_vertices v a t x y m n -> 
@@ -235,11 +238,6 @@ Proof.
 
   assert (rooted:=H).
   apply (nearly_all_trees_rooted root v a x t) in rooted.
-
-
-
-
-
 
   apply (connected_min_path2 root v a x t) in H.
   destruct H.
@@ -331,7 +329,8 @@ Proof.
   apply x5.
 Qed.
 
-
+(* if there are special_vertices in some subgraph, then the supergraph cannot be bipartite *)
+(* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
 Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set) (t : Tree v a) (x y : Component) (c: Connected v (A_union a (E_set x y)))
   (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list) (m n : nat),
   special_vertices v a t x y m n -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
