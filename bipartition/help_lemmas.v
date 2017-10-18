@@ -186,20 +186,6 @@ Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
 Definition distance (v: V_set) (a: A_set) (c0 : Component) (n : nat) :=
   forall (vl : V_list) (el : E_list) (p: Path v a root c0 vl el), n <= length el.
 
-Lemma distance_root_0: forall (v: V_set) (a: A_set) (root:Component), distance v a root 0.
-Proof.
-  intros v0 a0.
-  unfold distance.
-  intros.
-  inversion p.
-  simpl.
-  reflexivity.
-  simpl.
-  intuition.
-Qed.
-
-
-
 Lemma E_eq2 : forall (e1 e2 : Edge),
   E_eq e1 e2 -> E_eq e2 e1.
 Proof.
@@ -1201,13 +1187,30 @@ Proof.
   reflexivity.
 Qed.
 
-(* Lemma exists_distance: forall (v: V_set) (a:A_set) (x:Component) (t: Tree v a),
-  v x -> {n : nat & distance2 v a root x n}.
+Lemma distance_root_0: forall (v: V_set) (a: A_set) (root:Component), distance v a root 0.
 Proof.
-  intros v a x t vx. *)
-  
+  intros v0 a0.
+  unfold distance.
+  intros.
+  inversion p.
+  simpl.
+  reflexivity.
+  simpl.
+  intuition.
+Qed.
 
-(* Lemma path_in_tree_has_distance: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
-  (Path v a x root vl el \/ Path v a root x vl el) ->  *)
+Lemma distance_refl: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n:nat) (g: Graph v a),
+  distance2 v a c0 c1 n -> distance2 v a c1 c0 n.
+Proof.
+  intros v a c0 c1 n g dis.
+  unfold distance2 in dis.
+  unfold distance2.
+  intros.
+  apply Path_reverse in p.
+  apply dis in p.
+  rewrite E_rev_len in p.
+  apply p.
+  apply g.
+Qed.
 
 End Help.
