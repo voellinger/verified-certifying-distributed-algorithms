@@ -524,37 +524,56 @@ Fixpoint cut (n : nat) (l : list Vertex) : list Vertex :=
     end
   end.
 
-Lemma subs_app : forall (sub super : list Vertex),
-  sub_starts_in_list sub super <-> (exists (super2 : list Vertex), super = sub ++ super2).
+Lemma cut_1 : forall (sub : list Vertex),
+  cut (length sub) sub = nil.
 Proof.
-  intros sub super. split. intros sinl.
-  exists (cut (length sub) super).
-(*   induction super.
-  apply subs_sub_nil in sinl. rewrite sinl. reflexivity.
-  destruct sub.
-  simpl. reflexivity.
-  inversion sinl.
-  simpl.
-  rewrite H. *)
-  
-
-  induction sub.
-  simpl. reflexivity.
-  destruct super.
-  simpl. 
-
-
-
-  admit.
-
-  intros sinl.
-  destruct sinl.
+  intros sub.
   induction sub.
   reflexivity.
-  rewrite H.
   simpl.
-  split. reflexivity.
-  apply subs_app3.
+  apply IHsub.
+Qed.
+
+Lemma cut_2 : forall (sub super rest : list Vertex),
+  length sub <= length super -> cut (length sub) (super ++ rest) = cut (length sub) super ++ rest.
+Proof.
+  intros sub super rest ll.
+Admitted.
+
+Lemma aux : forall (sub super rest : list Vertex),
+  super = sub ++ rest -> length sub <= length super.
+Proof.
+  intros sub super rest ssr.
+Admitted.
+
+Lemma aux2 : forall (sub super :list Vertex) (r : Vertex),
+  sub_starts_in_list sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list sub super).
+Proof.
+  intros sub super r ssil.
+Admitted.
+
+Lemma subs_app : forall (sub super : list Vertex),
+  sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
+Proof.
+  intros sub super sinl.
+  exists (cut (length sub) super).
+
+  induction super using rev_ind.
+  apply subs_sub_nil in sinl. rewrite sinl.
+  reflexivity.
+  apply aux2 in sinl.
+  destruct H.
+  rewrite <- H.
+  rewrite cut_1.
+  rewrite app_nil_r. reflexivity.
+  apply IHsuper in H.
+  assert (H' := H).
+  apply aux in H'.
+  rewrite cut_2.
+  rewrite app_assoc.
+  rewrite <- H.
+  reflexivity.
+  apply H'.
 Qed.
 
 Axiom subs_app : forall (sub super : list Vertex),
