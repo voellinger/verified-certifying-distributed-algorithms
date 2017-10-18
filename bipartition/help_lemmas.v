@@ -175,17 +175,6 @@ Proof.
   apply H.
 Qed.
 
-Definition shortest_path2 {v: V_set} {a:A_set} {vl : V_list} {el : E_list} (c0 c1 : Component) {p: Path v a c0 c1 vl el} := 
-  forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length vl <= length vl'.
-
-
-
-Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
-  forall (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), n <= length el.
-
-Definition distance (v: V_set) (a: A_set) (c0 : Component) (n : nat) :=
-  forall (vl : V_list) (el : E_list) (p: Path v a root c0 vl el), n <= length el.
-
 Lemma E_eq2 : forall (e1 e2 : Edge),
   E_eq e1 e2 -> E_eq e2 e1.
 Proof.
@@ -1131,6 +1120,15 @@ Proof.
         apply (Walk_to_path v a x y x0 x1 p0).
 Qed.
 
+Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component) (p: Path v a c0 c1 vl el) := 
+  forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length el <= length el'.
+
+Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
+  exists (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), shortest_path2 v a vl el c0 c1 p /\ length el = n.
+
+Definition distance (v: V_set) (a: A_set) (c0 : Component) (n : nat) :=
+  distance2 v a root c0 n.
+
 Lemma connected_min_path: forall (v: V_set) (a: A_set) (x : Component) (t : Tree v a),
  v x -> {vl : V_list &  {el : E_list &  {p : Path v a root x vl el & distance2 v a root x (length el)}}}.
 Proof.
@@ -1147,6 +1145,9 @@ Proof.
   exists x0.
   exists p.
   unfold distance2.
+  exists x. exists x0. exists p.
+  split.
+  unfold shortest_path2.
   intros vl el p2.
   assert (vl = x /\ el = x0).
   apply (Tree_only_one_path v a root xx t2).
@@ -1154,6 +1155,7 @@ Proof.
   apply p.
   destruct H.
   rewrite H0.
+  reflexivity.
   reflexivity.
 Qed.
 
@@ -1176,6 +1178,9 @@ Proof.
   apply t.
   exists H.
   unfold distance2.
+  exists vl. exists el. exists x2.
+  split.
+  unfold shortest_path2.
   intros vl0 el0 p2.
   assert (vl = vl0 /\ el = el0).
   apply (Tree_only_one_path v a root x t).
@@ -1183,19 +1188,40 @@ Proof.
   apply p2.
   destruct H0.
   rewrite H1.
+  reflexivity.
   rewrite E_rev_len.
   reflexivity.
 Qed.
 
-Lemma distance_root_0: forall (v: V_set) (a: A_set) (root:Component), distance v a root 0.
+Lemma path_length_geq_0: forall (v: V_set) (a: A_set) (vl:V_list) (el:E_list) (x y : Component),
+  Walk v a x y vl el -> length el >= 0.
+Proof.
+  intros v a vl el x y w.
+  inversion w.
+  simpl.
+  intuition.
+  simpl.
+  intuition.
+Qed.
+
+
+Lemma distance_root_0: forall (v: V_set) (a: A_set), distance v a root 0.
 Proof.
   intros v0 a0.
   unfold distance.
+  unfold distance2.
   intros.
   inversion p.
   simpl.
+  split.
   reflexivity.
+  intuition.
+  destruct H4.
+  intuition.
   simpl.
+  intuition.
+  destruct H10.
+  destruct H10.
   intuition.
 Qed.
 
@@ -1212,5 +1238,12 @@ Proof.
   apply p.
   apply g.
 Qed.
+
+Lemma distance_: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n m:nat),
+  distance2 v a c0 c1 n -> distance2 v a c0 c1 m -> n = m.
+Proof.
+  intros v a c0 c1 n m dis1 dis2.
+  unfold distance2 in dis1. unfold distance2 in dis2.
+  
 
 End Help.
