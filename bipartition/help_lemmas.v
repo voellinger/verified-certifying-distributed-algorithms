@@ -396,7 +396,7 @@ Fixpoint sub_in_list (sublist superlist : list Vertex) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
-    |nil => False
+    |nil => False  (*  (sub_starts_in_list sublist superlist) \/ (sub_in_list sublist tlb) *)
     |b::tlb => ((a = b) /\ (sub_starts_in_list tla tlb)) \/ (sub_in_list sublist tlb)
     end
   end.
@@ -503,20 +503,57 @@ Proof.
   reflexivity.
 Qed.
 
-Axiom subs_app3 : forall (sub super1 super2 : list Vertex),
-  sub_starts_in_list sub super1 -> sub_starts_in_list sub (super1 ++ super2).
+Lemma subs_app3: forall (sub super : list Vertex),
+  sub_starts_in_list sub (sub ++ super).
+Proof.
+  intros sub super.
+  induction sub.
+  reflexivity.
+  simpl.
+  split.
+  reflexivity.
+  apply IHsub.
+Qed.
+
+Fixpoint cut (n : nat) (l : list Vertex) : list Vertex :=
+  match n with
+  |0 => l
+  |S(x) => match l with
+    |nil => nil
+    |hd::tl => cut x tl
+    end
+  end.
+
+
+Lemma subs_app : forall (sub super : list Vertex),
+  sub_starts_in_list sub super <-> (exists (super2 : list Vertex), super = sub ++ super2).
+Proof.
+  intros sub super. split. intros sinl.
+  (* exists (cut (length sub) super) *)
+(*   induction super.
+  apply subs_sub_nil in sinl.
+  exists nil. rewrite sinl. reflexivity. *)
+
+(*   induction sub.
+  exists (a :: super). reflexivity.
+  inversion sinl.
+  induction sub.
+  exists super. reflexivity. *)
+  admit.
+  intros sinl.
+  destruct sinl.
+  induction sub.
+  reflexivity.
+  rewrite H.
+  simpl.
+  split. reflexivity.
+  apply subs_app3.
+Admitted.
 
 Axiom subs_app : forall (sub super : list Vertex),
   sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
 
-(* Lemma subs_app3 : forall (sub super1 super2 : list Vertex),
-  sub_starts_in_list sub super1 -> sub_starts_in_list sub (super1 ++ super2).
-Proof.
-Admitted.
-
-
-
-Lemma subs_app : forall (sub super : list Vertex),
+(* Lemma subs_app : forall (sub super : list Vertex),
   sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
 Proof.
   intros sub super sinl.
