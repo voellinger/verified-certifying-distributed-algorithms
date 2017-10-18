@@ -534,22 +534,76 @@ Proof.
   apply IHsub.
 Qed.
 
+Lemma cut_3 : forall (sub super : list Vertex),
+  cut (length sub) (sub ++ super) = super.
+Proof.
+  intros sub super.
+  induction sub.
+  simpl. reflexivity.
+  simpl. apply IHsub.
+Qed.
+
 Lemma cut_2 : forall (sub super rest : list Vertex),
   length sub <= length super -> cut (length sub) (super ++ rest) = cut (length sub) super ++ rest.
 Proof.
   intros sub super rest ll.
+(*   induction super.
+  simpl.
+  simpl in ll.
+  inversion ll.
+  rewrite H0.
+  simpl. reflexivity.
+
+  simpl.
+  inversion ll.
+  rewrite H0.
+  simpl.
+  rewrite cut_1.
+  rewrite cut_3.
+  reflexivity.
+
+  clear ll. clear H. clear m.
+  apply IHsuper in H0. *)
+
+(*   induction sub.
+  simpl. reflexivity.
+  inversion ll.
+  assert (length (a :: sub) = S ( length sub)).
+  simpl. reflexivity.
+  rewrite H.
+  rewrite H0.
+  rewrite cut_3.
+  rewrite cut_1.
+  reflexivity.
+  simpl. *)
+  induction rest using rev_ind.
+  rewrite app_nil_r. rewrite app_nil_r. reflexivity.
+  rewrite app_assoc. rewrite app_assoc.
+  rewrite <- IHrest.
+  rewrite <- app_assoc.
 Admitted.
 
 Lemma aux : forall (sub super rest : list Vertex),
   super = sub ++ rest -> length sub <= length super.
 Proof.
   intros sub super rest ssr.
-Admitted.
+  rewrite ssr.
+  rewrite app_length.
+  intuition.
+Qed.
 
 Lemma aux2 : forall (sub super :list Vertex) (r : Vertex),
   sub_starts_in_list sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list sub super).
 Proof.
   intros sub super r ssil.
+  induction super using rev_ind.
+  simpl.
+  destruct sub. right. reflexivity.
+  inversion ssil.
+  left. rewrite H. apply subs_sub_nil in H0. rewrite H0. reflexivity.
+  
+  simpl in ssil.
+  destruct sub.
 Admitted.
 
 Lemma subs_app : forall (sub super : list Vertex),
@@ -575,28 +629,6 @@ Proof.
   reflexivity.
   apply H'.
 Qed.
-
-Axiom subs_app : forall (sub super : list Vertex),
-  sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
-
-(* Lemma subs_app : forall (sub super : list Vertex),
-  sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
-Proof.
-  intros sub super sinl.
-  (* exists (cut length(sub) super) *)
-(*   induction super.
-  apply subs_sub_nil in sinl.
-  exists nil. rewrite sinl. reflexivity.
-
-  induction sub.
-  exists (a :: super). reflexivity.
-  inversion sinl. *)
-  induction sub.
-  exists super. reflexivity.
-  
-
-
-Admitted. *)
 
 
 
