@@ -605,19 +605,30 @@ Proof.
   intuition.
 Qed.
 
-Lemma aux2 : forall (sub super :list Vertex) (r : Vertex),
+Lemma aux2 : forall (super sub :list Vertex) (r : Vertex),
   sub_starts_in_list sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list sub super).
 Proof.
-  intros sub super r ssil.
-  induction super using rev_ind.
+  intros super.
+  induction super.
+  intros sub r ssil.
   simpl.
   destruct sub. right. reflexivity.
+
   inversion ssil.
-  left. rewrite H. apply subs_sub_nil in H0. rewrite H0. reflexivity.
+  apply subs_sub_nil in H0. rewrite H0. left. rewrite H. reflexivity.
   
-  simpl in ssil.
-  destruct sub.
-Admitted.
+  intros sub r ssil.
+  destruct sub. right. reflexivity.
+
+  inversion ssil.
+  rewrite H. simpl.
+  apply IHsuper in H0.
+  destruct H0.
+  rewrite H0.
+  left. reflexivity.
+  right.
+  split. reflexivity. apply H0.
+Qed.
 
 Lemma subs_app : forall (sub super : list Vertex),
   sub_starts_in_list sub super -> (exists (super2 : list Vertex), super = sub ++ super2).
