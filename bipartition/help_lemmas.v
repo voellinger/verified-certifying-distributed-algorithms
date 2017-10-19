@@ -1130,11 +1130,25 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
+(*
+
+help_lemmata: if a path is different in vl then different in el and vice versa
+
+
+
+if two paths a and b both from x to y are different, then there exist two completely different sub_paths from x' to y':
+a = x...x'...y'...y = xx' x'y' y'y
+b = x...x'...y'...y = (xx')' (x'y')' (y'y)'
+and x'y' completely different from (x'y')'. x'y' (rev (x'y')') make a closed_path/cycle.
+
+*)
+
 (* There can only be one path in a tree t, ending in vertices x and y.
 
-Suppose there are two paths from x to y: p1 and p2. p1 and p2 must be out of three parts: el_p1 = a b1 c, el_p2 = a b2 c.
-With b1 completely different from b2.
-b1 (rev b2) makes a cycle. This cycle must be of length 0, because t is acyclic as it is a tree. therefore el_p1 = el_p2.
+Suppose there are two paths from x to y: a and b. a = s1 :: d1 :: s2 :: d2 .... dn :: sn
+                                                  b = s1 :: e1 :: s2 :: e2 .... en :: sn
+  forall 1<=k<=n: dk != ek.
+d1 (rev e1) makes a cycle. This cycle must be of length 0, because t is acyclic as it is a tree. therefore el_p1 = el_p2.
 
 I Suppose we only have a root. There is only the path from root to root and that is equivalent to all other such paths.
 II Suppose we add v as a leaf to t. For all paths not containing v we use IS. If v is contained in a path, then at its start
