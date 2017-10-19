@@ -543,45 +543,23 @@ Proof.
   simpl. apply IHsub.
 Qed.
 
-Lemma cut_2 : forall (sub super rest : list Vertex),
-  length sub <= length super -> cut (length sub) (super ++ rest) = cut (length sub) super ++ rest.
+Lemma cut_4 : forall (super rest : list Vertex) (k : nat),
+  k <= length super -> cut k (super ++ rest) = cut k super ++ rest.
 Proof.
-  intros sub super rest ll.
-(*   induction super.
-  simpl.
-  simpl in ll.
-  inversion ll.
-  rewrite H0.
-  simpl. reflexivity.
-
-  simpl.
-  inversion ll.
-  rewrite H0.
-  simpl.
-  rewrite cut_1.
-  rewrite cut_3.
-  reflexivity.
-
-  clear ll. clear H. clear m.
-  apply IHsuper in H0. *)
-
-(*   induction sub.
-  simpl. reflexivity.
-  inversion ll.
-  assert (length (a :: sub) = S ( length sub)).
-  simpl. reflexivity.
-  rewrite H.
-  rewrite H0.
-  rewrite cut_3.
-  rewrite cut_1.
-  reflexivity.
-  simpl. *)
+  intros super rest k lek.
   induction rest using rev_ind.
   rewrite app_nil_r. rewrite app_nil_r. reflexivity.
   rewrite app_assoc. rewrite app_assoc.
-  rewrite <- IHrest.
-  rewrite <- app_assoc.
+  rewrite <- IHrest. rewrite <- app_assoc. (* clear IHrest. *)
+  induction k. simpl. rewrite <- app_assoc. reflexivity.
+  inversion lek.
+  rewrite H0. rewrite cut_3. rewrite cut_3. reflexivity.
+  assert (k <= length super).
+  intuition.
+  apply IHk in H1.
+  
 Admitted.
+
 
 Lemma aux : forall (sub super rest : list Vertex),
   super = sub ++ rest -> length sub <= length super.
@@ -616,14 +594,14 @@ Proof.
   apply subs_sub_nil in sinl. rewrite sinl.
   reflexivity.
   apply aux2 in sinl.
-  destruct H.
+  destruct sinl.
   rewrite <- H.
   rewrite cut_1.
   rewrite app_nil_r. reflexivity.
   apply IHsuper in H.
   assert (H' := H).
   apply aux in H'.
-  rewrite cut_2.
+  rewrite cut_4.
   rewrite app_assoc.
   rewrite <- H.
   reflexivity.
