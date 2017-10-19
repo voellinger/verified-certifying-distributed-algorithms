@@ -543,11 +543,100 @@ Proof.
   simpl. apply IHsub.
 Qed.
 
+Lemma cut_nil : forall (k :nat),
+  cut k nil = nil.
+Proof.
+  intros k.
+  induction k.
+  reflexivity.
+  simpl. reflexivity.
+Qed.
+
+Lemma cut_6 : forall (super rest : list Vertex) (k : nat),
+  (cut (S k) (super ++ rest) = cut (S k) super ++ rest) -> (cut k (super ++ rest) = cut k super ++ rest).
+Proof.
+  intros super rest k cutk.
+  elim k. reflexivity. intros.
+
+Admitted.
+
+Lemma cut_5 : forall (super rest : list Vertex) (v : Vertex) (k : nat),
+  (cut k (super ++ rest) = cut k super ++ rest) -> (cut k ((v :: super) ++ rest) = cut k (v :: super) ++ rest).
+Proof.
+  intros super rest v k cutk.
+  induction k.
+  reflexivity.
+  simpl.
+  apply cut_6 in cutk.
+  apply cutk.
+Qed.
+
+
+Lemma cut_7 : forall (super rest fest : list Vertex) (k : nat),
+  (cut k (super ++ rest) = cut k super ++ rest) -> (cut k (super ++ fest) = cut k super ++ fest).
+Proof.
+  intros super rest fest k cutk.
+Admitted.
+
+
 Lemma cut_4 : forall (super rest : list Vertex) (k : nat),
   k <= length super -> cut k (super ++ rest) = cut k super ++ rest.
 Proof.
   intros super rest k lek.
-  induction rest using rev_ind.
+  inversion lek.
+  rewrite cut_3. rewrite cut_1. reflexivity.
+  assert (k < length super).
+  intuition.
+  clear H. clear H0. clear m. clear lek.
+
+  induction super using rev_ind.
+  inversion H1.
+  rewrite app_length in H1.
+  inversion H1.
+  assert (k = length super).
+  intuition.
+  rewrite H. rewrite <- app_assoc. rewrite cut_3. rewrite cut_3. reflexivity.
+
+  assert (k < length super).
+  intuition.
+  clear H. clear H0. clear m. clear H1.
+  assert (H := H2).
+  assert (H1 := H2).
+  apply IHsuper in H. apply IHsuper in H1. clear IHsuper.
+  rewrite <- app_assoc.
+  apply (cut_7 super rest ((x :: nil) ++ rest)) in H.
+  rewrite H. clear H.
+  apply (cut_7 super rest (x::nil)) in H1.
+  rewrite H1. clear H1. rewrite app_assoc.
+  reflexivity.
+Qed.
+
+  induction rest.
+  rewrite app_nil_r. rewrite app_nil_r. reflexivity.
+
+  induction k.
+  reflexivity.
+  inversion lek. 
+  rewrite H0. rewrite cut_3. rewrite cut_1. reflexivity.
+
+  assert (S k < length super).
+  intuition.
+  clear lek. clear H. clear H0. clear m.
+  assert (k <= length super).
+  intuition.
+  apply IHk in H. clear IHk.
+
+  destruct super.
+  inversion H1.
+  simpl.
+
+  induction rest.
+  rewrite app_nil_r. rewrite app_nil_r. reflexivity.
+  
+
+  intros.
+
+(*   induction rest using rev_ind.
   rewrite app_nil_r. rewrite app_nil_r. reflexivity.
   rewrite app_assoc. rewrite app_assoc.
   rewrite <- IHrest. rewrite <- app_assoc. (* clear IHrest. *)
@@ -556,7 +645,7 @@ Proof.
   rewrite H0. rewrite cut_3. rewrite cut_3. reflexivity.
   assert (k <= length super).
   intuition.
-  apply IHk in H1.
+  apply IHk in H1.  *)
   
 Admitted.
 
