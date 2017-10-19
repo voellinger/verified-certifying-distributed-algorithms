@@ -392,12 +392,13 @@ Fixpoint sub_starts_in_list (sublist superlist : list Vertex) : Prop :=
     end
   end.
 
+(* TODO not list Vertex, but list *TYPE* *)
 Fixpoint sub_in_list (sublist superlist : list Vertex) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
-    |nil => False  (*  (sub_starts_in_list sublist superlist) \/ (sub_in_list sublist tlb) *)
-    |b::tlb => ((a = b) /\ (sub_starts_in_list tla tlb)) \/ (sub_in_list sublist tlb)
+    |nil => False  
+    |b::tlb => (sub_starts_in_list sublist superlist) \/ (sub_in_list sublist tlb)
     end
   end.
 
