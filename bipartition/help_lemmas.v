@@ -445,10 +445,6 @@ Proof.
   apply H.
 Qed.
 
-
-
-
-
 Lemma sub_nil_super: forall(superlist : list Vertex),
   sub_in_list nil superlist.
 Proof.
