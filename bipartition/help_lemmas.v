@@ -383,29 +383,28 @@ Proof.
   intuition.
 Qed.
 
-Fixpoint sub_starts_in_list (sublist superlist : list Vertex) : Prop :=
+Fixpoint sub_starts_in_list (X : Type) (sublist superlist : list X) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
     |nil => False
-    |b::tlb => (a = b) /\ (sub_starts_in_list tla tlb)
+    |b::tlb => (a = b) /\ (sub_starts_in_list X tla tlb)
     end
   end.
 
-(* TODO not list Vertex, but list *TYPE* *)
-Fixpoint sub_in_list (sublist superlist : list Vertex) : Prop :=
+Fixpoint sub_in_list (X: Type) (sublist superlist : list X) : Prop :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
     |nil => False  
-    |b::tlb => (sub_starts_in_list sublist superlist) \/ (sub_in_list sublist tlb)
+    |b::tlb => (sub_starts_in_list X sublist superlist) \/ (sub_in_list X sublist tlb)
     end
   end.
 
-Lemma sub_one_more: forall (sub super : list Vertex) (a : Vertex),
-  sub_in_list sub super -> sub_in_list sub (a::super).
+Lemma sub_one_more: forall (X: Type) (sub super : list X) (a : X),
+  sub_in_list X sub super -> sub_in_list X sub (a::super).
 Proof.
-  intros sub super a sinl.
+  intros X sub super a sinl.
   destruct sub.
   reflexivity.
   unfold sub_in_list.
@@ -413,10 +412,10 @@ Proof.
   apply sinl.
 Qed.
 
-Lemma subs_means_sub : forall (sub super : list Vertex),
-  sub_starts_in_list sub super -> sub_in_list sub super.
+Lemma subs_means_sub : forall (X: Type) (sub super : list X),
+  sub_starts_in_list X sub super -> sub_in_list X sub super.
 Proof.
-  intros sub super sinl.
+  intros X sub super sinl.
   destruct sub. destruct super.
   reflexivity. reflexivity.
   destruct super. inversion sinl.
@@ -428,56 +427,56 @@ Proof.
   apply H0.
 Qed.
 
-Lemma sub_one_less: forall (sub super : list Vertex) (a : Vertex),
-  sub_in_list (a :: sub) super -> sub_in_list sub super.
+Lemma sub_one_less: forall (X: Type) (sub super : list X) (a : X),
+  sub_in_list X (a :: sub) super -> sub_in_list X sub super.
 Proof.
-  intros sub super a sinl.
+  intros X sub super a sinl.
   induction super.
   inversion sinl.
   simpl in sinl.
   destruct sinl.
   destruct H.
   apply subs_means_sub in H0.
-  apply (sub_one_more sub super a0) in H0.
+  apply (sub_one_more X sub super a0) in H0.
   apply H0.
   apply IHsuper in H.
-  apply (sub_one_more sub super a0) in H.
+  apply (sub_one_more X sub super a0) in H.
   apply H.
 Qed.
 
-Lemma sub_nil_super: forall(superlist : list Vertex),
-  sub_in_list nil superlist.
+Lemma sub_nil_super: forall (X: Type) (superlist : list X),
+  sub_in_list X nil superlist.
 Proof.
-  intros superlist.
+  intros X superlist.
   induction superlist.
   reflexivity.
   reflexivity.
 Qed.
 
-Lemma sub_sub_nil: forall (sublist : list Vertex),
-  sub_in_list sublist nil -> sublist = nil.
+Lemma sub_sub_nil: forall (X: Type) (sublist : list X),
+  sub_in_list X sublist nil -> sublist = nil.
 Proof.
-  intros sublist sinl.
+  intros X sublist sinl.
   unfold sub_in_list in sinl.
   destruct sublist.
   reflexivity.
   inversion sinl.
 Qed.
 
-Lemma subs_sub_nil: forall (sublist : list Vertex),
-  sub_starts_in_list sublist nil -> sublist = nil.
+Lemma subs_sub_nil: forall (X: Type) (sublist : list X),
+  sub_starts_in_list X sublist nil -> sublist = nil.
 Proof.
-  intros sublist sinl.
+  intros X sublist sinl.
   unfold sub_in_list in sinl.
   destruct sublist.
   reflexivity.
   inversion sinl.
 Qed.
 
-Lemma in_means_embedded : forall (l : list Vertex) (x : Vertex),
-  In x l <-> (exists (l1 l2 : list Vertex), l = l1 ++ (x :: l2)).
+Lemma in_means_embedded : forall (X: Type)  (l : list X) (x : X),
+  In x l <-> (exists (l1 l2 : list X), l = l1 ++ (x :: l2)).
 Proof.
-  intros l.
+  intros X l.
   split.
 
   intros.
@@ -500,10 +499,10 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma subs_app3: forall (sub super : list Vertex),
-  sub_starts_in_list sub (sub ++ super).
+Lemma subs_app3: forall (X: Type) (sub super : list X),
+  sub_starts_in_list X sub (sub ++ super).
 Proof.
-  intros sub super.
+  intros X sub super.
   induction sub.
   reflexivity.
   simpl.
@@ -512,48 +511,48 @@ Proof.
   apply IHsub.
 Qed.
 
-Fixpoint cut (n : nat) (l : list Vertex) : list Vertex :=
+Fixpoint cut (X: Type) (n : nat) (l : list X) : list X :=
   match n with
   |0 => l
   |S(x) => match l with
     |nil => nil
-    |hd::tl => cut x tl
+    |hd::tl => cut X x tl
     end
   end.
 
-Lemma cut_1 : forall (sub : list Vertex),
-  cut (length sub) sub = nil.
+Lemma cut_1 : forall (X: Type) (sub : list X),
+  cut X (length sub) sub = nil.
 Proof.
-  intros sub.
+  intros X sub.
   induction sub.
   reflexivity.
   simpl.
   apply IHsub.
 Qed.
 
-Lemma cut_3 : forall (sub super : list Vertex),
-  cut (length sub) (sub ++ super) = super.
+Lemma cut_3 : forall (X: Type) (sub super : list X),
+  cut X (length sub) (sub ++ super) = super.
 Proof.
-  intros sub super.
+  intros X sub super.
   induction sub.
   simpl. reflexivity.
   simpl. apply IHsub.
 Qed.
 
-Lemma cut_nil : forall (k :nat),
-  cut k nil = nil.
+Lemma cut_nil : forall (X: Type) (k :nat),
+  cut X k nil = nil.
 Proof.
-  intros k.
+  intros X k.
   induction k.
   reflexivity.
   simpl. reflexivity.
 Qed.
 
 
-Lemma cut_7 : forall (super rest fest : list Vertex) (k : nat),
-  k <= length super -> (cut k (super ++ rest) = cut k super ++ rest) -> (cut k (super ++ fest) = cut k super ++ fest).
+Lemma cut_7 : forall (X: Type) (super rest fest : list X) (k : nat),
+  k <= length super -> (cut X k (super ++ rest) = cut X k super ++ rest) -> (cut X k (super ++ fest) = cut X k super ++ fest).
 Proof.
-  intros super.
+  intros X super.
   induction super.
   intros rest fest k kls cutk.
   inversion kls.
@@ -573,10 +572,10 @@ Proof.
 Qed.
 
 
-Lemma cut_4 : forall (k : nat) (super rest : list Vertex),
-  k <= length super -> cut k (super ++ rest) = cut k super ++ rest.
+Lemma cut_4 : forall (X: Type) (k : nat) (super rest : list X),
+  k <= length super -> cut X k (super ++ rest) = cut X k super ++ rest.
 Proof.
-  intros k.
+  intros X k.
   induction k.
   intros super rest lek. reflexivity.
   intros super rest lek.
@@ -588,24 +587,24 @@ Proof.
   induction rest.
 
   rewrite app_nil_r. rewrite app_nil_r. reflexivity.
-  apply (cut_7 super rest (a::rest)) in IHrest.
+  apply (cut_7 X super rest (a::rest)) in IHrest.
   apply IHrest.
   apply lek.
 Qed.
 
-Lemma aux : forall (sub super rest : list Vertex),
+Lemma aux : forall (X: Type) (sub super rest : list X),
   super = sub ++ rest -> length sub <= length super.
 Proof.
-  intros sub super rest ssr.
+  intros X sub super rest ssr.
   rewrite ssr.
   rewrite app_length.
   intuition.
 Qed.
 
-Lemma aux2 : forall (super sub :list Vertex) (r : Vertex),
-  sub_starts_in_list sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list sub super).
+Lemma aux2 : forall (X: Type) (super sub :list X) (r : X),
+  sub_starts_in_list X sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list X sub super).
 Proof.
-  intros super.
+  intros X super.
   induction super.
   intros sub r ssil.
   simpl.
@@ -1134,14 +1133,47 @@ Qed.
 
 help_lemmata: if a path is different in vl then different in el and vice versa
 
-
-
 if two paths a and b both from x to y are different, then there exist two completely different sub_paths from x' to y':
-a = x...x'...y'...y = xx' x'y' y'y
-b = x...x'...y'...y = (xx')' (x'y')' (y'y)'
-and x'y' completely different from (x'y')'. x'y' (rev (x'y')') make a closed_path/cycle.
+a = x...x'...y'...y = vlax vla vlay
+b = x...x'...y'...y = vlbx vlb vlby
+and vla completely different from vlb. 
+
+vla (rev vlb) make a closed_path/cycle, therefore vla and vlb = nil. This holds for all vla, vlb. Therefore a = b.
 
 *)
+(* Axiom Paths_into_parts' : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
+  (pa : Path v a x y vlpa elpa) (pb : Path v a x y vlpb elpb),
+  vlpa != vlpb \/ elpa != elpb ->
+  exists (x' y' : Vertex) (vlax vlay vlbx vlby vla vlb : V_list) (elax elay elbx elby ela elb : E_list),
+  Path v a x x' vlax elax /\ Path v a x' y' vla ela /\ Path v a y' y vlay elay /\
+  Path v a x x' vlbx elbx /\ Path v a x' y' vlb elb /\ Path v a y' y vlby elby /\
+  pa = p1p2p3
+  pb = p4p5p6 *)
+
+(* Definition subpath. *)
+(* Lemma subpath_is_a_path. *)
+Fixpoint middle (X : Type) (l : list X) : list X :=
+  cdr (cut 1 l).
+Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
+  (forall (vv : Vertex), In vv (middle vl) -> ~ In vv (middle vl')).
+Lemma path_different_means_el_different : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el'),
+  path_different v a vl vl' el el' x y w1 w2 -> (forall (e : Edge), In e (middle el) -> ~ In e (middle el')).
+(* Lemma path_diff_plus_path_diff_is_path: path_different1 + rev (path_different2) is a path *)
+Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (w1: Path v a x y vl el) (w2: Path v a x' y' vl' el') :=
+  (forall (vv : Vertex), In vv (middle vl) -> ~ In vv (middle vl')) /\ (forall (e : Edge), In e (middle el) -> ~ In e (middle el')).
+Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
+  vl = vl' /\ el = el'.
+(* Lemma all_different_subpaths_are_length_0: using path_diff_plus_path_diff_is_path *)
+(* Lemma if_all_different_subpaths_are_length_0_paths_are_same:. *)
+(* Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
+  vl = vl' /\ el = el'. *)
+
+
+
+
+
+
 
 (* There can only be one path in a tree t, ending in vertices x and y.
 
@@ -1157,89 +1189,10 @@ y are the same. As y has degree of 1, there is only one possible extension to th
 are the same.
  *)
 
-Axiom Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
-  (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
-  exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
-  (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
-  vla = vl1 ++ vl2a ++ vl3 /\ vlb = vl1 ++ vl2b ++ vl3 /\ 
-  (forall z: Vertex, In z vl2a -> ~ In z vl2b) /\ (forall z: Vertex, In z vl2b -> ~ In z vl2a).
-
-(* Lemma Paths_into_parts : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
-  (pa : Path v a x y vla ela) (pb : Path v a x y vlb elb),
-  exists (vl1 vl2a vl2b vl3 : V_list) (x1 x2 : Vertex) (el2a el2b : E_list)
-  (p2a: Path v a x1 x2 vl2a el2a) (p2b: Path v a x1 x2 vl2b el2b), 
-  vla = vl1 ++ vl2a ++ vl3 /\ vlb = vl1 ++ vl2b ++ vl3 /\ 
-  (forall z: Vertex, In z vl2a -> ~ In z vl2b) /\ (forall z: Vertex, In z vl2b -> ~ In z vl2a).
-Proof.
-  intros.
-  exists nil.
-  exists nil.
-  exists nil.
-  exists vla.
-  exists x.
-  exists x.
-  exists nil.
-Admitted. *)
-
 Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   vl = vl' /\ el = el'.
 
-(* Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
-  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
-  vl = vl' /\ el = el'.
-Proof.
-  intros v a x y t vl vl' el el' p1 p2.
-  assert (parts := p2).
-  apply (Paths_into_parts v a x y vl vl' el el' p1) in parts.
-  destruct parts.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H.
-  destruct H0.
-  destruct H1.
-  apply Path_reverse in x9.
-  apply (Path_append2 v a x4 x5 x4 x1 (cdr (rev (x4 :: x2))) x6 (E_reverse x7)) in x9.
-  assert (Cycle v a x4 x4 (x1 ++ cdr (rev (x4 :: x2))) (x6 ++ E_reverse x7) x9).
-  unfold Cycle.
-  reflexivity.
-  apply (Acyclic_no_cycle ) in H3.
-  apply app_eq_nil in H3.
-  destruct H3.
-  simpl in H4.
-  assert(x2 = nil).
-  admit.
-  rewrite H3 in H.
-  rewrite H5 in H0.
-  rewrite <- H0 in H.
-  split.
-  apply H.
-  admit. (* H, p1, p2 -> el = el'*)
-  apply Tree_isa_acyclic in t.
-  apply t.
-  intros.
-  apply H1 in H3.
-  unfold not. intros. apply H3.
-  apply cdr_rev in H4.
-  unfold In in H4.
-  destruct H4.
-  admit.
-  apply H3 in H4.
-  inversion H4.
-  admit.
-  admit. (* Critical *)
-  apply x8.
-  reflexivity.
-  apply Tree_isa_graph in t.
-  apply t.
-Admitted. *)
 
 Lemma connected_path :
  forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
