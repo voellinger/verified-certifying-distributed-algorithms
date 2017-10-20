@@ -1146,8 +1146,6 @@ Qed.
 
 (*
 
-help_lemmata: if a path is different in vl then different in el and vice versa
-
 if two paths a and b both from x to y are different, then there exist two completely different sub_paths from x' to y':
 a = x...x'...y'...y = vlax vla vlay
 b = x...x'...y'...y = vlbx vlb vlby
@@ -1156,6 +1154,48 @@ and vla completely different from vlb.
 vla (rev vlb) make a closed_path/cycle, therefore vla and vlb = nil. This holds for all vla, vlb. Therefore a = b.
 
 *)
+
+
+(* Definition subpath. *)
+
+(* Lemma subpath_is_a_path. *)
+
+Fixpoint middle (X : Type) (l : list X) : list X :=
+  rev (cdr X (rev (cdr X l))).
+
+Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
+  (forall (vv : Vertex), In vv (middle Vertex vl) -> ~ In vv (middle Vertex vl')).
+
+Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
+  forall (e : Edge), In e el -> ~ In e el'.
+
+Lemma path_different_is_path_different2 : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el'),
+  path_different v a vl vl' el el' x y w1 w2 <-> path_different2 v a vl vl' el el' x y w1 w2.
+Admitted.
+
+Lemma path_diff_plus_path_diff_is_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el'),
+  path_different v a vl vl' el el' x y w1 w2 -> Path v a x x (vl ++ (cdr Vertex (rev (x :: vl')))) (el ++ (E_reverse el')).
+Admitted.
+
+Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
+  vl = vl' /\ el = el'.
+
+(* Lemma all_different_subpaths_are_length_0: using path_diff_plus_path_diff_is_path *)
+
+(* Lemma if_all_different_subpaths_are_length_0_paths_are_same:. *)
+
+Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
+  path_same v a vl vl' el el' x y p1 p2.
+Admitted.
+
+
+
+
+
+(* Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (w1: Path v a x y vl el) (w2: Path v a x' y' vl' el') :=
+  (forall (vv : Vertex), In vv (middle vl) -> ~ In vv (middle vl')) /\ (forall (e : Edge), In e (middle el) -> ~ In e (middle el')). *)
+
 (* Axiom Paths_into_parts' : forall (v:V_set) (a:A_set) (x y : Component) (vla vlb : V_list) (ela elb : E_list)
   (pa : Path v a x y vlpa elpa) (pb : Path v a x y vlpb elpb),
   vlpa != vlpb \/ elpa != elpb ->
@@ -1164,32 +1204,6 @@ vla (rev vlb) make a closed_path/cycle, therefore vla and vlb = nil. This holds 
   Path v a x x' vlbx elbx /\ Path v a x' y' vlb elb /\ Path v a y' y vlby elby /\
   pa = p1p2p3
   pb = p4p5p6 *)
-
-(* Definition subpath. *)
-(* Lemma subpath_is_a_path. *)
-Fixpoint middle (X : Type) (l : list X) : list X :=
-  rev (cdr X (rev (cdr X l))).
-Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
-  (forall (vv : Vertex), In vv (middle Vertex vl) -> ~ In vv (middle Vertex vl')).
-Lemma path_different_means_el_different : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el'),
-  path_different v a vl vl' el el' x y w1 w2 -> (forall (e : Edge), In e (middle Edge el) -> ~ In e (middle Edge el')).
-Admitted.
-(* Lemma path_diff_plus_path_diff_is_path: path_different1 + rev (path_different2) is a path *)
-(* Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (w1: Path v a x y vl el) (w2: Path v a x' y' vl' el') :=
-  (forall (vv : Vertex), In vv (middle vl) -> ~ In vv (middle vl')) /\ (forall (e : Edge), In e (middle el) -> ~ In e (middle el')). *)
-Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (w1: Path v a x y vl el) (w2: Path v a x y vl' el') :=
-  vl = vl' /\ el = el'.
-(* Lemma all_different_subpaths_are_length_0: using path_diff_plus_path_diff_is_path *)
-(* Lemma if_all_different_subpaths_are_length_0_paths_are_same:. *)
-(* Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
-  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
-  path_same v a x y vl vl' el el' p1 p2 *)
-
-
-
-
-
-
 
 (* There can only be one path in a tree t, ending in vertices x and y.
 
