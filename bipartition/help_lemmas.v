@@ -1257,8 +1257,11 @@ Admitted. *)
 Lemma different_subpaths_in_tree_length_0: forall (v:V_set) (a:A_set) (x y x' y': Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
   (sp1 : Path v a x' y' vl' el') (sp2 : Path v a x' y' vl'' el''),
   subpath v a vl vl' el el' x y x' y' p -> subpath v a vl vl'' el el'' x y x' y' p -> path_different v a vl' vl'' el' el'' x' y' sp1 sp2 ->
-  length vl' = 0 /\ length vl'' = 0.
-Admitted.
+  (length vl' = 0 /\ length vl'' = 0).
+Proof.
+  intros v a x y x' y' vl vl' vl'' el el' el'' t p sp1 sp2 subp1 sub2 pdiff.
+  apply path_diff_cycle_is_path in pdiff.
+  
 
 Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb),
