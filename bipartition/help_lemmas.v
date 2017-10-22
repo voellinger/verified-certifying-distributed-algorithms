@@ -1189,12 +1189,14 @@ Proof.
   intros.
 Admitted.
 
+
+(* two paths from x1 to y1 that don't share any inner nodes (one path might be from y1 to x1) *)
 Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el') :=
   x1 <> y1 /\ 
-  (x1 = x2 /\ y1 = y2 /\ forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x1 :: vl')))) /\
+  ((x1 = x2 /\ y1 = y2 /\ forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x2 :: vl')))) /\
   forall u u' : Edge, In u el -> In u' el' -> ~ E_eq u' u) \/ 
   (x1 = y2 /\ y1 = x2 /\ forall (vv : Vertex), In vv vl -> ~ In vv vl' /\
-  forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u).
+  forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u)).
 
 (* Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u.
@@ -1215,13 +1217,18 @@ Proof.
   simpl in H1'.
   destruct H1'. *)
 
-Lemma path_diff_cycle_is_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el')  (g : Graph v a),
-  path_different v a vl vl' el el' x y p1 p2 -> Path v a x x (vl ++ (cdr Vertex (rev (x :: vl')))) (el ++ (E_reverse el')).
+Lemma path_diff_cycle_is_path : forall (v: V_set) (a: A_set) (vl vl' vll: V_list) (el el' ell: E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el')  (g : Graph v a),
+  path_different v a vl vl' el el' x1 x2 y1 y2 p1 p2 -> 
+  (vll = (vl ++ (cdr Vertex (rev (x2 :: vl')))) /\ ell = (el ++ (E_reverse el')) \/
+   vll = (vl ++ vl') /\ ell = (el ++ el')) ->
+  Path v a x1 x1 vll ell.
 Proof.
-  intros v a vl vl' el el' x y p1 p2 g pdiff.
+  intros v a vl vl' vll el el' ell x1 x2 y1 y2 p1 p2 g pdiff vllell.
+Admitted. (* 
+  destruct vllell.
   assert (H := p2).
   apply Path_reverse in H.
-  apply (Path_append2 v a x y x vl (cdr Vertex (rev (x :: vl'))) el (E_reverse el')).
+  apply (Path_append2 v a x1 y1 x vl (cdr Vertex (rev (x2 :: vl'))) el (E_reverse el')).
   intros.
   apply pdiff in H0.
   unfold not.
@@ -1252,7 +1259,7 @@ Proof.
   intros.
   reflexivity.
   apply g.
-Qed.
+Qed. *)
 
 
 
@@ -1270,46 +1277,59 @@ Lemma all_subpaths_same_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Compo
   subpath v a vla vl' ela el' x y x' y' pa -> subpath v a vlb vl'' elb el'' x y x' y' pb -> path_same v a vla vlb ela elb x y pa pb.
 Admitted. *)
 
-Lemma different_subpaths_in_tree_length_0: forall (v:V_set) (a:A_set) (x y x' y': Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
-  (sp1 : Path v a x' y' vl' el') (sp2 : Path v a x' y' vl'' el''),
-  subpath v a vl vl' el el' x y x' y' p -> subpath v a vl vl'' el el'' x y x' y' p -> path_different v a vl' vl'' el' el'' x' y' sp1 sp2 ->
-  (length vl' = 0 /\ length vl'' = 0).
+Lemma different_subpaths_in_tree_are_nil: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
+  (sp1 : Path v a x1 y1 vl' el') (sp2 : Path v a x2 y2 vl'' el''),
+  subpath v a vl vl' el el' x y x1 y1 p -> subpath v a vl vl'' el el'' x y x2 y2 p -> path_different v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2 ->
+  (vl' = nil /\ vl'' = nil).
 Proof.
-  intros v a x y x' y' vl vl' vl'' el el' el'' t p sp1 sp2 subp1 sub2 pdiff.
-  apply path_diff_cycle_is_path in pdiff.
-  assert (Cycle v a x' x' (vl' ++ cdr Vertex (rev (x' :: vl'')))
-          (el' ++ E_reverse el'') pdiff).
+  intros v a x y x1 x2 y1 y2 vl vl' vl'' el el' el'' t p sp1 sp2 subp1 sub2 pdiff.
+  assert (H := pdiff).
+  unfold path_different in pdiff.
+  destruct pdiff.
+  apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) el' el'' (el' ++ E_reverse (el''))) in H.
+  assert (Cycle v a x1 x1 (vl' ++ cdr Vertex (rev (x2 :: vl'')))
+          (el' ++ E_reverse el'') H).
   unfold Cycle.
   reflexivity.
-  apply Acyclic_no_cycle in H.
-  simpl in H.
-  unfold V_nil in H.
-  apply app_eq_nil in H.
-  destruct H.
+  apply Acyclic_no_cycle in H2.
+  simpl in H2.
+  unfold V_nil in H2.
+  apply app_eq_nil in H2.
+  destruct H2.
   split.
-  rewrite H.
-  reflexivity.
-  apply cdr_rev5 in H0.
-  rewrite H0.
-  reflexivity.
+  apply H2.
+  apply cdr_rev5 in H3.
+  apply H3.
   apply Tree_isa_acyclic in t.
   apply t.
   apply Tree_isa_graph in t.
   apply t.
+  left.
+  split.
+  reflexivity.
+  reflexivity.
 Qed.
 
-(* Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
-  (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb),
-  (path_different v a vl' vl'' el' el'' x' y' (subpath v a vla vl' ela el' x y x' y' pa) (subpath v a vlb vl'' elb el'' x y x' y' pb) /\ length vl' = 0 /\ length vl'' = 0) -> path_same v a vla vlb ela elb x y pa pb.
+Lemma different_subpaths_are_nil_paths_same: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) 
+  (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
+  (spa : Path v a x1 y1 vl' el') (spb : Path v a x2 y2 vl'' el''),
+  (subpath v a vla vl' ela el' x y x1 y1 pa -> subpath v a vlb vl'' elb el'' x y x2 y2 pb -> path_different v a vl' vl'' el' el'' x1 x2 y1 y2 spa spb ->
+  (vl' = nil /\ vl'' = nil)) -> path_same v a vla vlb ela elb x y pa pb.
 Proof.
-  intros v a x y x' y' vla vlb vl' vl'' ela elb el' el'' t pa pb sp1 sp2.
-  unfold path_same. *)
-
+  intros v a x y x1 x2 y1 y2 vla vlb vl' vl'' ela elb el' el'' t pa pb spa spb.
+  intros diff_sp_i_t_a_n.
+  unfold path_same.
+  intuition.
+  admit.
+  admit.
+Admitted.
 
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   path_same v a vl vl' el el' x y p1 p2.
+Proof.
   intros v a x y t vl vl' el el' p1 p2.
+  apply different_subpaths_are_nil_paths_same.
   unfold path_same.
 Admitted.
 
