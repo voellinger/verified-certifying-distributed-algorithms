@@ -1173,10 +1173,10 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   end.
 
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\
-  ((vl' = nil /\ el' = nil /\ x' = y') \/ 
-  (hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
-  y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y')))).
+  {vl' = nil /\ el' = nil /\ x' = y' /\ x = x'} + 
+  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' vl} + 
+  {sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
+  y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y'))}.
 
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
@@ -1184,19 +1184,39 @@ Proof.
   intros v a vl vl' el el' x y x' y' p sp.
   unfold subpath in sp.
   destruct sp.
+  destruct s.
+  destruct a0.
   destruct H0.
-  elim p.
-  intros.
+  destruct H1.
+  rewrite H1. rewrite H. rewrite H0.
+  apply P_null.
+  apply P_endx_inv in p.
+  rewrite <- H1. rewrite <- H2.
+  apply p.
+  destruct a0.
+  destruct H0.
+  destruct H1.
+  rewrite H. rewrite H0. rewrite H1.
+  apply P_null.
+  rewrite <- H1.
+  apply (P_invl_inv v a x y vl el) in H2.
+  apply H2.
+  apply p.
+  destruct a0.
+  destruct H0.
+  destruct H1.
+  destruct H2.
 Admitted.
 
 
 (* two paths from x1 to y1 that don't share any inner nodes (one path might be from y1 to x1) *)
-Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el') :=
-  x1 <> y1 /\ 
-  ((x1 = x2 /\ y1 = y2 /\ forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x2 :: vl')))) /\
-  forall u u' : Edge, In u el -> In u' el' -> ~ E_eq u' u) \/ 
-  (x1 = y2 /\ y1 = x2 /\ forall (vv : Vertex), In vv vl -> ~ In vv vl' /\
-  forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u)).
+Definition path_different1 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el') :=
+  x1 <> y1 /\ x1 = x2 /\ y1 = y2 /\ (forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x2 :: vl'))))) /\
+  (forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u).
+
+Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el') :=
+  x1 <> y1 /\ x1 = y2 /\ y1 = x2 /\ (forall (vv : Vertex), In vv vl -> ~ In vv vl') /\
+  (forall u u' : Edge, In u el -> In u' el' -> ~ E_eq u' u).
 
 (* Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u.
@@ -1218,48 +1238,66 @@ Proof.
   destruct H1'. *)
 
 Lemma path_diff_cycle_is_path : forall (v: V_set) (a: A_set) (vl vl' vll: V_list) (el el' ell: E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el')  (g : Graph v a),
-  path_different v a vl vl' el el' x1 x2 y1 y2 p1 p2 -> 
-  (vll = (vl ++ (cdr Vertex (rev (x2 :: vl')))) /\ ell = (el ++ (E_reverse el')) \/
-   vll = (vl ++ vl') /\ ell = (el ++ el')) ->
-  Path v a x1 x1 vll ell.
+  {path_different1 v a vl vl' el el' x1 x2 y1 y2 p1 p2 /\ vll = (vl ++ (cdr Vertex (rev (x2 :: vl')))) /\ ell = (el ++ (E_reverse el'))} +
+  {path_different2 v a vl vl' el el' x1 x2 y1 y2 p1 p2 /\ vll = (vl ++ vl') /\ ell = (el ++ el')} -> Path v a x1 x1 vll ell.
 Proof.
-  intros v a vl vl' vll el el' ell x1 x2 y1 y2 p1 p2 g pdiff vllell.
-Admitted. (* 
-  destruct vllell.
+  intros v a vl vl' vll el el' ell x1 x2 y1 y2 p1 p2 g pdiff.
+  destruct pdiff.
   assert (H := p2).
   apply Path_reverse in H.
-  apply (Path_append2 v a x1 y1 x vl (cdr Vertex (rev (x2 :: vl'))) el (E_reverse el')).
+  destruct a0.
+  destruct H1.
+  rewrite H1.
+  rewrite H2.
+  apply (Path_append2 v a x1 y1 x1 vl (cdr Vertex (rev (x2 :: vl'))) el (E_reverse el')).
   intros.
-  apply pdiff in H0.
   unfold not.
   intros.
-  apply H0.
+  unfold path_different1 in H0.
+  intuition.
+  apply H7 in H3.
+  inversion H3.
+
   apply -> in_rev.
-  apply H1.
-  unfold path_different in pdiff.
-  destruct pdiff.
-  apply (H1 y).
-  apply (P_iny_vl v a x y vl el).
-  apply p1.
+  apply H4.
+  unfold path_different1 in H0.
+  destruct H0.
+  destruct H3.
+  destruct H4.
+  destruct H5.
+  apply H6.
 
-  inversion p1.
-  apply H0 in H4.
-  intuition.
-  unfold V_nil. unfold not. intros.
-  symmetry in H13.
-  apply nil_cons in H13. intuition.
-
-
-  intros.
-  destruct pdiff.
-  apply H1 in H0.
+  unfold path_different1 in H0.
   intuition.
   apply p1.
+  unfold path_different1 in H0.
+  intuition.
+  rewrite H0. rewrite H4.
   apply H.
-  intros.
+
   reflexivity.
   apply g.
-Qed. *)
+
+  assert (H := p1).
+  destruct a0.
+  destruct H1.
+  rewrite H1. rewrite H2.
+  unfold path_different2 in H0.
+  intuition.
+  apply (Path_append2 v a x1 y1 x1 vl vl' el el').
+  unfold not.
+  intros.
+  apply H5 in H6.
+  inversion H6.
+  apply H8. 
+  unfold not. apply H7.
+  intros.
+  apply H3 in H6. inversion H6.
+  apply p1.
+  rewrite H0. rewrite H4.
+  apply p2.
+  reflexivity.
+Qed.
 
 
 
