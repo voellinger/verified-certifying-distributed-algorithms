@@ -1154,7 +1154,7 @@ and vla completely different from vlb.
 vla (rev vlb) make a closed_path/cycle, therefore vla and vlb = nil. This holds for all vla, vlb. Therefore a = b.
 
 *)
-Definition E_goes_to_v (v: Vertex) (e: Edge) :=
+Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   match e with
   (E_ends x y) =>  y = v
   end.
@@ -1164,7 +1164,7 @@ Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x 
   sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\
   ((vl' = nil /\ el' = nil) \/ 
   (In (E_ends x' (hd x' vl')) el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
-  y' = last vl' y' /\ E_goes_to_v y' (last el' (E_ends y' y')))).
+  y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y')))).
 
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
@@ -1187,7 +1187,27 @@ Admitted.
 Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   vl = vl' /\ el = el'.
 
-(* Lemma all_different_subpaths_in_tree_are_length_0: using path_diff_plus_path_diff_is_path *)
+(* Lemma all_subpaths_in_tree_same: forall (v:V_set) (a:A_set) (x y x' y': Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
+  (sp1 : Path v a x' y' vl' el') (sp2 : Path v a x' y' vl'' el''),
+  subpath v a vl vl' el el' x y x' y' p -> subpath v a vl vl'' el el'' x y x' y' p -> path_same v a vl' vl'' el' el'' x' y' sp1 sp2.
+Admitted.
+
+Lemma all_subpaths_same_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
+  (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
+  (sp1 : Path v a x' y' vl' el') (sp2 : Path v a x' y' vl'' el''),
+  subpath v a vla vl' ela el' x y x' y' pa -> subpath v a vlb vl'' elb el'' x y x' y' pb -> path_same v a vla vlb ela elb x y pa pb.
+Admitted. *)
+
+Lemma different_subpaths_in_tree_length_0: forall (v:V_set) (a:A_set) (x y x' y': Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
+  (sp1 : Path v a x' y' vl' el') (sp2 : Path v a x' y' vl'' el''),
+  subpath v a vl vl' el el' x y x' y' p -> subpath v a vl vl'' el el'' x y x' y' p -> path_different v a vl' vl'' el' el'' x' y' sp1 sp2 ->
+  length vl' = 0 /\ length vl'' = 0.
+Admitted.
+
+Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
+  (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb),
+  subpath v a vla vl' ela el' x y x' y' pa -> subpath v a vlb vl'' elb el'' x y x' y' pb -> path_same v a vla vlb ela elb x y pa pb.
+Admitted.
 
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
@@ -1224,10 +1244,6 @@ y are the same. As y has degree of 1, there is only one possible extension to th
 are the same.
  *)
 
-Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
-  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
-  vl = vl' /\ el = el'.
-
 
 Lemma connected_path :
  forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
@@ -1242,9 +1258,9 @@ Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c
   forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length el <= length el'.
 
 Lemma shortest_path2_rev: forall (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component)
-  (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
+  (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr Vertex (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
   shortest_path2 v a vl el c0 c1 p0 -> 
-  shortest_path2 v a (cdr (rev (c0 :: vl))) (E_reverse el) c1 c0 p1.
+  shortest_path2 v a (cdr Vertex (rev (c0 :: vl))) (E_reverse el) c1 c0 p1.
 Proof.
   intros v a vl el c0 c1 p0 p1 g s.
   unfold shortest_path2. unfold shortest_path2 in s.
@@ -1303,9 +1319,9 @@ Proof.
   destruct s.
   destruct s.
   rename x0 into vl. rename x1 into el.
-  exists (cdr(rev(root::vl))).
+  exists (cdr Vertex(rev(root::vl))).
   exists (E_reverse el).
-  assert (Path v a x root (cdr (rev (root :: vl))) (E_reverse el)).
+  assert (Path v a x root (cdr Vertex (rev (root :: vl))) (E_reverse el)).
   apply Path_reverse in x2.
   apply x2.
   apply Tree_isa_graph in t.
@@ -1368,7 +1384,7 @@ Proof.
   destruct H. destruct H. destruct H.
   assert (p := x1).
   apply Path_reverse in p.
-  exists (cdr (rev (c0 :: x))).
+  exists (cdr Vertex (rev (c0 :: x))).
   exists (E_reverse x0).
   exists p.
   split.
