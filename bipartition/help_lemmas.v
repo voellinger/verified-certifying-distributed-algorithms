@@ -1315,13 +1315,13 @@ Lemma all_subpaths_same_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Compo
   subpath v a vla vl' ela el' x y x' y' pa -> subpath v a vlb vl'' elb el'' x y x' y' pb -> path_same v a vla vlb ela elb x y pa pb.
 Admitted. *)
 
-Lemma different_subpaths_in_tree_are_nil: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
+Lemma different_subpaths_in_tree_are_nil: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) (vla vl' vlb vl'' : V_list) (ela el' elb el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
   (sp1 : Path v a x1 y1 vl' el') (sp2 : Path v a x2 y2 vl'' el''),
-  subpath v a vl vl' el el' x y x1 y1 p -> subpath v a vl vl'' el el'' x y x2 y2 p -> 
+  subpath v a vla vl' ela el' x y x1 y1 pa -> subpath v a vlb vl'' elb el'' x y x2 y2 pb -> 
   {path_different1 v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2} + {path_different2 v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2} ->
   (vl' = nil /\ vl'' = nil).
 Proof.
-  intros v a x y x1 x2 y1 y2 vl vl' vl'' el el' el'' t p sp1 sp2 subp1 subp2 pdiff.
+  intros v a x y x1 x2 y1 y2 vl vl' vlb vl'' el el' elb el'' t pa pb sp1 sp2 subp1 subp2 pdiff.
   assert (H := pdiff).
   unfold path_different1 in pdiff.
   unfold path_different2 in pdiff.
@@ -1333,7 +1333,7 @@ Proof.
   apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) el' el'' (el' ++ E_reverse (el'')) x1 x2 y1 y2 sp1 sp2 t).
   left.
   split.
-  apply p0.
+  apply p.
   split.
   reflexivity.
   reflexivity.
@@ -1356,7 +1356,7 @@ Proof.
   apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ vl'') el' el'' ((el' ++ el'')) x1 x2 y1 y2 sp1 sp2 t).
   right.
   split.
-  apply p0.
+  apply p.
   split.
   reflexivity.
   reflexivity.
@@ -1378,8 +1378,8 @@ Qed.
 Lemma different_subpaths_are_nil_paths_same: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
   (spa : Path v a x1 y1 vl' el') (spb : Path v a x2 y2 vl'' el''),
-  (subpath v a vla vl' ela el' x y x1 y1 pa -> subpath v a vlb vl'' elb el'' x y x2 y2 pb -> path_different v a vl' vl'' el' el'' x1 x2 y1 y2 spa spb ->
-  (vl' = nil /\ vl'' = nil)) -> path_same v a vla vlb ela elb x y pa pb.
+  (different_subpaths_in_tree_are_nil v a x y x1 x2 y1 y2 vla vl' vlb vl'' ela el' elb el'' t pa spa spb) -> 
+  path_same v a vla vlb ela elb x y pa pb.
 Proof.
   intros v a x y x1 x2 y1 y2 vla vlb vl' vl'' ela elb el' el'' t pa pb spa spb.
   intros diff_sp_i_t_a_n.
