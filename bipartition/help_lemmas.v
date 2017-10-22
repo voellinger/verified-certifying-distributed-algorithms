@@ -1317,35 +1317,62 @@ Admitted. *)
 
 Lemma different_subpaths_in_tree_are_nil: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) (vl vl' vl'' : V_list) (el el' el'': E_list) (t : Tree v a) (p: Path v a x y vl el)
   (sp1 : Path v a x1 y1 vl' el') (sp2 : Path v a x2 y2 vl'' el''),
-  subpath v a vl vl' el el' x y x1 y1 p -> subpath v a vl vl'' el el'' x y x2 y2 p -> path_different v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2 ->
+  subpath v a vl vl' el el' x y x1 y1 p -> subpath v a vl vl'' el el'' x y x2 y2 p -> 
+  {path_different1 v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2} + {path_different2 v a vl' vl'' el' el'' x1 x2 y1 y2 sp1 sp2} ->
   (vl' = nil /\ vl'' = nil).
 Proof.
-  intros v a x y x1 x2 y1 y2 vl vl' vl'' el el' el'' t p sp1 sp2 subp1 sub2 pdiff.
+  intros v a x y x1 x2 y1 y2 vl vl' vl'' el el' el'' t p sp1 sp2 subp1 subp2 pdiff.
   assert (H := pdiff).
-  unfold path_different in pdiff.
-  destruct pdiff.
-  apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) el' el'' (el' ++ E_reverse (el''))) in H.
-  assert (Cycle v a x1 x1 (vl' ++ cdr Vertex (rev (x2 :: vl'')))
-          (el' ++ E_reverse el'') H).
-  unfold Cycle.
-  reflexivity.
-  apply Acyclic_no_cycle in H2.
-  simpl in H2.
-  unfold V_nil in H2.
-  apply app_eq_nil in H2.
-  destruct H2.
-  split.
-  apply H2.
-  apply cdr_rev5 in H3.
-  apply H3.
-  apply Tree_isa_acyclic in t.
-  apply t.
+  unfold path_different1 in pdiff.
+  unfold path_different2 in pdiff.
+  assert (tt := t).
   apply Tree_isa_graph in t.
-  apply t.
+
+  destruct H.
+  assert (Path v a x1 x1 (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) (el' ++ E_reverse (el''))).
+  apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) el' el'' (el' ++ E_reverse (el'')) x1 x2 y1 y2 sp1 sp2 t).
   left.
   split.
+  apply p0.
+  split.
   reflexivity.
   reflexivity.
+  assert (Cycle v a x1 x1 (vl' ++ (cdr Vertex (rev (x2 :: vl'')))) (el' ++ E_reverse (el'')) H).
+  unfold Cycle.
+  reflexivity.
+  apply Acyclic_no_cycle in H0.
+  simpl in H0.
+  unfold V_nil in H0.
+  apply app_eq_nil in H0.
+  destruct H0.
+  split.
+  apply H0.
+  apply cdr_rev5 in H1.
+  apply H1.
+  apply Tree_isa_acyclic in tt.
+  apply tt.
+
+  assert (Path v a x1 x1 (vl' ++ vl'') (el' ++ el'')).
+  apply (path_diff_cycle_is_path v a vl' vl'' (vl' ++ vl'') el' el'' ((el' ++ el'')) x1 x2 y1 y2 sp1 sp2 t).
+  right.
+  split.
+  apply p0.
+  split.
+  reflexivity.
+  reflexivity.
+  assert (Cycle v a x1 x1 (vl' ++ vl'') (el' ++ el'') H).
+  unfold Cycle.
+  reflexivity.
+  apply Acyclic_no_cycle in H0.
+  simpl in H0.
+  unfold V_nil in H0.
+  apply app_eq_nil in H0.
+  destruct H0.
+  split.
+  apply H0.
+  apply H1.
+  apply Tree_isa_acyclic in tt.
+  apply tt.
 Qed.
 
 Lemma different_subpaths_are_nil_paths_same: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) 
