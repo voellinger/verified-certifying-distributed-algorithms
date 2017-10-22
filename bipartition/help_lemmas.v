@@ -398,6 +398,19 @@ Proof.
   intuition.
 Qed.
 
+Lemma cdr_rev5: forall (X: Type) (vl : list X) (x : X),
+  cdr X (rev vl ++ x :: nil) = nil -> vl = nil.
+Proof.
+  intros X vl x cdrX.
+  induction vl using rev_ind.
+  reflexivity.
+  rewrite rev_app_distr in cdrX.
+  simpl in cdrX.
+  apply app_eq_nil in cdrX.
+  destruct cdrX.
+  inversion H0.
+Qed.
+
 Fixpoint sub_starts_in_list (X : Type) (sublist superlist : list X) : Prop :=
   match sublist with
   |nil => True
@@ -1261,7 +1274,32 @@ Lemma different_subpaths_in_tree_length_0: forall (v:V_set) (a:A_set) (x y x' y'
 Proof.
   intros v a x y x' y' vl vl' vl'' el el' el'' t p sp1 sp2 subp1 sub2 pdiff.
   apply path_diff_cycle_is_path in pdiff.
-  
+  assert (Cycle v a x' x' (vl' ++ cdr Vertex (rev (x' :: vl'')))
+          (el' ++ E_reverse el'') pdiff).
+  unfold Cycle.
+  reflexivity.
+  apply Acyclic_no_cycle in H.
+  simpl in H.
+  unfold V_nil in H.
+  apply app_eq_nil in H.
+  destruct H.
+  split.
+  rewrite H.
+  reflexivity.
+  apply cdr_rev5 in H0.
+  rewrite H0.
+  reflexivity.
+  apply Tree_isa_acyclic in t.
+  apply t.
+  apply Tree_isa_graph in t.
+  apply t.
+Qed.
+
+
+Lemma Acyclic_no_cycle :
+ forall (v : V_set) (a : A_set) (Ac : Acyclic v a) 
+   (x y : Vertex) (vl : V_list) (el : E_list) (p : Path v a x y vl el),
+ Cycle v a x y vl el p -> vl = V_nil.
 
 Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb),
