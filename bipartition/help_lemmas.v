@@ -1159,15 +1159,21 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   (E_ends x y) =>  y = v
   end.
 
-
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
   sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\
-  ((vl' = nil /\ el' = nil) \/ 
+  ((vl' = nil /\ el' = nil /\ x' = y') \/ 
   (In (E_ends x' (hd x' vl')) el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
   y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y')))).
 
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
+Proof.
+  intros v a vl vl' el el' x y x' y' p sp.
+  unfold subpath in sp.
+  destruct sp.
+  destruct H0.
+  elim p.
+  intros.
 Admitted.
 
 Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
