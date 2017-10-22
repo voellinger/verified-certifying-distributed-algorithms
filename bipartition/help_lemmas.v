@@ -1189,9 +1189,12 @@ Proof.
   intros.
 Admitted.
 
-Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
-  x <> y /\ forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x :: vl')))) /\
-  forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u.
+Definition path_different (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x1 x2 y1 y2:Vertex) (p1: Path v a x1 y1 vl el) (p2: Path v a x2 y2 vl' el') :=
+  x1 <> y1 /\ 
+  (x1 = x2 /\ y1 = y2 /\ forall (vv : Vertex), In vv vl -> ~ In vv (rev (cdr Vertex (rev (x1 :: vl')))) /\
+  forall u u' : Edge, In u el -> In u' el' -> ~ E_eq u' u) \/ 
+  (x1 = y2 /\ y1 = x2 /\ forall (vv : Vertex), In vv vl -> ~ In vv vl' /\
+  forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u).
 
 (* Definition path_different2 (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   forall u u' : Edge, In u el -> In u' (E_reverse el') -> ~ E_eq u' u.
@@ -1295,20 +1298,19 @@ Proof.
   apply t.
 Qed.
 
-
-Lemma Acyclic_no_cycle :
- forall (v : V_set) (a : A_set) (Ac : Acyclic v a) 
-   (x y : Vertex) (vl : V_list) (el : E_list) (p : Path v a x y vl el),
- Cycle v a x y vl el p -> vl = V_nil.
-
-Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
+(* Lemma different_subpaths_lengths_0_paths_same: forall (v:V_set) (a:A_set) (x y x' y': Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb),
-  subpath v a vla vl' ela el' x y x' y' pa -> subpath v a vlb vl'' elb el'' x y x' y' pb -> path_same v a vla vlb ela elb x y pa pb.
-Admitted.
+  (path_different v a vl' vl'' el' el'' x' y' (subpath v a vla vl' ela el' x y x' y' pa) (subpath v a vlb vl'' elb el'' x y x' y' pb) /\ length vl' = 0 /\ length vl'' = 0) -> path_same v a vla vlb ela elb x y pa pb.
+Proof.
+  intros v a x y x' y' vla vlb vl' vl'' ela elb el' el'' t pa pb sp1 sp2.
+  unfold path_same. *)
+
 
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   path_same v a vl vl' el el' x y p1 p2.
+  intros v a x y t vl vl' el el' p1 p2.
+  unfold path_same.
 Admitted.
 
 
