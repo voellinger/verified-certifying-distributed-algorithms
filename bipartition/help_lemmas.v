@@ -1378,15 +1378,18 @@ Qed.
 Lemma different_subpaths_are_nil_paths_same: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
   (spa : Path v a x1 y1 vl' el') (spb : Path v a x2 y2 vl'' el''),
-  (different_subpaths_in_tree_are_nil v a x y x1 x2 y1 y2 vla vl' vlb vl'' ela el' elb el'' t pa spa spb) -> 
+  subpath v a vla vl' ela el' x y x1 y1 pa -> subpath v a vlb vl'' elb el'' x y x2 y2 pb ->
+  {path_different1 v a vl' vl'' el' el'' x1 x2 y1 y2 spa spb} + {path_different2 v a vl' vl'' el' el'' x1 x2 y1 y2 spa spb} ->
   path_same v a vla vlb ela elb x y pa pb.
 Proof.
-  intros v a x y x1 x2 y1 y2 vla vlb vl' vl'' ela elb el' el'' t pa pb spa spb.
-  intros diff_sp_i_t_a_n.
+  intros v a x y x1 x2 y1 y2 vla vlb vl' vl'' ela elb el' el'' t pa pb spa spb suba subb pdiff.
+  assert (H := pdiff).
+
+  apply (different_subpaths_in_tree_are_nil v a x y x1 x2 y1 y2 vla vl' vlb vl'' ela el' elb el'' t pa pb spa spb suba subb) in pdiff.
+  destruct pdiff as [vlnil vl'nil].
   unfold path_same.
-  intuition.
-  admit.
-  admit.
+  destruct H.
+  
 Admitted.
 
 Lemma Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
