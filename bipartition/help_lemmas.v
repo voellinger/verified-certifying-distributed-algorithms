@@ -1175,7 +1175,7 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
   {vl' = nil /\ el' = nil /\ x' = y' /\ x = x'} + 
   {vl' = nil /\ el' = nil /\ x' = y' /\ In x' vl} + 
-  {sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
+  {In x' (x :: vl) /\ In y' vl /\ sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
   y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y'))}.
 
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
@@ -1202,10 +1202,16 @@ Proof.
   apply (P_invl_inv v a x y vl el) in H2.
   apply H2.
   apply p.
+
   destruct a0.
   destruct H0.
   destruct H1.
   destruct H2.
+  destruct H3.
+  destruct H4.
+  induction p.
+  inversion H0.
+  apply P_step.
 Admitted.
 
 
@@ -1374,6 +1380,19 @@ Proof.
   apply Tree_isa_acyclic in tt.
   apply tt.
 Qed.
+
+Definition same_diff_list
+
+Fixpoint same_diff_list_to_path1 Path v a x y vl el
+  match element with
+  | path_diff v a x1 x2 y1 y2 vl' vl'' el' el'' :: tl => same_diff_list_to_path1 tl (Path v a x x2 (vl ++ vl') (el ++ el'))
+  | path_same v a x1 x2 y1 y2 vl' vl'' el' el'' :: tl => same_diff_list_to_path1 tl (Path v a x x2 (vl ++ vl') (el ++ el'))
+  end.
+
+Lemma exists_same_diff_list_of_pa_pb_sdltp1ispa_sdltp2ispb
+Lemma diff_lists_are_nil_so_only_same_lists
+Lemma only_same_lists->pa=pb
+Lemma pa=pb
 
 Lemma different_subpaths_are_nil_paths_same: forall (v:V_set) (a:A_set) (x y x1 x2 y1 y2: Component) 
   (vla vlb vl' vl'' : V_list) (ela elb el' el'': E_list) (t : Tree v a) (pa: Path v a x y vla ela) (pb: Path v a x y vlb elb)
