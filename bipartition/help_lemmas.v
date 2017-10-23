@@ -1173,10 +1173,11 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   end.
 
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  {vl' = nil /\ el' = nil /\ x' = y' /\ x = x'} + 
-  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' vl} + 
-  {In x' (x :: vl) /\ In y' vl /\ sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ hd (E_ends x' x') el' = E_ends x' (hd x' vl') /\
-  y' = last vl' y' /\ E_ends_at_y y' (last el' (E_ends y' y'))}.
+  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)} + 
+  {vl' <> nil /\
+   sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ 
+   hd (E_ends x x) el' = E_ends x' (hd x vl') /\
+   y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
 
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
@@ -1184,34 +1185,50 @@ Proof.
   intros v a vl vl' el el' x y x' y' p sp.
   unfold subpath in sp.
   destruct sp.
-  destruct s.
   destruct a0.
   destruct H0.
   destruct H1.
   rewrite H1. rewrite H. rewrite H0.
   apply P_null.
+  assert (pp := p).
   apply P_endx_inv in p.
-  rewrite <- H1. rewrite <- H2.
+  rewrite <- H1. inversion H2. rewrite <- H3.
   apply p.
-  destruct a0.
-  destruct H0.
-  destruct H1.
-  rewrite H. rewrite H0. rewrite H1.
-  apply P_null.
-  rewrite <- H1.
-  apply (P_invl_inv v a x y vl el) in H2.
-  apply H2.
-  apply p.
+  apply (P_invl_inv v a x y vl el pp) in H3.
+  apply H3.
 
-  destruct a0.
-  destruct H0.
-  destruct H1.
-  destruct H2.
-  destruct H3.
-  destruct H4.
+
+  intuition.
+  assert (el' <> nil).
+  destruct vl'.
+  intuition.
+  apply sub_for_all in H0.
+  
+  simpl in H2.
+  destruct el'.
+  simpl in H2.
+  inversion H2.
+  
+  assert (In x' (x :: vl)).
+  assert (In y' vl).
+
   induction p.
+  apply sub_sub_nil in H0.
+  apply H in H0.
   inversion H0.
-  apply P_step.
+  apply IHp.
+  
+  inversion H0.
+  
+
+  inversion H2.
+  unfold In. left. apply H8.
+  
+  rewrite <- H8.
+  unfold In.
+  right.
+  admit.
+  apply H8.
 Admitted.
 
 
