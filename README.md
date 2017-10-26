@@ -1,5 +1,8 @@
 # Verified Certifying Distributed Algorithms
 
+## License
+GNU General Public License
+
 ## What is this repository for?
 
 This repository is a collection of verified certifying distributed 
