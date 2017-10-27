@@ -331,6 +331,7 @@ Qed.
 
 (* if there are special_vertices in some subgraph, then the supergraph cannot be bipartite *)
 (* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
+(* also: a bipartiteness should be about graphs and not their arcs *)
 Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set) (t : Tree v a) (x y : Component) (c: Connected v (A_union a (E_set x y)))
   (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list) (m n : nat),
   special_vertices v a t x y m n -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
@@ -346,7 +347,18 @@ Proof.
   apply (odd_closed_rest_graph_not_bi v0 v' (A_union a0 (E_set x y)) a' c (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
 Qed.
 
+Definition bipartite (v : V_set) (a : A_set) (g: Graph v a) :=
+  bipartite3 a.
+
+Definition supergraph 
+
 Definition spanning_tree: forall (v:V_set) (a:A_set) (c: Connected v a) := Tree v (sub_set a).
+distance root = 0 (shortpaper 2015, V\u00f6llinger)
+forall non_root : Dreiecksungleichung
+forall non_root : existiert Vorg\u00e4nger
+
+
+
 
 Definition colorable : forall (v : V_set) (a : A_set) (c: Connected v a) (x y : Component),
   exists c : color, bipartite3 a.
