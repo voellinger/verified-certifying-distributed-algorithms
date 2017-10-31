@@ -420,12 +420,12 @@ Fixpoint sub_starts_in_list (X : Type) (sublist superlist : list X) : Prop :=
     end
   end.
 
-Fixpoint sub_in_list (X: Type) (sublist superlist : list X) : Prop :=
+Fixpoint sub_in_list (X: Type) (sublist superlist : list X) : Set :=
   match sublist with
   |nil => True
   |a::tla => match superlist with
     |nil => False  
-    |b::tlb => (sub_starts_in_list X sublist superlist) \/ (sub_in_list X sublist tlb)
+    |b::tlb => (sub_starts_in_list X sublist superlist) + (sub_in_list X sublist tlb)
     end
   end.
 
@@ -463,13 +463,13 @@ Proof.
   inversion sinl.
   simpl in sinl.
   destruct sinl.
-  destruct H.
+  destruct a1.
   apply subs_means_sub in H0.
   apply (sub_one_more X sub super a0) in H0.
   apply H0.
-  apply IHsuper in H.
-  apply (sub_one_more X sub super a0) in H.
-  apply H.
+  apply IHsuper in s.
+  apply (sub_one_more X sub super a0) in s.
+  apply s.
 Qed.
 
 Lemma sub_nil_super: forall (X: Type) (superlist : list X),
@@ -750,13 +750,13 @@ Proof.
 
   unfold sub_in_list in sinl.
   destruct sinl.
-  destruct H.
+  destruct s.
   rewrite H. exists nil. exists (a :: super). split. reflexivity. 
   apply (subs_minus X (a :: nil) sub super) in H0. rewrite <- app_comm_cons in H0. rewrite <- app_comm_cons in H0.
   rewrite app_nil_l in H0. rewrite app_nil_l in H0. apply H0.
 
-  apply IHsuper in H.
-  destruct H.
+  apply IHsuper in s.
+  destruct s.
   destruct H.
   exists (a :: x0). exists x1. destruct H. split. rewrite H. reflexivity. apply H0.
 Qed.
@@ -778,7 +778,7 @@ Proof.
 Qed.
 
 Lemma sub_exists_one : forall (X: Type) (sub super : list X),
-  (exists x : X, In x sub /\ ~ In x super) -> ~ sub_in_list X sub super.
+  (exists x : X, In x sub /\ ~ In x super) -> sub_in_list X sub super -> False.
 Proof.
   intros X sub super ex.
   destruct ex.
@@ -791,7 +791,7 @@ Proof.
 Qed.
 
 Lemma sub_starts_or_in_rest : forall (X: Type) (sublist superlist : list X) (a : X),
-  sub_in_list X sublist (a :: superlist) -> sub_starts_in_list X sublist (a :: superlist) \/ sub_in_list X sublist superlist.
+  sub_in_list X sublist (a :: superlist) -> (sub_starts_in_list X sublist (a :: superlist)) + sub_in_list X sublist superlist.
 Proof.
   intros X sublist superlist a sinl.
   destruct sublist.
@@ -799,14 +799,14 @@ Proof.
   reflexivity.
   unfold sub_in_list in sinl.
   destruct sinl.
-  destruct H.
+  destruct s.
   left.
   simpl.
   split.
   apply H.
   apply H0.
   right.
-  apply H.
+  apply s.
 Qed.
 
 Lemma sub_exists_embedding: forall (X: Type) (sublist superlist : list X),
@@ -820,11 +820,11 @@ Proof.
 
   apply sub_starts_or_in_rest in sinl.
   destruct sinl.
-  apply subs_app in H.
-  destruct H.
+  apply subs_app in s.
+  destruct s.
   rewrite H. exists nil. exists x. reflexivity.
-  apply IHsuperlist in H.
-  destruct H. destruct H.
+  apply IHsuperlist in s.
+  destruct s. destruct H.
   rewrite H. exists (a :: x). exists x0. reflexivity.
 Qed.
 
@@ -1172,8 +1172,10 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   (E_ends x y) =>  y = v
   end.
 
+Locate "{".
+
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)} + 
+  (vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)) + 
   {vl' <> nil /\
    sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ 
    hd (E_ends x x) el' = E_ends x' (hd x vl') /\
@@ -1199,36 +1201,36 @@ Proof.
 
 
   intuition.
-  assert (el' <> nil).
+(*   assert (el' <> nil).
   destruct vl'.
   intuition.
-  apply sub_for_all in H0.
-  
-  simpl in H2.
   destruct el'.
   simpl in H2.
   inversion H2.
-  
-  assert (In x' (x :: vl)).
-  assert (In y' vl).
+  simpl in H5.
+  inversion p.
+  unfold V_nil in H10.
+  rewrite <- H10 in H1.
+  inversion H1.
+  rewrite <- H7 in H1.
+  rewrite <- H6 in H1.
+  intuition.
+  apply (sub_for_all) in H1. *)
+
 
   induction p.
-  apply sub_sub_nil in H0.
-  apply H in H0.
-  inversion H0.
-  apply IHp.
-  
-  inversion H0.
-  
-
-  inversion H2.
-  unfold In. left. apply H8.
-  
-  rewrite <- H8.
-  unfold In.
-  right.
+  apply sub_sub_nil in H1.
+  apply H in H1.
+  intuition.
+  destruct vl'.
+  intuition.
+  assert (el' <> nil).
   admit.
-  apply H8.
+  destruct el'.
+  intuition.
+  simpl in H2.
+  unfold sub_in_list in H1.
+  destruct H1.
 Admitted.
 
 
