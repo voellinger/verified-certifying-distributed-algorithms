@@ -1174,19 +1174,37 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
 
 Locate "{".
 
-Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  (vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)) + 
-  {vl' <> nil /\
-   sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ 
-   hd (E_ends x x) el' = E_ends x' (hd x vl') /\
-   y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
+(* Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
+  
+  sub_in_list Vertex vl' vl + sub_in_list Edge el' el + {vl = vl'}. *)
 
+
+
+Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
+  forall (s1 : sub_in_list Vertex vl' vl) (s2 : sub_in_list Edge el' el),  
+  {vl' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}
+  +
+  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}.
+
+
+
+
+
+(* Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
+  
+  (vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)) \/ 
+  (sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ vl' <> nil /\
+   hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))).
+ *)
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
 Proof.
   intros v a vl vl' el el' x y x' y' p sp.
   unfold subpath in sp.
   destruct sp.
+  admit. admit.
+  destruct s.
+  destruct s.
   destruct a0.
   destruct H0.
   destruct H1.
