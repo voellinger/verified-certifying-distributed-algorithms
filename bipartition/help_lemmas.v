@@ -1181,10 +1181,9 @@ Locate "{".
 
 
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  forall (s1 : sub_in_list Vertex vl' vl) (s2 : sub_in_list Edge el' el),  
-  {vl' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}
+  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}
   +
-  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}.
+  {vl' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
 
 
 
@@ -1197,14 +1196,12 @@ Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x 
    hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))).
  *)
 Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
+  forall (s1 : sub_in_list Vertex vl' vl) (s2 : sub_in_list Edge el' el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
 Proof.
-  intros v a vl vl' el el' x y x' y' p sp.
+  intros v a vl vl' el el' x y x' y' p s1 s2 sp.
   unfold subpath in sp.
   destruct sp.
-  admit. admit.
-  destruct s.
-  destruct s.
   destruct a0.
   destruct H0.
   destruct H1.
@@ -1219,36 +1216,44 @@ Proof.
 
 
   intuition.
-(*   assert (el' <> nil).
+  assert (el' <> nil).
   destruct vl'.
   intuition.
   destruct el'.
-  simpl in H2.
-  inversion H2.
-  simpl in H5.
-  inversion p.
-  unfold V_nil in H10.
-  rewrite <- H10 in H1.
+  simpl in H1.
   inversion H1.
-  rewrite <- H7 in H1.
-  rewrite <- H6 in H1.
-  intuition.
-  apply (sub_for_all) in H1. *)
+  simpl in H3.
+  inversion p.
+  unfold V_nil in H8.
+  rewrite <- H8 in s1.
+  inversion s1.
+  rewrite <- H5 in s1.
+  rewrite <- H4 in s1.
+  specialize (sub_for_all Vertex (x :: vl') vl s1).
+  intros.
+  specialize (H16 x).
+  assert (In x (x :: vl')).
+  simpl. left. reflexivity.
+  apply H16 in H17.
+  apply (P_when_cycle v a x y vl el p) in H17.
+  rewrite H17 in p.
+  assert (Cycle v a y y vl el p).
+  reflexivity.
+  
 
 
   induction p.
-  apply sub_sub_nil in H1.
-  apply H in H1.
+  apply sub_sub_nil in s1.
+  apply H in s1.
   intuition.
+
   destruct vl'.
   intuition.
-  assert (el' <> nil).
-  admit.
   destruct el'.
+  inversion H1. inversion H3.
   intuition.
-  simpl in H2.
-  unfold sub_in_list in H1.
-  destruct H1.
+  simpl in s2.
+  destruct s2.
 Admitted.
 
 
