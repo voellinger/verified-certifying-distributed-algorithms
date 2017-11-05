@@ -1183,10 +1183,21 @@ Locate "{".
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
   {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}
   +
-  {vl' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
+  {vl' <> nil /\ el' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
 
+Lemma last_is_last: forall (T: Type) (l : list T) (x y : T),
+  l <> nil -> last (l) x = last (l) y.
+Proof.
+  intros T l x y lnil.
+  induction l.
+  intuition.
 
+  destruct l.
+  reflexivity.
 
+  simpl. simpl in IHl. apply IHl.
+  intuition. inversion H.
+Qed.
 
 
 (* Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
@@ -1199,6 +1210,58 @@ Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el'
   forall (s1 : sub_in_list Vertex vl' vl) (s2 : sub_in_list Edge el' el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
 Proof.
+  intros v a vl vl' el el' x y x' y' p s1 s2 sp.
+  assert (pp := p).
+  induction p.
+  apply sub_sub_nil in s1.
+  unfold subpath in sp.
+
+  destruct sp.
+  destruct a0.
+  destruct H0.
+  destruct H1.
+  rewrite H1. rewrite H. rewrite H0.
+  apply P_null.
+  inversion H2.
+  rewrite <- H1. rewrite <- H3. apply v0.
+  inversion H3.
+
+  intuition.
+
+
+  unfold subpath in sp.
+  intuition.
+  rewrite H1. rewrite H. rewrite H0.
+  apply P_null.
+  rewrite <- H0.
+  inversion H3. 
+  rewrite <- H2. apply v0.
+  inversion H2.
+  rewrite <- H4. 
+  assert (ppp := p). apply (P_endx_inv) in ppp. apply ppp.
+  assert (ppp := p). apply (P_invl_inv v a y z vl el ppp) in H4. apply H4.
+
+
+  apply IHp.
+  admit. admit.
+  unfold subpath.
+  destruct vl'. intuition.
+  destruct el'. intuition.
+  right. intuition.
+  rewrite (last_is_last Vertex (v1 :: vl') y x).
+  apply H2. intuition.
+  rewrite (last_is_last Edge (e0 :: el') (E_ends y y) (E_ends x x)).
+  apply H4. intuition.
+  apply p.
+Qed.
+  
+
+
+
+
+
+
+
   intros v a vl vl' el el' x y x' y' p s1 s2 sp.
   unfold subpath in sp.
   destruct sp.
@@ -1216,7 +1279,7 @@ Proof.
 
 
   intuition.
-  assert (el' <> nil).
+  (* assert (el' <> nil).
   destruct vl'.
   intuition.
   destruct el'.
@@ -1238,7 +1301,7 @@ Proof.
   apply (P_when_cycle v a x y vl el p) in H17.
   rewrite H17 in p.
   assert (Cycle v a y y vl el p).
-  reflexivity.
+  reflexivity. *)
   
 
 
@@ -1250,11 +1313,33 @@ Proof.
   destruct vl'.
   intuition.
   destruct el'.
-  inversion H1. inversion H3.
   intuition.
-  simpl in s2.
-  destruct s2.
-Admitted.
+  simpl in H0.
+  destruct e0.
+
+  clear H1. clear H.
+  apply IHp.
+  simpl in s1. destruct s1.
+  destruct a1.
+  rewrite H in H0. rewrite H in H2. rewrite H in IHp. rewrite H. clear H. clear v1.
+  inversion H0. clear H0. rewrite H3 in s2. rewrite H3 in H4. rewrite H3 in IHp. 
+  rewrite H5 in s2. rewrite H5 in H4. rewrite H5 in IHp. clear H3. clear H5. clear v2. clear v3.
+  
+  admit.
+  apply s.
+  simpl in s2. destruct s2.
+  admit.
+  apply s.
+  simpl. apply H0.
+  rewrite (last_is_last Vertex (v1 :: vl') x y) in H2.
+  apply H2.
+  intuition. inversion H.
+  rewrite (last_is_last Edge (E_ends v2 v3 :: el') (E_ends x x) (E_ends y y)) in H4.
+  apply H4.
+  intuition. inversion H.
+Qed.
+
+
 
 
 (* two paths from x1 to y1 that don't share any inner nodes (one path might be from y1 to x1) *)
