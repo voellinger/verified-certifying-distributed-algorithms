@@ -1198,17 +1198,28 @@ Lemma subpath_starts: forall (v: V_set) (a: A_set) (vl vl': V_list) (el el': E_l
 Proof.
   intros v a vl vl' el el' x y z y' p s1 s2 ylast elast.
 
-  apply subs_app in s1.
-  apply subs_app in s2.
-  destruct s1. destruct s2.
-
   induction p.
+
   apply subs_sub_nil in s1. apply subs_sub_nil in s2.
   rewrite s1 in ylast. rewrite s1. rewrite s2.
   unfold last in ylast. rewrite ylast.
   apply P_null. apply v0.
 
+  destruct vl'. unfold last in ylast.
+  destruct el'. unfold last in elast. inversion elast.
+  apply P_null. rewrite <- H. apply v0.
   
+
+
+
+
+  assert (ss1 := s1). assert (ss2 := s2).
+  apply subs_app in s1.
+  apply subs_app in s2.
+  destruct s1. destruct s2.
+  rewrite e in p. rewrite e0 in p.
+
+  rewrite e in ss1. apply subs_app in ss1. destruct ss1.
 
 
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
