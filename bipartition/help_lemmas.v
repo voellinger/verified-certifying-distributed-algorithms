@@ -655,7 +655,7 @@ Proof.
 Qed.
 
 Lemma subs_app : forall (X: Type) (sub super : list X),
-  sub_starts_in_list X sub super -> (exists (super2 : list X), super = sub ++ super2).
+  sub_starts_in_list X sub super -> {super2 : list X & super = sub ++ super2}.
 Proof.
   intros X sub super sinl.
   exists (cut X (length sub) super).
@@ -681,12 +681,12 @@ Qed.
 
 
 Lemma subs_app2 : forall (X: Type) (sub1 sub2 super : list X),
-  sub_starts_in_list X (sub1 ++ sub2) super -> (exists (super2 : list X), super = sub1 ++ super2).
+  sub_starts_in_list X (sub1 ++ sub2) super -> {super2 : list X & super = sub1 ++ super2}.
 Proof.
   intros X s1 s2 super sinl.
   apply subs_app in sinl.
   destruct sinl.
-  exists (s2 ++ x). rewrite H. rewrite <- app_assoc. reflexivity.
+  exists (s2 ++ x). rewrite <- app_assoc in e. apply e.
 Qed.
 
 
@@ -724,8 +724,8 @@ Proof.
   destruct H.
   rewrite H in sss. assert (sss' := sss). apply subs_app2 in sss.
   destruct sss.
-  rewrite H0 in sss'.
-  rewrite H0.
+  rewrite e in sss'.
+  rewrite e.
   apply <- subs_minus in sss'.
   destruct x2.
   inversion sss'.
@@ -735,7 +735,7 @@ Proof.
   unfold In.
   left.
   symmetry.
-  apply H1.
+  apply H0.
 Qed.
 
 Lemma sub_means_exists_subs : forall (X: Type) (sub super : list X),
@@ -822,7 +822,7 @@ Proof.
   destruct sinl.
   apply subs_app in s.
   destruct s.
-  rewrite H. exists nil. exists x. reflexivity.
+  rewrite e. exists nil. exists x. reflexivity.
   apply IHsuperlist in s.
   destruct s. destruct H.
   rewrite H. exists (a :: x). exists x0. reflexivity.
@@ -1172,19 +1172,6 @@ Definition E_ends_at_y (v: Vertex) (e: Edge) :=
   (E_ends x y) =>  y = v
   end.
 
-Locate "{".
-
-(* Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  
-  sub_in_list Vertex vl' vl + sub_in_list Edge el' el + {vl = vl'}. *)
-
-
-
-Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
-  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}
-  +
-  {vl' <> nil /\ el' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
-
 Lemma last_is_last: forall (T: Type) (l : list T) (x y : T),
   l <> nil -> last (l) x = last (l) y.
 Proof.
@@ -1199,20 +1186,52 @@ Proof.
   intuition. inversion H.
 Qed.
 
+(* 
+p : Path v a y z vl el
+H1 : sub_starts_in_list Vertex vl' vl
+H6 : sub_starts_in_list Edge el' el
+H2 : y' = last (y :: vl') x *)
 
-(* Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
+Lemma subpath_starts: forall (v: V_set) (a: A_set) (vl vl': V_list) (el el': E_list) (x y z y':Vertex) (p : Path v a y z vl el),
+  sub_starts_in_list Vertex vl' vl -> sub_starts_in_list Edge el' el -> y' = last (y :: vl') x -> E_ends_at_y y' (last (E_ends x y :: el') (E_ends x x)) ->
+    Path v a y y' vl' el'.
+Proof.
+  intros v a vl vl' el el' x y z y' p s1 s2 ylast elast.
+
+  apply subs_app in s1.
+  apply subs_app in s2.
+  destruct s1. destruct s2.
+
+  induction p.
+  apply subs_sub_nil in s1. apply subs_sub_nil in s2.
+  rewrite s1 in ylast. rewrite s1. rewrite s2.
+  unfold last in ylast. rewrite ylast.
+  apply P_null. apply v0.
+
   
-  (vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)) \/ 
-  (sub_in_list Vertex vl' vl /\ sub_in_list Edge el' el /\ vl' <> nil /\
-   hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))).
- *)
-Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el),
+
+
+Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
+  {vl' = nil /\ el' = nil /\ x' = y' /\ In x' (x :: vl)}
+  +
+  {vl' <> nil /\ el' <> nil /\ hd (E_ends x x) el' = E_ends x' (hd x vl') /\ y' = last vl' x /\ E_ends_at_y y' (last el' (E_ends x x))}.
+
+
+Lemma subpath_is_a_path : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y:Vertex),
+  forall (p: Path v a x y vl el),
+  forall (vl' : V_list) (el' : E_list) (x' y':Vertex),
   forall (s1 : sub_in_list Vertex vl' vl) (s2 : sub_in_list Edge el' el),
   subpath v a vl vl' el el' x y x' y' p -> Path v a x' y' vl' el'.
 Proof.
-  intros v a vl vl' el el' x y x' y' p s1 s2 sp.
+
+
+  intros v a vl el x y p.
   assert (pp := p).
   induction p.
+  intros vl' el' x' y' s1 s2 sp.
+
+
+  
   apply sub_sub_nil in s1.
   unfold subpath in sp.
 
@@ -1228,116 +1247,66 @@ Proof.
 
   intuition.
 
-
+  intros vl' el' x' y' s1 s2 sp.
   unfold subpath in sp.
   intuition.
   rewrite H1. rewrite H. rewrite H0.
   apply P_null.
   rewrite <- H0.
-  inversion H3. 
-  rewrite <- H2. apply v0.
-  inversion H2.
-  rewrite <- H4. 
-  assert (ppp := p). apply (P_endx_inv) in ppp. apply ppp.
-  assert (ppp := p). apply (P_invl_inv v a y z vl el ppp) in H4. apply H4.
+  inversion H3.
+  rewrite <- H4. apply v0. 
+  inversion H4. assert (ppp := p). apply (P_endx_inv) in ppp. rewrite <- H5. apply ppp.
+  assert (ppp := p). apply (P_invl_inv v a y z vl el ppp) in H5. apply H5.
 
 
-  apply IHp.
-  admit. admit.
-  unfold subpath.
-  destruct vl'. intuition.
-  destruct el'. intuition.
-  right. intuition.
-  rewrite (last_is_last Vertex (v1 :: vl') y x).
-  apply H2. intuition.
-  rewrite (last_is_last Edge (e0 :: el') (E_ends y y) (E_ends x x)).
-  apply H4. intuition.
-  apply p.
-Qed.
-  
-
-
-
-
-
-
-
-  intros v a vl vl' el el' x y x' y' p s1 s2 sp.
-  unfold subpath in sp.
-  destruct sp.
-  destruct a0.
-  destruct H0.
-  destruct H1.
-  rewrite H1. rewrite H. rewrite H0.
-  apply P_null.
-  assert (pp := p).
-  apply P_endx_inv in p.
-  rewrite <- H1. inversion H2. rewrite <- H3.
-  apply p.
-  apply (P_invl_inv v a x y vl el pp) in H3.
-  apply H3.
-
-
-  intuition.
-  (* assert (el' <> nil).
-  destruct vl'.
-  intuition.
-  destruct el'.
-  simpl in H1.
-  inversion H1.
-  simpl in H3.
-  inversion p.
-  unfold V_nil in H8.
-  rewrite <- H8 in s1.
-  inversion s1.
-  rewrite <- H5 in s1.
-  rewrite <- H4 in s1.
-  specialize (sub_for_all Vertex (x :: vl') vl s1).
-  intros.
-  specialize (H16 x).
-  assert (In x (x :: vl')).
-  simpl. left. reflexivity.
-  apply H16 in H17.
-  apply (P_when_cycle v a x y vl el p) in H17.
-  rewrite H17 in p.
-  assert (Cycle v a y y vl el p).
-  reflexivity. *)
-  
-
-
-  induction p.
-  apply sub_sub_nil in s1.
-  apply H in s1.
-  intuition.
-
-  destruct vl'.
-  intuition.
-  destruct el'.
-  intuition.
+  destruct vl'. intuition. clear H.
+  destruct el'. intuition. clear H1.
   simpl in H0.
-  destruct e0.
+  rewrite H0.
 
-  clear H1. clear H.
-  apply IHp.
-  simpl in s1. destruct s1.
-  destruct a1.
-  rewrite H in H0. rewrite H in H2. rewrite H in IHp. rewrite H. clear H. clear v1.
-  inversion H0. clear H0. rewrite H3 in s2. rewrite H3 in H4. rewrite H3 in IHp. 
-  rewrite H5 in s2. rewrite H5 in H4. rewrite H5 in IHp. clear H3. clear H5. clear v2. clear v3.
+  simpl in s1. simpl in s2.
+  destruct s1. destruct s2.
   
+
+  destruct a1. destruct a2. rewrite H5 in H0. inversion H0.
+  rewrite <- H9. rewrite <- H9 in H2. rewrite <- H9 in H0. rewrite <- H9 in H. clear H9. clear v1.
+  symmetry in H8. rewrite H8 in H0. rewrite H8. clear H8. clear x'.
+  clear H. clear H0. rewrite H5 in H4. clear H5. clear e0.
+
+  apply (P_step v a x y y' vl' el').
+
+
+
+
+
+
+
+  admit. (* p, H1, H2, H6 *)
+  apply v0.
+  apply a0.
+  intuition.
+  intuition. admit. (* H, H1, n0 *)
+  intros. admit. (* vl' must be vl, then apply e *)
+  intros. admit. (* H6 and n1 *)
+
+
+(*   conflict a1, s: el starts with e0 = (x', y) meaning x' = x meaning el starts with (x,y) which cannot be *)
   admit.
-  apply s.
-  simpl in s2. destruct s2.
+  destruct s2.
+(*   conflict a1, s *)
   admit.
+
+
+  apply H3.
   apply s.
-  simpl. apply H0.
-  rewrite (last_is_last Vertex (v1 :: vl') x y) in H2.
-  apply H2.
+  rewrite H0 in s0. apply s0.
+  unfold subpath. right. intuition. inversion H.
+  inversion H.
+  rewrite (last_is_last Vertex (v1 :: vl') x y) in H2. apply H2.
+  intuition. inversion H. 
+  rewrite (last_is_last Edge (E_ends x' v1 :: el') (E_ends y y) (E_ends x x)). rewrite H0 in H4. apply H4.
   intuition. inversion H.
-  rewrite (last_is_last Edge (E_ends v2 v3 :: el') (E_ends x x) (E_ends y y)) in H4.
-  apply H4.
-  intuition. inversion H.
-Qed.
+Admitted.
 
 
 
