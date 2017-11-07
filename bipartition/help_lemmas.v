@@ -1186,12 +1186,6 @@ Proof.
   intuition. inversion H.
 Qed.
 
-(* 
-p : Path v a y z vl el
-H1 : sub_starts_in_list Vertex vl' vl
-H6 : sub_starts_in_list Edge el' el
-H2 : y' = last (y :: vl') x *)
-
 Lemma subpath_starts: forall (v: V_set) (a: A_set) (vl vl': V_list) (el el': E_list) (x y z y':Vertex) (p : Path v a y z vl el),
   sub_starts_in_list Vertex vl' vl -> sub_starts_in_list Edge el' el -> y' = last (y :: vl') x -> E_ends_at_y y' (last (E_ends x y :: el') (E_ends x x)) ->
     Path v a y y' vl' el'.
