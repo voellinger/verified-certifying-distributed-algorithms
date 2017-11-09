@@ -56,6 +56,16 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma Path_vl_el_lenghts_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Vertex) (p : Path v a x y vl el),
+  length vl = length el.
+Proof.
+  intros v a vl el x y p.
+  induction p.
+  reflexivity.
+  simpl. rewrite IHp.
+  reflexivity.
+Qed.
+
 Function length_w {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Walk v a c1 c2 vl el) := length vl.
 Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Path v a c1 c2 vl el) := length vl.
 
@@ -1186,18 +1196,115 @@ Proof.
   intuition. inversion H.
 Qed.
 
+
+
+
+Inductive Path_rev : V_set -> A_set -> Vertex -> Vertex -> V_list -> E_list -> Set :=
+  | P_rev_null : forall (v : V_set) (a : A_set) (x : Vertex), v x -> Path_rev v a x x V_nil E_nil
+  | P_rev_step :
+      forall (v : V_set) (a : A_set) (x y z : Vertex) (vl : V_list) (el : E_list),
+      Path_rev v a x y vl el ->
+      v z ->
+      a (A_ends y z) ->
+      y <> z ->
+      ~ In z vl ->
+      (x = y -> vl = V_nil) ->
+      (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
+      Path_rev v a x z (vl ++ z :: V_nil) (el ++ E_ends y z :: E_nil).
+
+Lemma cdr_last: forall (T: Type) (v1 : T) (vl : list T),
+  v1 :: vl = rev (cdr T (rev (v1 :: vl))) ++ last (v1 :: vl) v1 :: nil.
+Proof. Admitted.
+
+Lemma last_exists : forall (T:Type) (v1 : T) (vl : list T),
+  {x : T & x = last (v1 :: vl) v1}.
+Proof.
+  intros T v1 vl.
+  induction vl.
+  exists v1.
+  reflexivity.
+  destruct IHvl.
+  destruct vl. exists a. reflexivity.
+  exists x.
+  simpl. simpl in e. apply e.
+Qed.
+
+Theorem Path_is_Path_rev : forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list) (p: Path v a x y vl el),
+  Path_rev v a x y vl el.
+Proof.
+  intros v a x y vl el p.
+  induction p.
+  apply P_rev_null.
+  apply v0.
+
+  destruct vl. destruct el.
+  assert (y :: nil = nil ++ y :: nil).
+  reflexivity.
+  assert (E_ends x y :: nil = nil ++ E_ends x y :: nil).
+  reflexivity.
+  rewrite H. rewrite H0. inversion p.
+  apply P_rev_step.
+  apply P_rev_null.
+  apply v0.
+  apply H1.
+  rewrite H3 in a0. apply a0.
+  rewrite H3 in n. apply n.
+  rewrite H3 in n0. apply n0.
+  intuition.
+  rewrite H3 in n1. apply n1.
+
+  inversion p.
+  destruct el.
+  inversion p.
+(*   induction IHp.
+  assert (x0 :: V_nil = nil ++ x0 :: V_nil). reflexivity. rewrite H.
+  assert (E_ends x x0 :: E_nil = nil ++ E_ends x x0 :: E_nil). reflexivity. rewrite H0.
+  apply P_rev_step.
+  apply P_rev_null. apply v0. apply v2. apply a0. apply n. apply n0. reflexivity. apply n1.
+  apply (P_rev_step v a x y z (x0 :: vl0) (E_ends x x0 :: el0)). *)
+  
+
+
+
+  assert (y :: v1 :: vl = y :: rev (cdr Vertex (rev (v1 :: vl))) ++ last (v1 :: vl) v1 :: V_nil).
+  rewrite <- cdr_last. reflexivity.
+  rewrite H.
+  assert (E_ends x y :: e0 :: el = E_ends x y :: rev (cdr Edge (rev (e0 :: el))) ++ last (e0 :: el) e0 :: E_nil).
+  rewrite <- cdr_last. reflexivity.
+  rewrite H0.
+  destruct (last (e0 :: el) e0).
+  assert {x : Vertex & x = last (v1 :: vl) v1}.
+  apply last_exists.
+  destruct H1. rewrite <- e1.
+  assert (x0 = z).
+  admit. rewrite H1.
+  assert (E_ends v2 v3 = E_ends y z).
+  admit. rewrite H2.
+  apply (P_rev_step v a x y z (y :: rev (cdr Vertex (rev (v1 :: vl)))) (E_ends x y :: rev (cdr Edge (rev (e0 :: el))))).
+Admitted.
+
+Theorem Path_rev_is_Path : forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list) (p: Path_rev v a x y vl el),
+  Path v a x y vl el.
+Proof. Admitted.
+
+
 Lemma subpath_starts: forall (v: V_set) (a: A_set) (vl vl': V_list) (el el': E_list) (x y z y':Vertex) (p : Path v a y z vl el),
   sub_starts_in_list Vertex vl' vl -> sub_starts_in_list Edge el' el -> y' = last (y :: vl') x -> E_ends_at_y y' (last (E_ends x y :: el') (E_ends x x)) ->
     Path v a y y' vl' el'.
 Proof.
   intros v a vl vl' el el' x y z y' p s1 s2 ylast elast.
-
+  apply Path_is_Path_rev in p.
   induction p.
 
   apply subs_sub_nil in s1. apply subs_sub_nil in s2.
   rewrite s1 in ylast. rewrite s1. rewrite s2.
   unfold last in ylast. rewrite ylast.
   apply P_null. apply v0.
+
+  apply Path_rev_is_Path in p.
+  assert ({vl' = (vl ++ z :: V_nil)} + {vl' 
+  apply IHp.
+  
 
   destruct vl'. unfold last in ylast.
   destruct el'. unfold last in elast. inversion elast.
