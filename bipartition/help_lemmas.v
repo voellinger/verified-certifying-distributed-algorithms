@@ -56,7 +56,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma Path_vl_el_lenghts_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Vertex) (p : Path v a x y vl el),
+Lemma Path_vl_el_lengths_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Vertex) (p : Path v a x y vl el),
   length vl = length el.
 Proof.
   intros v a vl el x y p.
@@ -700,6 +700,33 @@ Proof.
 Qed.
 
 
+Lemma subs_lengths_eq: forall (X: Type) (superlist sublist : list X),
+  length sublist = length superlist -> sub_starts_in_list X sublist superlist -> sublist = superlist.
+Proof.
+  intros X super.
+  induction super using rev_ind.
+  intros sub lengths sssil.
+  apply subs_sub_nil in sssil. apply sssil.
+  intros sub lengths sssil.
+  apply subs_app in sssil.
+  destruct sssil.
+  rewrite e.
+  destruct x0.
+  rewrite app_nil_r. reflexivity.
+
+  rewrite e in lengths.
+  rewrite app_length in lengths. simpl in lengths.
+  rewrite plus_comm in lengths. simpl in lengths.
+  assert (forall n m:nat, n <> S(m + n)).
+  intros.
+  induction n.
+  intuition.
+  intuition.
+  apply (H (length sub)) in lengths.
+  intuition.
+Qed.
+
+
 Lemma subs_minus : forall (X: Type) (s1 s2 s3 : list X),
   sub_starts_in_list X s2 s3 <-> sub_starts_in_list X (s1 ++ s2) (s1 ++ s3).
 Proof.
@@ -1287,12 +1314,26 @@ Theorem Path_rev_is_Path : forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V
   Path v a x y vl el.
 Proof. Admitted.
 
+Lemma help1: forall (vl' vl : V_list) (z : Vertex),
+  {length vl' = length (vl ++ z :: V_nil)} + {length vl' <> length (vl ++ z :: V_nil)}.
+Proof.
+  intros.
+  assert (forall n m : nat, {m > n} + {n = m} + {n > m}).
+  apply gt_eq_gt_dec.
+  specialize (H (length vl') (length (vl ++ z :: V_nil))).
+  destruct H.
+  destruct s.
+  right. intuition.
+  left. intuition.
+  right. intuition.
+Qed.
 
 Lemma subpath_starts: forall (v: V_set) (a: A_set) (vl vl': V_list) (el el': E_list) (x y z y':Vertex) (p : Path v a y z vl el),
   sub_starts_in_list Vertex vl' vl -> sub_starts_in_list Edge el' el -> y' = last (y :: vl') x -> E_ends_at_y y' (last (E_ends x y :: el') (E_ends x x)) ->
     Path v a y y' vl' el'.
 Proof.
   intros v a vl vl' el el' x y z y' p s1 s2 ylast elast.
+
   apply Path_is_Path_rev in p.
   induction p.
 
@@ -1302,25 +1343,38 @@ Proof.
   apply P_null. apply v0.
 
   apply Path_rev_is_Path in p.
-  assert ({vl' = (vl ++ z :: V_nil)} + {vl' 
+  assert ({length vl' = length (vl ++ z :: V_nil)} + {length vl' <> length (vl ++ z :: V_nil)}).
+  apply help1.
+  destruct H. 
+  apply subs_lengths_eq in s1.
+  rewrite s1.
+  assert ({length el' = length (el ++ E_ends y z :: E_nil)} + {length el' <> length (el ++ E_ends y z :: E_nil)}).
+  admit.
+  destruct H.
+  apply subs_lengths_eq in s2.
+  rewrite s2.
+  rewrite s1 in ylast.
+  assert (y' = z). (* ylast *)
+  admit.
+  rewrite H.
+  apply Path_cons.
+  apply v0. apply a0. apply e. apply n. apply n0. apply n1. apply p. apply e1.
+
+  assert (pp := p).
+  apply (Path_vl_el_lengths_eq) in pp.
+  rewrite app_length in e0. simpl in e0.
+  rewrite app_length in n2. simpl in n2.
+  rewrite pp in e0. rewrite <- e0 in n2.
+
+  assert (length el' <> length (el ++ E_ends y z :: E_nil) -> sub_starts_in_list Edge el' (el ++ E_ends y z :: E_nil) -> sub_starts_in_list Edge el' el).
+  admit.
+  apply H in n2.
+
   apply IHp.
   
 
-  destruct vl'. unfold last in ylast.
-  destruct el'. unfold last in elast. inversion elast.
-  apply P_null. rewrite <- H. apply v0.
-  
-
-
-
-
-  assert (ss1 := s1). assert (ss2 := s2).
-  apply subs_app in s1.
-  apply subs_app in s2.
-  destruct s1. destruct s2.
-  rewrite e in p. rewrite e0 in p.
-
-  rewrite e in ss1. apply subs_app in ss1. destruct ss1.
+Lemma subs_lenghts_eq: forall (X: Type) (superlist sublist : list X),
+  length sublist = length superlist -> sub_starts_in_list X sublist superlist -> sublist = superlist.
 
 
 Definition subpath (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y x' y':Vertex) (p: Path v a x y vl el) :=
