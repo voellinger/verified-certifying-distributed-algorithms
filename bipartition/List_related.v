@@ -1,4 +1,3 @@
-Require Import GraphBasics.Graphs.
 Require Import Coq.Logic.Classical_Prop.
 
 Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Help_Lemmata".

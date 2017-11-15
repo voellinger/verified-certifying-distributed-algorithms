@@ -7,20 +7,20 @@ Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartit
 Section Path_Walk_related.
 
 
-Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
+Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Component) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   vl = vl' /\ el = el'.
 
-Definition append_w (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (w1: Walk v a x y vl el) (w2: Walk v a y z vl' el') :=
+Definition append_w (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (w1: Walk v a x y vl el) (w2: Walk v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
-Definition append_p (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') :=
+Definition append_p (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
-Function length_w {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Walk v a c1 c2 vl el) := length vl.
-Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Path v a c1 c2 vl el) := length vl.
+Function length_w {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Walk v a c1 c2 vl el) := length el.
+Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Path v a c1 c2 vl el) := length el.
 
-Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component) (p: Path v a c0 c1 vl el) := 
-  forall (vl': V_list) (el' : E_list), Path v a c0 c1 vl' el' -> length el <= length el'.
+Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component) (p1: Path v a c0 c1 vl el) := 
+  forall (vl': V_list) (el' : E_list) (p2: Path v a c0 c1 vl' el'), length_p p1 <= length_p p2.
 
 Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
   exists (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), shortest_path2 v a vl el c0 c1 p /\ length el = n.
@@ -32,7 +32,7 @@ Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
 
 
 Lemma Path_isa_walk: 
-  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+  forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> Walk v a x y vl el.
 Proof.
   intros.
@@ -42,7 +42,7 @@ Proof.
 Qed.
 
 Lemma Path_appended_isa_walk :
- forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+ forall (v: V_set) (a: A_set) (x y z : Component) (vl vl' : V_list) (el el' : E_list),
  Path v a x y vl el ->
  Path v a y z vl' el' -> Walk v a x z (vl ++ vl') (el ++ el').
 Proof.
@@ -59,7 +59,7 @@ Qed.
 
 
 
-Lemma Path_append (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el'):
+Lemma Path_append (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el'):
  Walk v a x z (vl ++ vl') (el ++ el') = append_p v a vl vl' el el' x y z p1 p2.
 Proof.
   intros.
@@ -67,7 +67,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma Path_vl_el_lengths_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Vertex) (p : Path v a x y vl el),
+Lemma Path_vl_el_lengths_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Component) (p : Path v a x y vl el),
   length vl = length el.
 Proof.
   intros v a vl el x y p.
@@ -78,7 +78,7 @@ Proof.
 Qed.
 
 
-Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Vertex) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' x y z p1 p2):
+Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' x y z p1 p2):
   length_p p1 + length_p p2 = length_w p3.
 Proof.
   intros.
@@ -118,7 +118,7 @@ Qed.
 
 
 
-Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Vertex) (vl : V_list) (el : E_list),
+Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Component) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
   Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
 Proof.
@@ -211,7 +211,7 @@ Proof.
   inversion H.
 Qed.
 
-Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Vertex) (vl vl' : V_list) (el el' : E_list),
+Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Component) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
   (x = y -> vl = V_nil \/ vl' = V_nil) -> 
   Path v a x y vl el ->  Path v a y z vl' el' -> (In x vl' -> x = z) ->
@@ -318,7 +318,7 @@ Proof.
   apply H.
 Qed.
 
-Lemma P_y_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+Lemma P_y_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In y (cdr Vertex (rev vl)).
 Proof.
   intros v a x y vl el p.
@@ -330,7 +330,7 @@ Proof.
   inversion H.
   apply IHp.
 
-  apply (cdr_rev3 Vertex vl z y) in IHp.
+  apply (cdr_rev3 Component vl z y) in IHp.
   apply IHp in H.
   inversion H.
   unfold not.
@@ -349,7 +349,7 @@ Proof.
 Qed.
 
 
-Lemma P_x_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+Lemma P_x_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr Vertex (rev vl)).
 Proof.
   intros v a x y vl el p.
@@ -448,18 +448,18 @@ Proof.
 Qed.
 
 Lemma shortest_path2_rev: forall (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component)
-  (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr Vertex (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
+  (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr Component (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
   shortest_path2 v a vl el c0 c1 p0 -> 
-  shortest_path2 v a (cdr Vertex (rev (c0 :: vl))) (E_reverse el) c1 c0 p1.
+  shortest_path2 v a (cdr Component (rev (c0 :: vl))) (E_reverse el) c1 c0 p1.
 Proof.
   intros v a vl el c0 c1 p0 p1 g s.
   unfold shortest_path2. unfold shortest_path2 in s.
-  intros.
+  intros. unfold length_p.
   rewrite E_rev_len.
-  apply Path_reverse in H.
-  apply s in H.
-  rewrite E_rev_len in H.
-  apply H.
+  apply Path_reverse in p2.
+  specialize (s (cdr Component (rev (c1 :: vl'))) (E_reverse el') p2). unfold length_p in s.
+  rewrite E_rev_len in s.
+  apply s.
   apply g.
 Qed.
 
@@ -488,7 +488,7 @@ Proof.
   destruct H. destruct H. destruct H.
   assert (p := x1).
   apply Path_reverse in p.
-  exists (cdr Vertex (rev (c0 :: x))).
+  exists (cdr Component (rev (c0 :: x))).
   exists (E_reverse x0).
   exists p.
   split.
@@ -508,6 +508,7 @@ Proof.
   destruct dis1. destruct H. destruct H. destruct H.
   destruct dis2. destruct H1. destruct H1. destruct H1.
   unfold shortest_path2 in H. unfold shortest_path2 in H1.
+  unfold length_p in H. unfold length_p in H1.
   apply H in x4.
   apply H1 in x1.
   rewrite <- H2.

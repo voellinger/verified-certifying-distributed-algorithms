@@ -1,7 +1,5 @@
 Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
-Require Import Coq.Logic.Classical_Prop.
-Require Import Coq.Arith.Even.
 Require Import Coq.Logic.Classical_Pred_Type.
 
 Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Tree_related".
@@ -56,7 +54,7 @@ Qed.
 Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) (n m : nat) :=
   v x /\ v y /\ ~ a (A_ends x y) /\ distance root v a x m /\ distance root v a y n /\ odd m = odd n /\ x <> y.
 
-Definition odd_closed {v : V_set} {a : A_set} (x y : Vertex) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
+Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
 
 

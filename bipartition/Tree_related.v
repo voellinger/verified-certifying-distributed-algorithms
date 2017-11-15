@@ -99,7 +99,7 @@ Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tre
   path_same v a vl vl' el el' x y p1 p2.
 
 Lemma connected_path :
- forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+ forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Component),
  v x -> v y -> {vl : V_list &  {el : E_list &  Path v a x y vl el}}.
 Proof.
   intros; elim (Connected_walk v a g x y H H0); intros.
@@ -132,6 +132,7 @@ Proof.
   apply p2.
   apply p.
   destruct H.
+  unfold length_p.
   rewrite H0.
   reflexivity.
   reflexivity.
@@ -146,9 +147,9 @@ Proof.
   destruct s.
   destruct s.
   rename x0 into vl. rename x1 into el.
-  exists (cdr Vertex(rev(root::vl))).
+  exists (cdr Component(rev(root::vl))).
   exists (E_reverse el).
-  assert (Path v a x root (cdr Vertex (rev (root :: vl))) (E_reverse el)).
+  assert (Path v a x root (cdr Component (rev (root :: vl))) (E_reverse el)).
   apply Path_reverse in x2.
   apply x2.
   apply Tree_isa_graph in t.
@@ -164,6 +165,7 @@ Proof.
   apply x2.
   apply p2.
   destruct H0.
+  unfold length_p.
   rewrite H1.
   reflexivity.
   rewrite E_rev_len.
