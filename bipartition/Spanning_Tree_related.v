@@ -2,14 +2,7 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Prop.
 
-
 Section Spanning_Tree.
-
-
-
-
-
-
 
 (* representation of network *)
 
@@ -492,7 +485,7 @@ Proof.
 Qed.
 
 (*It exists a connection between a vertex k and the result of parent_iteration n k with the length n*)
-Lemma walk_to_parent_it: forall  (n:nat)(c k: Component)(el  : A_list) (prop1:v c),
+(*Lemma walk_to_parent_it: forall  (n:nat)(c k: Component)(el  : A_list) (prop1:v c),
 parent_iteration n c = k ->  {el : A_list  & Connection_up k c el n}.
 Proof.
 intros n.
@@ -522,10 +515,12 @@ reflexivity.
 rewrite <- parent_it_prop.
 apply parent_it_arcs_induced_left with (x:=c).
 apply prop1.
+assert (n < distance c).
+admit.
 apply parent_it_arcs_induced_right with (x:=c).
 apply prop1.
-Qed.
-
+Qed.*)
+(*
 (*Exists connection between parent and child*)
 Lemma walk_to_parent: forall (c k: Component)(el  : A_list) (prop1:v c),
 parent c = k -> {el : A_list  & Connection c k el 1}.
@@ -551,7 +546,7 @@ apply H1.
 apply parent_exists_ in prop1.
 apply prop1.
 reflexivity.
-Qed.
+Qed.*)
 
 
 
@@ -607,7 +602,10 @@ split with A_nil.
 apply distance_root_ in H.
 rewrite H.
 apply self.
-apply rootprop.
+unfold spanningtree in *.
+destruct span_tree.
+unfold root_prop. 
+apply rooted.
 apply prop1.
 
 (*Step*)
@@ -640,6 +638,11 @@ assert (H'':= prop1).
 destruct prop1 .
 apply H0.
 apply H'.
+assert (distance x = S n -> distance x > 0).
+intuition.
+apply H0 in H.
+apply distance_greater_zero_ in H.
+trivial. trivial.
 reflexivity.
 assert (H'':= prop1). 
 apply parent_exists_ in prop1.
@@ -647,30 +650,12 @@ apply parent_arc with (c:=x) in prop1 .
 destruct prop1 .
 apply H1.
 apply H''.
+assert (distance x = S n -> distance x > 0).
+intuition.
+apply H0 in H.
+apply distance_greater_zero_ in H.
+trivial. trivial.
 reflexivity.
-Qed.
-
-
-(*Every vertex agrees on the leader with its parent and thereby recursivly with its ancestors *)
-Lemma parent_is_leader:
-forall (n:nat)(x y: Component)(prop1: v x) (prop2:v y), 
- leader x = leader (parent_iteration n x).
-Proof.
-intros n.
-induction n.
-intros.
-unfold parent_iteration.
-reflexivity.
-intros.
-rewrite  IHn with (y:=parent_iteration n x).
-rewrite leader_prop_.
-rewrite parent_it_prop.
-reflexivity.
-apply parent_it_closed with (x:=x).
-apply prop1.
-apply prop1.
-apply parent_it_closed with (x:=x).
-apply prop1.
 Qed.
 
 
@@ -748,39 +733,6 @@ apply prop1.
 reflexivity.
 Qed.
 
-
-
-
-
-Theorem global_witness_property:
-
-exists (l : Component), v l -> forall (x:Component)(prop1: v x), leader x = l.
-Proof.
-exists root.
-intros.
-case (C_eq_dec  x root).
-intros.
-rewrite e.
-apply leader_root.
-intros.
-rewrite parent_is_leader with (n:=distance x) (y:=root).
-apply leader_prop in n.
-destruct n.
-symmetry.
-rewrite <- parent_transitive_is_root with (n:=distance x) (x:=x) .
-symmetry.
-apply leader_root.
-apply prop1.
-reflexivity.
-apply path_to_root with (n:=distance x).
-
-apply prop1.
-reflexivity.
-apply prop1.
-apply prop1.
-apply rootprop.
-
-Qed.
 
 End Spanning_Tree.
 (***************************************************************)
