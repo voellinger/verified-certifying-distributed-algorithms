@@ -4,9 +4,9 @@ Require Import Coq.Logic.Classical_Prop.
 Require Import Coq.Arith.Even.
 Require Import Coq.Logic.Classical_Pred_Type.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/help_lemmas".
+Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Tree_related".
 
-Section Test.
+Section Bipartion_related.
 
 
 
