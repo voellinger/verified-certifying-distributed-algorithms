@@ -11,9 +11,6 @@ Section Help.
 Definition Component := Vertex.
 
 
-
-
-
 Lemma Path_isa_walk: 
   forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list),
   Path v a x y vl el -> Walk v a x y vl el.
@@ -29,15 +26,15 @@ Lemma Path_appended_isa_walk :
  Path v a x y vl el ->
  Path v a y z vl' el' -> Walk v a x z (vl ++ vl') (el ++ el').
 Proof.
-        intros v a x0 y0 z0 vl vl' el el' Hw; elim Hw; simpl; intros.
-        apply Path_isa_walk in H.
-        trivial.
+  intros v a x0 y0 z0 vl vl' el el' Hw; elim Hw; simpl; intros.
+  apply Path_isa_walk in H.
+  trivial.
 
-        apply W_step.
-        apply H.
-        apply H0.
-        apply v0.
-        apply a0.
+  apply W_step.
+  apply H.
+  apply H0.
+  apply v0.
+  apply a0.
 Qed.
 
 
