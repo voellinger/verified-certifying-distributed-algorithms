@@ -393,21 +393,23 @@ reflexivity.
 Qed.
 
 Lemma parent_it_arcs_induced_left: forall (x:Component)(prop: v x)(n:nat), 
-a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)).
+(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)).
 Proof.
 intros. 
 apply parent_it_arcs_induced with (n:=n)in prop.
 destruct prop as [b c] .
 apply b.
+apply H.
 Qed.
 
 Lemma parent_it_arcs_induced_right: forall (x:Component)(prop: v x)(n:nat), 
-a (  A_ends (parent_iteration (S n) x)(parent_iteration n x) ).
+(parent_iteration n x) <> root -> a (  A_ends (parent_iteration (S n) x)(parent_iteration n x) ).
 Proof.
 intros. 
 apply parent_it_arcs_induced with (n:=n)in prop.
 destruct prop as [b c] .
 apply c.
+apply H.
 Qed.
 
 
@@ -423,34 +425,6 @@ rewrite parent_it_prop.
 rewrite IHn.
 rewrite parent_it_prop.
 reflexivity.
-Qed.
-
-
-
-Lemma parent_aux_2:
-forall (x:Component) (n:nat) (prop1: v x),
-leader (parent (parent_iteration (S n) x)) =
-leader (parent_iteration n (parent x)).
-Proof.
-intros.
-induction n.
-unfold parent_iteration.
-rewrite -> leader_prop_ with (x:=parent x).
-reflexivity.
-apply parent_exists_.
-apply prop1.
-rewrite parent_it_prop.
-rewrite -> leader_prop_ with (x:=parent (parent_iteration (S n) x)) in IHn.
-rewrite IHn.
-rewrite parent_it_prop.
-rewrite -> leader_prop_ with (x:=parent_iteration n (parent x)).
-reflexivity.
-apply parent_it_closed with (x:=parent x) (n:=n).
-apply parent_exists_.
-apply prop1.
-rewrite <- parent_it_prop.
-apply parent_it_closed with (x:= x) (n:=(S (S n))).
-apply prop1.
 Qed.
 
 
@@ -519,7 +493,7 @@ Qed.
 
 (*It exists a connection between a vertex k and the result of parent_iteration n k with the length n*)
 Lemma walk_to_parent_it: forall  (n:nat)(c k: Component)(el  : A_list) (prop1:v c),
-parent_iteration n c = k -> {el : A_list  & Connection_up k c el n}.
+parent_iteration n c = k ->  {el : A_list  & Connection_up k c el n}.
 Proof.
 intros n.
 induction n.
