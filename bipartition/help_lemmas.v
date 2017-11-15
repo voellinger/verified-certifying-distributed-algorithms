@@ -1238,7 +1238,7 @@ Inductive Path_rev : V_set -> A_set -> Vertex -> Vertex -> V_list -> E_list -> S
       (x = y -> vl = V_nil) ->
       (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
       Path_rev v a x z (vl ++ z :: V_nil) (el ++ E_ends y z :: E_nil).
-
+(*
 Lemma cdr_last: forall (T: Type) (v1 : T) (vl : list T),
   v1 :: vl = rev (cdr T (rev (v1 :: vl))) ++ last (v1 :: vl) v1 :: nil.
 Proof. Admitted.
@@ -1711,6 +1711,14 @@ or at its end, otherwise it is no path, as v is a leaf and only has degree 1. Le
 y are the same. As y has degree of 1, there is only one possible extension to those paths. Therefore all paths from x to y
 are the same.
  *)
+*)
+
+Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Vertex) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
+  vl = vl' /\ el = el'.
+
+Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
+  (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
+  path_same v a vl vl' el el' x y p1 p2.
 
 
 Lemma connected_path :
