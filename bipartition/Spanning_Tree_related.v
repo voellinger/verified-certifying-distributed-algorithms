@@ -42,7 +42,7 @@ Definition root_prop(c: Connected v a) := v root.
 
 Definition parent_prop (x: Component) (v: C_set) :=
 forall (x :Component), 
-x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends x (parent x))
+x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends (parent x) x)
 \/
 x=root /\ parent x = x.
 
@@ -233,6 +233,62 @@ Proof.
   apply propp.
 Qed.
 
+Lemma parent_arc: forall (c k:Component)(prop: v c)(prop2: v k),
+  c <> root -> parent c = k -> a (A_ends c k) /\ a (A_ends k c).
+Proof.
+  intros.
+  unfold spanningtree in span_tree.
+  destruct span_tree.
+  assert (H3 := H2).
+  specialize (H2 c).
+  specialize (H3 k).
+  apply H3 in prop2.
+  destruct prop2. unfold parent_prop in H5.
+  specialize (H5 c).
+  destruct H5.
+  destruct H5 as [i [j l]].
+  rewrite <- H0.
+  apply l.
+  intuition.
+Qed.
+
+Lemma distance_root : distance root = 0.
+Proof.
+  intros.
+  unfold spanningtree in span_tree.
+  destruct span_tree.
+  specialize (H0 root).
+  unfold root_prop in H.
+  apply H0 in H.
+  destruct H.
+  unfold distance_prop in H.
+  specialize (H root).
+  destruct H.
+  intuition.
+  destruct H.
+  apply H2.
+Qed.
+
+
+
+
+Lemma distance_prop2 : forall (x:Component)(prop :v x),
+x <>root -> distance x = distance (parent x) + 1.
+Proof.
+  intros.
+  unfold spanningtree in span_tree.
+  destruct span_tree.
+  specialize (H1 x).
+  apply H1 in prop.
+  destruct prop.
+  unfold distance_prop in H2.
+  specialize (H2 x).
+  destruct H2.
+  destruct H2.
+  apply H4.
+  intuition.
+Qed.
+
 (***************************************************************************)
 
 
@@ -241,10 +297,10 @@ Qed.
 
 Lemma C_eq_dec : forall x y : Component, {x = y} + {x <> y}.
 Proof.
-        simple destruct x; simple destruct y; intros.
-        case (eq_nat_dec n n0); intros.
-        left; rewrite e; trivial.
-        right; injection; trivial.
+  simple destruct x; simple destruct y; intros.
+  case (eq_nat_dec n n0); intros.
+  left; rewrite e; trivial.
+  right; injection; trivial.
 Qed.
 
 
@@ -252,30 +308,19 @@ Qed.
 Lemma distance_root_ : forall (c:Component)(prop :v c),  distance c = 0 -> c = root.
 Proof.
 intros.
-unfold spanningtree in span_tree.
-destruct span_tree.
-unfold root_prop in H0.
 case (C_eq_dec  c root).
-intros. apply e.
+auto.
 intros.
-specialize (H1 c). apply H1 in prop.
-destruct prop.
-unfold distance_prop in H2.
-unfold parent_prop in H3.
-specialize (H2 c).
-destruct H2.
-destruct H2.
-rewrite H in H4. rewrite plus_comm in H4. simpl in H4. inversion H4.
-intuition.
+apply distance_prop2 in n.
+omega.
+apply prop.
 Qed.
 
 Lemma distance_root_2 : forall (c:Component)(prop :v c),  c = root -> distance c = 0.
 Proof.
 intros.
 rewrite H.
-unfold spanningtree in span_tree. destruct span_tree. unfold root_prop in H0.
-specialize (H1 root). apply H1 in H0. destruct H0. unfold distance_prop in H0.
-specialize (H0 root). destruct H0. destruct H0. intuition. apply H0.
+apply distance_root.
 Qed.
 
 
@@ -286,7 +331,7 @@ forall (comp: Component) (prop :v comp),
 comp <> root -> distance comp > 0. 
 Proof. 
 intros.
-rewrite (distance_prop comp).
+rewrite (distance_prop2 comp).
 elim distance.
 auto.
 intuition.
@@ -334,15 +379,16 @@ apply IHn.
 Qed.
 
 Lemma parent_it_arcs_induced: forall (x:Component)(prop: v x)(n:nat), 
-a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)) /\ a (  A_ends (parent_iteration (S n) x)(parent_iteration n x) ).
+(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)) /\ a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
 Proof.
 intros.
-apply parent_arc with (c:=parent_iteration n x) (k:=parent (parent_iteration n x))  .
+apply parent_arc with (c:=parent_iteration n x) (k:=parent (parent_iteration n x)).
 apply parent_it_closed with (x:=x).
 apply prop.
 rewrite <- parent_it_prop.
 apply parent_it_closed with (x:=x).
 apply prop.
+apply H.
 reflexivity.
 Qed.
 
@@ -596,7 +642,7 @@ destruct IHn with (x:= parent x) as [k i].
 assert (H':= H). 
 apply parent_exists_ in prop1.
 apply prop1.
-rewrite distance_prop in H.
+rewrite distance_prop2 in H.
 assert (H1: distance (parent x) + 1 = S n -> distance (parent x) = n ).
 intuition.
 apply H1.
@@ -691,7 +737,7 @@ symmetry.
 rewrite <- H'.
 assert (distance x = S n -> distance (parent x) = n).
 intros.
-rewrite distance_prop in H2.
+rewrite distance_prop2 in H2.
 assert (distance (parent x) + 1 = S n -> distance (parent x) = n).
 intuition.
 apply H3.
@@ -710,7 +756,7 @@ apply prop1.
 
 assert (distance x = S n -> distance (parent x) = n).
 intros.
-rewrite distance_prop in H2.
+rewrite distance_prop2 in H2.
 
 assert (distance (parent x) + 1 = S n -> distance (parent x) = n).
 intuition.
@@ -776,7 +822,7 @@ Axiom leader_prop_ : forall x, v x -> leader x =  leader (parent x).
 Axiom parent_exists_ : forall x, v x -> v (parent x).
 Hint Resolve parent_exists_ : core.
 
-Axiom distance_prop : forall x, v x -> x<>root -> distance x = S (distance (parent x)).
+Axiom distance_prop2 : forall x, v x -> x<>root -> distance x = S (distance (parent x)).
 
 Lemma C_eq_dec : forall x y : Component, {x = y} + {x <> y}.
 Proof.
@@ -794,10 +840,10 @@ Proof.
   induction dx; intros x vx dxx.
 
   { destruct (C_eq_dec x root) as [d|d]; subst; auto.
-    apply distance_prop in d; auto; omega. }
+    apply distance_prop2 in d; auto; omega. }
 
   { destruct (C_eq_dec x root) as [d|d]; subst; auto.
-    apply distance_prop in d; auto.
+    apply distance_prop2 in d; auto.
     rewrite d in dxx.
     inversion dxx as [xx]; clear dxx d.
     apply IHdx in xx; auto.
