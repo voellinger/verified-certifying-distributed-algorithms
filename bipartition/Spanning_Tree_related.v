@@ -9,9 +9,10 @@ Section Spanning_Tree.
 Definition Component := Vertex.
 
 
-Definition Component_index (c : Component):nat := match c with
-                          | index x => x
-                          end.
+Definition Component_index (c : Component):nat := 
+  match c with
+  | index x => x
+  end.
 
 Definition C_set := U_set Component.
 
@@ -735,52 +736,3 @@ Qed.
 
 
 End Spanning_Tree.
-(***************************************************************)
-
-
-(*
-Section GlobalWitnessProperty2.
-Axiom leader_root : leader root = root.
-Hint Resolve leader_root : core.
-
-Axiom leader_prop_ : forall x, v x -> leader x =  leader (parent x).
-
-Axiom parent_exists_ : forall x, v x -> v (parent x).
-Hint Resolve parent_exists_ : core.
-
-Axiom distance_prop2 : forall x, v x -> x<>root -> distance x = S (distance (parent x)).
-
-Lemma C_eq_dec : forall x y : Component, {x = y} + {x <> y}.
-Proof.
-  destruct x as [n], y as [m]; destruct (eq_nat_dec n m); subst; auto.
-  right; intro d; inversion d; subst; omega.
-Qed.
-
-Theorem global_witness_property2 :
-  forall x, v x -> leader x = root.
-Proof.
-  intros x pvx.
-  auto.
-  remember (distance x) as dx.
-  revert dependent x.
-  induction dx; intros x vx dxx.
-
-  { destruct (C_eq_dec x root) as [d|d]; subst; auto.
-    apply distance_prop2 in d; auto; omega. }
-
-  { destruct (C_eq_dec x root) as [d|d]; subst; auto.
-    apply distance_prop2 in d; auto.
-    rewrite d in dxx.
-    inversion dxx as [xx]; clear dxx d.
-    apply IHdx in xx; auto.
-    rewrite <- leader_prop_ in xx;auto. }
-Qed.
-
-Theorem global_witness_property3 :
-  exists l, v l -> forall x, v x -> leader x = l.
-Proof.
-  exists root; intro vr.
-  apply global_witness_property2.
-Qed.
-End GlobalWitnessProperty2.
-*)
