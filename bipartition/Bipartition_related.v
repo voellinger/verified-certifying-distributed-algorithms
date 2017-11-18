@@ -3,27 +3,37 @@ Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Pred_Type.
 
 Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Tree_related".
+Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Spanning_Tree_related".
 
 Section Bipartion_related.
 
 
+(* 
+
+Lemma path_to_root:
+forall (n:nat) (x:Vertex) (prop1 : v x),
+distance x = n -> {al : A_list & Connection x root al n }.
+
+Lemma Connection_to_walk: forall (n:nat)(x y:Vertex)(al:A_list),
+  (Connection x y al n) -> {vl : V_list & {el: E_list & {w: Walk v a x y vl el & length el = n}}}.
 
 
 
+ *)
 
 
-
-
-
-
-
-
-Variable root : Component.
+Variable parent : Vertex -> Vertex.
+Variable distance : Vertex -> nat.
 Variable color : Component -> bool.
 
 
-Definition bipartite3 (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 
+Variable root: Vertex.
+
+
+
+
+Definition bipartite3 (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 Definition bipartite4 (a: A_set) := ~exists (ar : Arc), a ar /\ color (A_tail ar) = color (A_head ar).
 
 Lemma bipar3_eq_bipar4: forall (a: A_set), bipartite3 a <-> bipartite4 a.
@@ -51,7 +61,7 @@ Proof.
 Qed.
 
 (* could be remade without m and n, just use shortest_path *)
-Definition special_vertices (v:V_set) (a:A_set) (t : Tree v a) (x y : Component) (n m : nat) :=
+Definition special_vertices (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) (n m : nat) :=
   v x /\ v y /\ ~ a (A_ends x y) /\ distance root v a x m /\ distance root v a y n /\ odd m = odd n /\ x <> y.
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)

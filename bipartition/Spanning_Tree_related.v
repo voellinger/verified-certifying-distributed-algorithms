@@ -13,7 +13,6 @@ Variable g : Connected v a.
 
 
 Variable root: Vertex.
-Axiom rooted : v root.
 
 Variable parent : Vertex -> Vertex.
 
@@ -48,8 +47,9 @@ Variable s : spanning_tree g.
 
 
 (************ Some Lemmata that follow easily ************)
-Lemma parent_root : parent root = root.
+Lemma parent_root : v root -> parent root = root.
 Proof.
+  intros rooted.
   unfold spanning_tree in s.
   destruct s.
   unfold root_prop in H0.
@@ -383,11 +383,11 @@ Qed.
 (*path_to_root: inductive proof shows there is a path from root to each vertex via the parent relation *)
 Lemma path_to_root:
 forall (n:nat) (x:Vertex) (prop1 : v x),
-distance x = n -> {al : A_list & Connection x root al n }.
+v root ->  distance x = n -> {al : A_list & Connection x root al n }.
 Proof.
 intros n.
 induction n.
-intros.
+intros x prop1 rooted.
 split with A_nil. 
 apply distance_root_ in H.
 rewrite H.
@@ -399,11 +399,38 @@ apply rooted.
 apply prop1.
 
 (*Step*)
-intros.
+intros x prop1 rooted H.
 destruct IHn with (x:= parent x) as [k i].
 assert (H':= H). 
 apply parent_exists_ in prop1.
 apply prop1.
+apply rooted.
+
+unfold spanning_tree in s.
+destruct s.
+specialize (H1 x).
+apply H1 in prop1.
+destruct prop1.
+unfold distance_prop in H2.
+specialize (H2 x).
+
+destruct H2.
+destruct H2.
+rewrite H in H4.
+symmetry in H4.
+intuition.
+
+intuition.
+
+
+apply step in i.
+specialize (IHn x prop1 rooted).
+destruct IHn.
+
+
+
+
+
 rewrite distance_prop2 in H.
 assert (H1: distance (parent x) + 1 = S n -> distance (parent x) = n ).
 intuition.
