@@ -4,59 +4,40 @@ Require Import Coq.Logic.Classical_Prop.
 
 Section Spanning_Tree.
 
-(* representation of network *)
 
-Definition Component := Vertex.
+(************ Definitions of the tree with distance ************)
 
-
-Definition Component_index (c : Component):nat := 
-  match c with
-  | index x => x
-  end.
-
-Definition C_set := U_set Component.
-
-Definition C_list := U_list Component.
-
-
-(* Axiom Component_Graph: forall (c:Component), v c. *)
-
+Variable v:V_set.
 Variable a:A_set.
-Variable v:C_set.
 Variable g : Connected v a.
 
 
-Variable root: Component.
+Variable root: Vertex.
+Axiom rooted : v root.
 
-Variable parent : Component -> Component.
+Variable parent : Vertex -> Vertex.
 
-Variable distance : Component -> nat.
+Variable distance : Vertex -> nat.
 
 Definition root_prop(c: Connected v a) := v root.
 
-Definition parent_prop (x: Component) (v: C_set) :=
-forall (x :Component), 
+Definition parent_prop (x :Vertex) :=
 x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends (parent x) x)
 \/
 x=root /\ parent x = x.
 
-Definition distance_prop (x: Component) :=
-forall (x:Component), 
+Definition distance_prop (x: Vertex) :=
+forall (x:Vertex), 
 x <> root /\ distance x = distance (parent x) + 1
 \/
 (x=root) /\ distance x = 0.
 
-Definition spanningtree (c: Connected v a) :=
-root_prop (c) /\ (forall x, v x -> distance_prop x /\ parent_prop x v).
+Definition spanning_tree (c: Connected v a) :=
+root_prop c /\ (forall x, v x -> distance_prop x /\ parent_prop x).
+(* maybe we have to get rid of the \/ in spanning_tree *)
 
-Variable span_tree : spanningtree g.
-
-(* Definition spanningtree (c: Connected v a) :=
-root_prop (c) /\ 
-  (forall x, v x -> 
-    {x = root /\ distance x = 0 /\ parent x = x} +
-    {x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends x (parent x)) /\ distance x = distance (parent x) + 1}).
- *)
+Variable s : spanning_tree g.
+(************ Definitions of the tree with distance ************)
 
 
 
@@ -66,131 +47,11 @@ root_prop (c) /\
 
 
 
-
-
-
-
-
-
-
-(*CA_list: all arcs of a Connected-graph*)
-Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
- A_list :=
-  match c with
-  | C_isolated x => A_nil
-  | C_leaf v' a' c' x y _ _ => CA_list v' a' c'
-  | C_edge v' a' c' x y _ _ _ _ _ =>
-      A_ends x y :: A_ends y x :: CA_list v' a' c'
-  | C_eq v' _ a' _ _ _ c' => CA_list v' a' c'
-  end.
-
-(*CV_list: all vertices of a Connected-graph*)
-Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
- V_list :=
-  match c with
-  | C_isolated x => x::V_nil
-  | C_leaf v' a' c' x y _ _ => x :: CV_list v' a' c'
-  | C_edge v' a' c' x y _ _ _ _ _  => CV_list v' a' c'
-  | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
-  end.
-
-(*C_non_directed: each arc in a connected graph is bidirectional*)
-Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
- a (A_ends x y) -> a (A_ends y x).
-Proof.
-intros.
-apply Connected_Isa_Graph in g0.
-apply G_non_directed with (v:=v0).
-apply g0.
-apply H.
-Qed.
-
-(*neighbors: all neighboring vertices of a vertex*)
-Definition neighbors (g : Connected v a) (c: Component) : C_list :=
-(A_in_neighborhood c (CA_list v a g)) .
-
-
-
-
-
-(************************local witness predicates***********************)
-
-(* (x) technical detail : collection of the values of the functions (parent, distance, leader) 
-in order to prove properties about the constructed functions  *) 
-
-(* gamma_i: local witness predicate of ordinary vertices (all but the root) *)
-Definition gamma_i (i:Component)(distance_i:nat)(parent_i:Component)(distance_parent_i:nat)
-:Prop :=
-parent i = parent_i /\  (* (x) *)
-a (A_ends i parent_i) /\
-a (A_ends parent_i i) /\
-distance i = distance_i /\ (* (x) *)
-distance_parent_i = distance parent_i /\ (* consistency in neighbourhood ) *)
-distance_i = distance_parent_i + 1.
-
-(* gamma_root: local witness predicate of the root node *)
-Definition gamma_root (i:Component)(distance_i:nat)(parent_i:Component)
-: Prop :=
-parent i = parent_i /\  (* (x) *)
-parent_i =  i /\
-distance i = distance_i /\  (* (x) *)
-distance_i = 0.
-
-
-(*Why gamma_root exactly once and in all other cases gamma_i?*)
-(* There is exactly one leader: the root. The leader is its own leader and has distance 0. All others have a leader different from themselves 
-and a distance of one more than their parent. *)
-(************************local witness predicates************************)
-
-Theorem composition_property:
-forall ( parent_root: Component)( distance_root : nat), (gamma_root root  distance_root parent_root)  ->
-forall (x:Component)(prop1: v x)(prop2: x <> root) (  parent_i  :Component )(distance_i distance_parent_i: nat), 
-(gamma_i x distance_i parent_i  distance_parent_i  ) -> 
-distance root = 0 /\ distance x = distance (parent x) + 1 /\
-parent root = root /\ v (parent x)
-/\ a (A_ends x (parent x)) /\ a (A_ends (parent x) x). 
-Proof.
-intros.
-unfold gamma_root in H.
-unfold gamma_i in H0.
-destruct H as  [f [l [i  d]]].
-destruct H0 as [c_i [f_i [l_i [i_i [m_i n_i]]]]].
-
-split.
-rewrite i.
-apply d.
-split.
-rewrite c_i.
-rewrite <- m_i.
-rewrite  i_i.
-trivial.
-split.
-rewrite f. (*LEADER PROPS*)
-apply l.
-apply C_ina_inv1 with (v:=v) (a:=a)  in l_i  .
-rewrite <- c_i in l_i.
-split.
-trivial.
-split.
-rewrite <- c_i  in f_i.
-trivial.
-Focus 2.
-apply g.
-rewrite <- c_i in f_i.
-apply C_non_directed  with (v:=v)  in f_i .
-trivial.
-apply g.
-Qed.
-
-
-
-
-Axiom rooted : v root.
-
+(************ Some Lemmata that follow easily ************)
 Lemma parent_root : parent root = root.
 Proof.
-  unfold spanningtree in span_tree.
-  destruct span_tree.
+  unfold spanning_tree in s.
+  destruct s.
   unfold root_prop in H0.
   specialize (H0 root).
   assert (v root).
@@ -198,7 +59,7 @@ Proof.
   apply H0 in H1.
   destruct H1.
   unfold parent_prop in H2.
-  specialize (H2 root).
+
   destruct H2.
   destruct H2.
   intuition.
@@ -206,18 +67,17 @@ Proof.
   apply H3.
 Qed.
 
-Lemma parent_exists_ : forall (x :Component) (prop: v x), v (parent x).
+Lemma parent_exists_ : forall (x :Vertex) (prop: v x), v (parent x).
 Proof.
   intros.
-  unfold spanningtree in span_tree.
-  destruct span_tree.
+  unfold spanning_tree in s.
+  destruct s.
   unfold root_prop in H0.
   specialize (H0 x).
   assert (propp := prop).
   apply H0 in prop.
   destruct prop.
   unfold parent_prop in H2.
-  specialize (H2 x).
   destruct H2.
   destruct H2.
   destruct H3.
@@ -227,30 +87,33 @@ Proof.
   apply propp.
 Qed.
 
-Lemma parent_arc: forall (c k:Component)(prop: v c)(prop2: v k),
+Lemma parent_arc: forall (c k:Vertex)(prop: v c)(prop2: v k),
   c <> root -> parent c = k -> a (A_ends c k) /\ a (A_ends k c).
 Proof.
   intros.
-  unfold spanningtree in span_tree.
-  destruct span_tree.
+  unfold spanning_tree in s.
+  destruct s.
   assert (H3 := H2).
   specialize (H2 c).
   specialize (H3 k).
   apply H3 in prop2.
   destruct prop2. unfold parent_prop in H5.
-  specialize (H5 c).
-  destruct H5.
-  destruct H5 as [i [j l]].
+  apply H2 in prop.
+  destruct prop.
+  unfold parent_prop in H7.
+  destruct H7.
   rewrite <- H0.
-  apply l.
+  destruct H7.
+  destruct H8.
+  apply H9.
   intuition.
 Qed.
 
 Lemma distance_root : distance root = 0.
 Proof.
   intros.
-  unfold spanningtree in span_tree.
-  destruct span_tree.
+  unfold spanning_tree in s.
+  destruct s.
   specialize (H0 root).
   unfold root_prop in H.
   apply H0 in H.
@@ -263,15 +126,12 @@ Proof.
   apply H2.
 Qed.
 
-
-
-
-Lemma distance_prop2 : forall (x:Component)(prop :v x),
+Lemma distance_prop2 : forall (x:Vertex)(prop :v x),
 x <>root -> distance x = distance (parent x) + 1.
 Proof.
   intros.
-  unfold spanningtree in span_tree.
-  destruct span_tree.
+  unfold spanning_tree in s.
+  destruct s.
   specialize (H1 x).
   apply H1 in prop.
   destruct prop.
@@ -283,13 +143,7 @@ Proof.
   intuition.
 Qed.
 
-(***************************************************************************)
-
-
-
-(**************************** Auxiliary Lemmas **************************************)
-
-Lemma C_eq_dec : forall x y : Component, {x = y} + {x <> y}.
+Lemma C_eq_dec : forall x y : Vertex, {x = y} + {x <> y}.
 Proof.
   simple destruct x; simple destruct y; intros.
   case (eq_nat_dec n n0); intros.
@@ -297,9 +151,7 @@ Proof.
   right; injection; trivial.
 Qed.
 
-
-
-Lemma distance_root_ : forall (c:Component)(prop :v c),  distance c = 0 -> c = root.
+Lemma distance_root_ : forall (c:Vertex)(prop :v c),  distance c = 0 -> c = root.
 Proof.
 intros.
 case (C_eq_dec  c root).
@@ -310,18 +162,15 @@ omega.
 apply prop.
 Qed.
 
-Lemma distance_root_2 : forall (c:Component)(prop :v c),  c = root -> distance c = 0.
+Lemma distance_root_2 : forall (c:Vertex)(prop :v c),  c = root -> distance c = 0.
 Proof.
 intros.
 rewrite H.
 apply distance_root.
 Qed.
 
-
-(*Lemma: All components have distance greater than zero except for root *)
-
 Lemma distance_greater_zero:
-forall (comp: Component) (prop :v comp),
+forall (comp: Vertex) (prop :v comp),
 comp <> root -> distance comp > 0. 
 Proof. 
 intros.
@@ -334,7 +183,7 @@ apply H.
 Qed.
 
 Lemma distance_greater_zero_:
-forall (comp: Component) (prop :v comp),
+forall (comp: Vertex) (prop :v comp),
 distance comp > 0 -> comp <> root. 
 Proof.
 intros.
@@ -345,23 +194,27 @@ omega.
 apply prop.
 auto.
 Qed.
+(************ Some Lemmata that follow easily ************)
+
+
+
+
 
 (************************* Auxiliary Function Parent_Iteration ***********************)
-
-Fixpoint parent_iteration (n: nat) (c: Component) :Component:= match n with
+Fixpoint parent_iteration (n: nat) (c: Vertex) :Vertex:= match n with
 | 0  =>  c
 |(S n)  => parent (parent_iteration n  c) 
 end.
 
 
-Lemma parent_it_prop : forall (n : nat) (c:Component),
-parent_iteration (S n) c = parent (parent_iteration n c).  
+Lemma parent_it_prop : forall (n : nat) (c:Vertex),
+parent_iteration (S n) c = parent (parent_iteration n c).
 Proof.
 intros.
 auto.
 Qed.
 
-Lemma parent_it_closed : forall (x :Component)(n:nat) (prop: v x), v (parent_iteration n x).
+Lemma parent_it_closed : forall (x :Vertex)(n:nat) (prop: v x), v (parent_iteration n x).
 Proof.
 intros.
 induction n.
@@ -372,7 +225,7 @@ apply parent_exists_ with (x:=parent_iteration n x).
 apply IHn.
 Qed.
 
-Lemma parent_it_arcs_induced: forall (x:Component)(prop: v x)(n:nat), 
+Lemma parent_it_arcs_induced: forall (x:Vertex)(prop: v x)(n:nat), 
 (parent_iteration n x) <> root -> a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)) /\ a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
 Proof.
 intros.
@@ -386,7 +239,7 @@ apply H.
 reflexivity.
 Qed.
 
-Lemma parent_it_arcs_induced_left: forall (x:Component)(prop: v x)(n:nat), 
+Lemma parent_it_arcs_induced_left: forall (x:Vertex)(prop: v x)(n:nat), 
 (parent_iteration n x) <> root -> a (A_ends (parent_iteration n x)  (parent_iteration (S n) x)).
 Proof.
 intros. 
@@ -396,7 +249,7 @@ apply b.
 apply H.
 Qed.
 
-Lemma parent_it_arcs_induced_right: forall (x:Component)(prop: v x)(n:nat), 
+Lemma parent_it_arcs_induced_right: forall (x:Vertex)(prop: v x)(n:nat), 
 (parent_iteration n x) <> root -> a (  A_ends (parent_iteration (S n) x)(parent_iteration n x) ).
 Proof.
 intros. 
@@ -408,7 +261,7 @@ Qed.
 
 
 Lemma parent_aux_1:
-(forall (x:Component) (n:nat) (prop1: v x),
+(forall (x:Vertex) (n:nat) (prop1: v x),
 (parent (parent_iteration  n x) )=  (parent_iteration n (parent x))).
 Proof.
 intros.
@@ -420,29 +273,29 @@ rewrite IHn.
 rewrite parent_it_prop.
 reflexivity.
 Qed.
+(************************* Auxiliary Function Parent_Iteration ***********************)
 
 
-(***************************************************************)
 
-(*********** Inductive Type Connection : Trail defined by parent relation ***************)
 
+(************************* Inductive Type Connection : Trail defined by parent relation *************************)
 (* Direction of construction : from parent to child *)
 Inductive Connection:  Vertex -> Vertex -> A_list -> nat -> Set :=
   | self : forall x:Vertex,  v x -> Connection x x  A_nil 0
-  | step : forall (x y z : Vertex)(el : A_list)(n:nat),
-           Connection y z el n -> v x  -> parent x = y 
+  | step : forall (x y z : Vertex)(al : A_list)(n:nat),
+           Connection y z al n -> v x  -> parent x = y 
           -> a (A_ends x (parent x))  -> a (A_ends (parent x) x) 
        (*   -> ~ In (A_ends x (parent x))  el -> ~ In (A_ends (parent x) x)  el*)
-          -> Connection x z ((A_ends (parent x) x ) :: el) (S n).
+          -> Connection x z ((A_ends (parent x) x ) :: al) (S n).
 
 (* Direction of construction : from child to parent *)
 Inductive Connection_up:  Vertex -> Vertex -> A_list -> nat -> Set :=
   | self_up : forall x:Vertex,  v x -> Connection_up x x  A_nil 0
-  | step_up : forall (x y z : Vertex)(el : A_list)(n:nat),
-           Connection_up z y el n -> v x  -> parent z = x 
+  | step_up : forall (x y z : Vertex)(al : A_list)(n:nat),
+           Connection_up z y al n -> v x  -> parent z = x 
           -> a (A_ends z (parent z))  -> a (A_ends (parent z) z) 
        (*   -> ~ In (A_ends x (parent x))  el -> ~ In (A_ends (parent x) x)  el*)
-          -> Connection_up x y ((A_ends z (parent z)) :: el) (S n).
+          -> Connection_up x y ((A_ends z (parent z)) :: al) (S n).
 
 
 Lemma Connection_append :
@@ -485,76 +338,12 @@ Proof.
         trivial.
 Qed.
 
-(*It exists a connection between a vertex k and the result of parent_iteration n k with the length n*)
-(*Lemma walk_to_parent_it: forall  (n:nat)(c k: Component)(el  : A_list) (prop1:v c),
-parent_iteration n c = k ->  {el : A_list  & Connection_up k c el n}.
-Proof.
-intros n.
-induction n.
-intros.
-split with (A_nil).
-unfold parent_iteration in H.
-rewrite H.
-apply self_up.
-rewrite <- H.
-apply prop1.
-intros.
-rewrite parent_it_prop in H.
-destruct IHn with (c:=c)(k:=parent_iteration n c).
-apply el.
-apply prop1. 
-reflexivity.
-split with (A_ends (parent_iteration n c) (parent (parent_iteration n c))  ::x).
-rewrite <- H.
-apply step_up with
-(y:= c)(x:=(parent (parent_iteration n c)))(z:=parent_iteration n c)(n:=n)(el:=x).
-apply c0.
-rewrite <- parent_it_prop.
-apply parent_it_closed with (x:=c).
-apply prop1.
-reflexivity.
-rewrite <- parent_it_prop.
-apply parent_it_arcs_induced_left with (x:=c).
-apply prop1.
-assert (n < distance c).
-admit.
-apply parent_it_arcs_induced_right with (x:=c).
-apply prop1.
-Qed.*)
-(*
-(*Exists connection between parent and child*)
-Lemma walk_to_parent: forall (c k: Component)(el  : A_list) (prop1:v c),
-parent c = k -> {el : A_list  & Connection c k el 1}.
-Proof.
-intros.
-split with (A_ends k c ::A_nil).
-rewrite <- H.
-apply step with (y:=parent c).
-apply self.
-apply parent_exists_ in prop1.
-apply prop1.
-apply prop1.
-reflexivity.
-apply parent_arc with (c:=c)(k:=parent c) in prop1 .
-destruct prop1.
-apply H0.
-apply parent_exists_ in prop1.
-apply prop1.
-reflexivity.
-apply parent_arc with (c:=c)(k:=parent c) in prop1 .
-destruct prop1.
-apply H1.
-apply parent_exists_ in prop1.
-apply prop1.
-reflexivity.
-Qed.*)
-
 
 
 
 Lemma Connection_Connection_up :
-forall  (n:nat) (x y: Component)(prop1:v x)(prop2: v y), 
-{el : A_list & Connection x y el n} -> {el : A_list & Connection_up y x el n}. 
+forall  (n:nat) (x y: Vertex)(prop1:v x)(prop2: v y), 
+{al : A_list & Connection x y al n} -> {al : A_list & Connection_up y x al n}. 
 Proof.
 intros.
 destruct H.
@@ -584,17 +373,17 @@ trivial.
 trivial.
 trivial.
 Qed.
+(************************* Inductive Type Connection : Trail defined by parent relation *************************)
 
 
 
-(***************************************************************)
+
 
 (********************* Proof of Witness Property ******************************************)
 (*path_to_root: inductive proof shows there is a path from root to each vertex via the parent relation *)
-
 Lemma path_to_root:
-forall (n:nat) (x:Component) (prop1 : v x),
-distance x = n -> {el : A_list & Connection x root el n }.
+forall (n:nat) (x:Vertex) (prop1 : v x),
+distance x = n -> {al : A_list & Connection x root al n }.
 Proof.
 intros n.
 induction n.
@@ -603,8 +392,8 @@ split with A_nil.
 apply distance_root_ in H.
 rewrite H.
 apply self.
-unfold spanningtree in *.
-destruct span_tree.
+unfold spanning_tree in *.
+destruct s.
 unfold root_prop. 
 apply rooted.
 apply prop1.
@@ -664,8 +453,8 @@ Qed.
 
 (* parent_transitive_is_root shows that root is ancestor of every vertex  *)
 Lemma parent_transitive_is_root :
-forall  (n:nat) (x: Component)(prop1:v x), 
-n= distance x ->  {el : A_list & Connection x root el (distance x) } -> root = parent_iteration (distance x) x .
+forall  (n:nat) (x: Vertex)(prop1:v x), 
+n= distance x ->  {al : A_list & Connection x root al (distance x) } -> root = parent_iteration (distance x) x .
 Proof.
 intros n .
 induction n.
@@ -733,6 +522,35 @@ apply parent_exists_.
 apply prop1.
 reflexivity.
 Qed.
+
+Lemma Connection_to_walk: forall (n:nat)(x y:Vertex)(al:A_list),
+  (Connection x y al n) -> {vl : V_list & {el: E_list & {w: Walk v a x y vl el & length el = n}}}.
+Proof.
+  intros n x y al c.
+  induction c.
+
+  exists V_nil. exists E_nil.
+  assert (Walk v a x x V_nil E_nil) as w.
+  apply W_null.
+  apply v0.
+  exists w.
+  reflexivity.
+
+  destruct IHc as [vl [el [w_old llength]]].
+  rewrite e in a0. rewrite e in a1.
+  exists (y :: vl).
+  exists ((E_ends x y) :: el).
+  assert (Walk v a x z (y :: vl) ((E_ends x y) :: el)) as w_new.
+  apply W_step.
+  apply w_old.
+  apply v0.
+  apply a0.
+  exists w_new.
+  simpl.
+  rewrite <- llength.
+  reflexivity.
+Qed.
+
 
 
 End Spanning_Tree.

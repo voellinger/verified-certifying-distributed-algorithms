@@ -93,7 +93,7 @@ Proof.
   apply H.
 Qed.
 
-
+(* 
 Axiom Tree_only_one_path : forall (v:V_set) (a:A_set) (x y : Component) (t : Tree v a) (vl vl' : V_list) (el el' : E_list)
   (p1 : Path v a x y vl el) (p2 : Path v a x y vl' el'),
   path_same v a vl vl' el el' x y p1 p2.
@@ -170,6 +170,6 @@ Proof.
   reflexivity.
   rewrite E_rev_len.
   reflexivity.
-Qed.
+Qed. *)
 
 End Tree_related.
