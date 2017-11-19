@@ -60,9 +60,9 @@ Proof.
   apply H1.
 Qed.
 
-(* could be remade without m and n, just use shortest_path *)
-Definition special_vertices (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) (n m : nat) :=
-  v x /\ v y /\ ~ a (A_ends x y) /\ distance root v a x m /\ distance root v a y n /\ odd m = odd n /\ x <> y.
+
+Definition special_vertices (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
+  v x /\ v y /\ a (A_ends x y) /\ ~ parent x = y /\ ~ parent y = x /\ odd (distance x) = odd (distance y) /\ x <> y.
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
@@ -229,12 +229,12 @@ Qed.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
 Lemma special_vertices_make_odd_closed: 
-  forall (v:V_set) (a:A_set) (t : Tree v a) (x y: Component) (m n : nat), 
-  special_vertices v a t x y m n -> 
+  forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x y: Component), 
+  special_vertices v a c t x y -> 
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v (A_union a (E_set x y)) y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
-  intros v a t x y m n H.
+  intros v a c t x y H.
 
   unfold special_vertices in H.
   destruct H.
@@ -244,10 +244,12 @@ Proof.
   destruct H3.
   destruct H4.
 
-  assert (rooted:=H).
-  apply (nearly_all_trees_rooted root v a x t) in rooted.
+  unfold spanning_tree in t.
+  destruct t.
+  unfold root_prop in H6.
+  rename H6 into rooted.
 
-  apply (connected_min_path2 root v a x t) in H.
+  apply (path_to_root v a c root parent distance ) in H.
   destruct H.
   destruct s.
   destruct s.
@@ -263,6 +265,13 @@ Proof.
   exists vly.
   exists elx.
   exists ely.
+
+
+Lemma path_to_root:
+forall (n:nat) (x:Vertex) (prop1 : v x),
+v root ->  distance x = n -> {al : A_list & Connection x root al n }.
+
+
 
   assert (temp := x2).
   apply Path_isa_walk in x2.

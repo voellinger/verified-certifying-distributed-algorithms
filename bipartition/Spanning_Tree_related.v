@@ -422,57 +422,44 @@ intuition.
 
 intuition.
 
-
-apply step in i.
-specialize (IHn x prop1 rooted).
-destruct IHn.
-
-
-
-
-
-rewrite distance_prop2 in H.
-assert (H1: distance (parent x) + 1 = S n -> distance (parent x) = n ).
-intuition.
-apply H1.
-apply H.
-apply prop1.
-assert (distance x = S n -> distance x > 0).
-intuition.
-apply H0 in H.
-apply distance_greater_zero_ in H.
-apply H.
-apply prop1.
-split with ((A_ends (parent x) x ) :: k).
-apply step with (y:= parent x).
+apply (step x) in i.
+exists (A_ends (parent x) x :: k).
 apply i.
 apply prop1.
 reflexivity.
-assert (H':= prop1). 
-apply parent_exists_ in prop1.
-apply parent_arc with (c:=x) in prop1 .
-assert (H'':= prop1). 
-destruct prop1 .
-apply H0.
-apply H'.
-assert (distance x = S n -> distance x > 0).
+unfold spanning_tree in s.
+destruct s.
+specialize (H1 x).
+apply H1 in prop1.
+destruct prop1.
+unfold parent_prop in H3.
+destruct H3.
+destruct H3.
 intuition.
-apply H0 in H.
-apply distance_greater_zero_ in H.
-trivial. trivial.
-reflexivity.
-assert (H'':= prop1). 
-apply parent_exists_ in prop1.
-apply parent_arc with (c:=x) in prop1 .
-destruct prop1 .
-apply H1.
-apply H''.
-assert (distance x = S n -> distance x > 0).
+unfold distance_prop in H2.
+specialize (H2 x).
+destruct H2.
 intuition.
-apply H0 in H.
-apply distance_greater_zero_ in H.
-trivial. trivial.
-reflexivity.
+destruct H2.
+rewrite H4 in H.
+inversion H.
+
+unfold spanning_tree in s.
+destruct s.
+specialize (H1 x).
+apply H1 in prop1.
+destruct prop1.
+unfold parent_prop in H3.
+destruct H3.
+destruct H3.
+intuition.
+unfold distance_prop in H2.
+specialize (H2 x).
+destruct H2.
+intuition.
+destruct H2.
+rewrite H4 in H.
+inversion H.
 Qed.
 
 
@@ -547,6 +534,9 @@ apply H'.
 apply path_to_root with (x:=parent x).
 apply parent_exists_.
 apply prop1.
+unfold spanning_tree in s.
+destruct s.
+apply H2.
 reflexivity.
 Qed.
 
@@ -579,5 +569,21 @@ Proof.
 Qed.
 
 
+
+Lemma path_to_root2:
+forall (x:Vertex) (prop1 : v x),
+{al : A_list & Connection x root al (distance x)}.
+Proof.
+  intros x prop1.
+  assert (forall (n:nat) (x:Vertex) (prop1 : v x), v root ->  distance x = n -> {al : A_list & Connection x root al n }).
+  apply path_to_root.
+  specialize (H (distance x) x prop1).
+  unfold spanning_tree in s.
+  destruct s.
+  unfold root_prop in H0.
+  apply H in H0.
+  apply H0.
+  reflexivity.
+Qed.
 
 End Spanning_Tree.
