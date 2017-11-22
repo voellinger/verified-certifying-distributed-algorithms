@@ -258,29 +258,38 @@ Proof.
   rename x1 into vlx.
   rename x2 into elx.
 
-
-
-  rename x3 into vly.
+  apply (path_to_root2 v a c root parent distance) in H0.
+  destruct H0.
+  apply (Connection_to_walk v a parent (distance y) y root x1) in c0.
+  destruct c0.
+  destruct s.
+  destruct s.
+  assert (c' := c).
+  apply Connected_Isa_Graph in c'.
+  apply (Walk_reverse v a c' y root x2 x4) in x5.
+  rename x2 into vly.
   rename x4 into ely.
+
   exists vlx.
-  exists vly.
+  assert (vlyy := (Paths.cdr (rev (y :: vly)))).
+  exists (vlyy).
   exists elx.
-  exists ely.
+  assert (elyy := E_reverse ely).
+  exists elyy.
 
 
 
 
-  assert (temp := x2).
-  apply Path_isa_walk in x2.
-  apply (Walk_append v a x root y vlx vly elx ely) in x2.
+  assert (temp := x3).
+  apply (Walk_append v a x root y vlx vlyy elx elyy) in x3.
   
-  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x2.
-  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vly) (E_ends y x :: E_nil) (elx ++ ely)) in x2.
+  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x3.
+  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vlyy) (E_ends y x :: E_nil) (elx ++ elyy)) in x3.
 
 
 
-  simpl in x2.
-  exists x2.
+  simpl in x3.
+  exists x3.
 
   unfold odd_closed.
   split.
@@ -289,13 +298,15 @@ Proof.
 
   simpl.
   apply odd_S.
+  rewrite <- e0 in H4.
+  rewrite <- e in H4. (* 
   unfold distance in H2.
   unfold distance in H3.
   apply (distance_no_dup v a root x (length elx) n d) in H2.
   apply (distance_no_dup v a root y (length ely) m d0) in H3.
 
   rewrite <- H2 in H4.
-  rewrite <- H3 in H4.
+  rewrite <- H3 in H4. *)
 
   assert (even (length elx) \/ odd (length elx)).
   apply even_or_odd.
@@ -305,10 +316,12 @@ Proof.
   rewrite app_length.
   apply even_even_plus.
   apply H.
-  assert (even (length ely) \/ odd (length ely)).
+  assert (even (length elyy) \/ odd (length elyy)).
   apply even_or_odd.
   destruct H0.
   apply H0.
+  assert (length (elyy) = length (ely)).
+  
   rewrite <- H4 in H0.
   apply not_even_and_odd in H0.
   inversion H0.
