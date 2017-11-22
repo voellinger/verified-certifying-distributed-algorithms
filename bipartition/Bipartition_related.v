@@ -62,7 +62,7 @@ Qed.
 
 
 Definition special_vertices (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
-  v x /\ v y /\ a (A_ends x y) /\ ~ parent x = y /\ ~ parent y = x /\ odd (distance x) = odd (distance y) /\ x <> y.
+  v x /\ v y /\ a (A_ends x y) /\ odd (distance x) = odd (distance y) /\ x <> y.
 
 Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
@@ -231,7 +231,7 @@ Qed.
 Lemma special_vertices_make_odd_closed: 
   forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x y: Component), 
   special_vertices v a c t x y -> 
-{vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v (A_union a (E_set x y)) y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
+{vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
   intros v a c t x y H.
@@ -241,9 +241,9 @@ Proof.
   destruct H0.
   destruct H1.
   destruct H2.
-  destruct H3.
-  destruct H4.
+  assert (H4 := H2). assert (H5 := H3).
 
+  assert (temp'' := t).
   unfold spanning_tree in t.
   destruct t.
   unfold root_prop in H6.
@@ -266,15 +266,16 @@ Proof.
   destruct s.
   assert (c' := c).
   apply Connected_Isa_Graph in c'.
+  assert (temp' := x5).
   apply (Walk_reverse v a c' y root x2 x4) in x5.
   rename x2 into vly.
   rename x4 into ely.
 
   exists vlx.
-  assert (vlyy := (Paths.cdr (rev (y :: vly)))).
+  set (vlyy := (Paths.cdr (rev (y :: vly)))).
   exists (vlyy).
   exists elx.
-  assert (elyy := E_reverse ely).
+  set (elyy := E_reverse ely).
   exists elyy.
 
 
@@ -283,8 +284,7 @@ Proof.
   assert (temp := x3).
   apply (Walk_append v a x root y vlx vlyy elx elyy) in x3.
   
-  apply (Walk_subgraph v v a (A_union a (E_set x y)) x y) in x3.
-  apply (Walk_append v (A_union a (E_set x y)) y x y (x :: V_nil) (vlx ++ vlyy) (E_ends y x :: E_nil) (elx ++ elyy)) in x3.
+  apply (Walk_append v a y x y (x :: V_nil) (vlx ++ vlyy) (E_ends y x :: E_nil) (elx ++ elyy)) in x3.
 
 
 
@@ -299,14 +299,7 @@ Proof.
   simpl.
   apply odd_S.
   rewrite <- e0 in H4.
-  rewrite <- e in H4. (* 
-  unfold distance in H2.
-  unfold distance in H3.
-  apply (distance_no_dup v a root x (length elx) n d) in H2.
-  apply (distance_no_dup v a root y (length ely) m d0) in H3.
-
-  rewrite <- H2 in H4.
-  rewrite <- H3 in H4. *)
+  rewrite <- e in H4.
 
   assert (even (length elx) \/ odd (length elx)).
   apply even_or_odd.
@@ -321,7 +314,14 @@ Proof.
   destruct H0.
   apply H0.
   assert (length (elyy) = length (ely)).
-  
+
+  unfold elyy in H0.
+  rewrite E_rev_len in H0.
+  rewrite <- H4 in H0.
+  apply not_even_and_odd in H0.
+  inversion H0.
+  apply H.
+  rewrite <- H6 in H4.
   rewrite <- H4 in H0.
   apply not_even_and_odd in H0.
   inversion H0.
@@ -331,39 +331,35 @@ Proof.
   apply odd_even_plus.
   apply H.
   rewrite H4 in H.
+  unfold elyy.
+  rewrite E_rev_len.
   apply H.
   simpl.
 
-  apply (W_step v (A_union a (E_set x y)) y x x (V_nil) (E_nil)).
+  apply (W_step v a y x x (V_nil) (E_nil)).
   apply W_null.
-  apply (P_endx_inv v a x root vlx elx) in temp.
+  apply (W_endx_inv v a x root vlx elx) in temp.
   apply temp.
-  apply (P_endy_inv v a root y vly ely) in x5.
+  apply (W_endy_inv v a root y vlyy elyy) in x5.
   apply x5.
-  unfold A_union.
-  apply A_in_right.
-  apply E_left.
-  unfold V_included.
-  unfold Included.
-  intros.
-  apply H.
-  unfold A_included.
-  unfold Included.
-  intros.
-  apply A_in_left.
-  apply H.
-  apply Path_isa_walk in x5.
+
+  apply (G_non_directed v a) in H1.
+  apply H1.
+  apply c'.
+
   apply x5.
+  apply temp''.
+  apply temp''.
 Qed.
 
 (* if there are special_vertices in some subgraph, then the supergraph cannot be bipartite *)
 (* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
 (* also: a bipartiteness should be about graphs and not their arcs *)
-Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set) (t : Tree v a) (x y : Component) (c: Connected v (A_union a (E_set x y)))
-  (d : Connected (V_union v v') (A_union (A_union a (E_set x y)) a')) (vl : V_list) (el: E_list) (m n : nat),
-  special_vertices v a t x y m n -> ~ bipartite3 (A_union (A_union a (E_set x y)) a').
+Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
+  (d : Connected (V_union v v') (A_union a a')) (vl : V_list) (el: E_list),
+  special_vertices v a e t x y -> ~ bipartite3 (A_union a a').
 Proof.
-  intros v0 v' a0 a' t x y c d vl el m n H.
+  intros v0 v' a0 a' e t x y d vl el H.
   apply special_vertices_make_odd_closed in H.
   destruct H.
   destruct s.
@@ -371,18 +367,14 @@ Proof.
   destruct s.
   destruct s.
 
-  apply (odd_closed_rest_graph_not_bi v0 v' (A_union a0 (E_set x y)) a' c (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
+  apply (odd_closed_rest_graph_not_bi v0 v' a0 a' e (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
 Qed.
 
 Definition bipartite (v : V_set) (a : A_set) (g: Graph v a) :=
   bipartite3 a.
 
-Definition supergraph 
+Definition super_connected 
 
-Definition spanning_tree: forall (v:V_set) (a:A_set) (c: Connected v a) := Tree v (sub_set a).
-distance root = 0 (shortpaper 2015, V\u00f6llinger)
-forall non_root : Dreiecksungleichung
-forall non_root : existiert Vorg\u00e4nger
 
 
 
