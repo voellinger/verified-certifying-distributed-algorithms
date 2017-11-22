@@ -249,16 +249,17 @@ Proof.
   unfold root_prop in H6.
   rename H6 into rooted.
 
-  apply (path_to_root v a c root parent distance ) in H.
+  apply (path_to_root2 v a c root parent distance) in H.
   destruct H.
+  apply (Connection_to_walk v a parent (distance x) x root x0) in c0.
+  destruct c0.
   destruct s.
   destruct s.
-  apply (connected_min_path root v a y t) in H0.
-  destruct H0.
-  destruct s.
-  destruct s.
-  rename x0 into vlx.
-  rename x1 into elx.
+  rename x1 into vlx.
+  rename x2 into elx.
+
+
+
   rename x3 into vly.
   rename x4 into ely.
   exists vlx.
@@ -266,10 +267,6 @@ Proof.
   exists elx.
   exists ely.
 
-
-Lemma path_to_root:
-forall (n:nat) (x:Vertex) (prop1 : v x),
-v root ->  distance x = n -> {al : A_list & Connection x root al n }.
 
 
 
