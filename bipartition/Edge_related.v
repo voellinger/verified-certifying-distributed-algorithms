@@ -89,9 +89,5 @@ Proof.
   apply plus_comm.
 Qed.
 
-Definition E_ends_at_y (v: Vertex) (e: Edge) :=
-  match e with
-  (E_ends x y) =>  y = v
-  end.
 
 End Edge_related.

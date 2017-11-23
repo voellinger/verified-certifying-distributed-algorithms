@@ -373,10 +373,7 @@ Qed.
 Definition bipartite (v : V_set) (a : A_set) (g: Graph v a) :=
   bipartite3 a.
 
-Definition super_connected 
-
-
-
+(* Definition super_connected  *)
 
 
 Definition colorable : forall (v : V_set) (a : A_set) (c: Connected v a) (x y : Component),
