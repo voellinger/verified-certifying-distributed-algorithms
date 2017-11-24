@@ -355,11 +355,11 @@ Qed.
 (* if there are special_vertices in some subgraph, then the supergraph cannot be bipartite *)
 (* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
 (* also: a bipartiteness should be about graphs and not their arcs *)
-Lemma special_vertices_make_graph_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
-  (d : Connected (V_union v v') (A_union a a')) (vl : V_list) (el: E_list),
+Lemma special_vertices_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
+  (d : Connected (V_union v v') (A_union a a')),
   special_vertices v a e t x y -> ~ bipartite3 (A_union a a').
 Proof.
-  intros v0 v' a0 a' e t x y d vl el H.
+  intros v0 v' a0 a' e t x y d H.
   apply special_vertices_make_odd_closed in H.
   destruct H.
   destruct s.
@@ -373,11 +373,32 @@ Qed.
 Definition bipartite (v : V_set) (a : A_set) (g: Graph v a) :=
   bipartite3 a.
 
-(* Definition super_connected  *)
+Definition colored_spanning_tree (v: V_set) (a:A_set) (c: Connected v a):=
+  spanning_tree v a root parent distance c -> (color root = true /\ forall (x : Component), (v x /\ x <> root) -> color x <> color (parent x)).
 
+Definition colored_spanning_tree2 (v: V_set) (a:A_set) (c: Connected v a):=
+  spanning_tree v a root parent distance c -> forall (x : Component), odd (distance x) -> color x = false /\ even (distance x) -> color x = true.
 
-Definition colorable : forall (v : V_set) (a : A_set) (c: Connected v a) (x y : Component),
-  exists c : color, bipartite3 a.
+Lemma spanning_trees_can_be_colored: forall (v : V_set) (a : A_set) (c: Connected v a),
+  spanning_tree v a root parent distance c -> colored_spanning_tree v a c.
+Admitted.
+
+Lemma no_special_vertices_make_connected_bi: forall (v : V_set) (a : A_set) (c: Connected v a) (t: spanning_tree v a root parent distance c) (x y : Component),
+  ~special_vertices v a c t x y -> bipartite3 a.
+Proof.
+  intros v a c t x y H.
+  assert (cst := t).
+  apply (spanning_trees_can_be_colored v a c) in cst.
+  unfold colored_spanning_tree in cst.
+  destruct cst as [cst1 cst2].
+  apply t.
+  unfold not in H.
+  unfold special_vertices in H.
+  unfold bipartite3.
+  unfold spanning_tree in t.
+  destruct t as [t1 t2].
+  unfold root_prop in t1.
+  
 
 Lemma no_odd_closed_means_bi : forall (v : V_set) (a : A_set) (t : Tree v a) 
 (d : Connected v a),
