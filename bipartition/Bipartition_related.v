@@ -383,10 +383,10 @@ Lemma spanning_trees_can_be_colored: forall (v : V_set) (a : A_set) (c: Connecte
   spanning_tree v a root parent distance c -> colored_spanning_tree v a c.
 Admitted.
 
-Lemma no_special_vertices_make_connected_bi: forall (v : V_set) (a : A_set) (c: Connected v a) (t: spanning_tree v a root parent distance c) (x y : Component),
-  ~special_vertices v a c t x y -> bipartite3 a.
+Lemma no_special_vertices_make_connected_bi: forall (v : V_set) (a : A_set) (c: Connected v a) (t: spanning_tree v a root parent distance c),
+  ~ (exists (x : Component), exists (y : Component), special_vertices v a c t x y) -> bipartite3 a.
 Proof.
-  intros v a c t x y H.
+  intros v a c t H.
   assert (cst := t).
   apply (spanning_trees_can_be_colored v a c) in cst.
   unfold colored_spanning_tree in cst.
@@ -398,23 +398,11 @@ Proof.
   unfold spanning_tree in t.
   destruct t as [t1 t2].
   unfold root_prop in t1.
-  
-
-Lemma no_odd_closed_means_bi : forall (v : V_set) (a : A_set) (t : Tree v a) 
-(d : Connected v a),
-  ~(exists (x : Component) (el: E_list) (vl : V_list) (w: Walk v a x x vl el), odd_closed x x vl el w) -> "exists coloring which is bipartite / our coloring process is bipartite".
-Proof.
-  intros v a t d.
-  unfold not.
-  intros H.
-  unfold bipartite3.
-  intros ar.
-  intros aar.
-  unfold not.
-  intros diff.
-  apply H.
-  
-  
+  destruct ar.
+  intros.
+  exists v0 in H.
+  specialize (cst2 v0).
+  specialize (t2 v0).
 
 
 (* INTUITION OF THIS FILE
