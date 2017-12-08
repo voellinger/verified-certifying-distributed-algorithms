@@ -107,14 +107,7 @@ Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
       end.
 
 Axiom forallb_forall_ : forall (l:C_list) (c:Component) (x:Component), 
-<<<<<<< HEAD
 (forallb_neighbors l c = true) <-> (In x l ->  x = c).
-
-
-
-=======
-(forallb_neigbors l c = true) <-> (In x l ->  x = c).
->>>>>>> 3b7d974756cc0243c3eece9c9a247e821b3b9d0d
 
 
 
@@ -466,8 +459,4 @@ destruct vi.
 apply forallb_forall_ with (x:=leader_i c).
 intros.
 trivial.
-<<<<<<< HEAD
 Qed.
-=======
-Qed.
->>>>>>> 3b7d974756cc0243c3eece9c9a247e821b3b9d0d
