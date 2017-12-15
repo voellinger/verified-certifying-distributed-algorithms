@@ -1,4 +1,5 @@
 Require Import GraphBasics.Graphs.
+Require Import GraphBasics.Connected.
 Require Import Coq.Logic.Classical_Prop.
 
 
@@ -33,28 +34,33 @@ Proof.
   apply H.
 Qed.
 
-Lemma Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a),
+Axiom Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
+  a (A_ends x y) -> x <> y.
+(* if all else fails, the x <> y part could be put into gamma_2 *)
+
+(* Lemma Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
   a (A_ends x y) -> x <> y.
 Proof.
-  intros v a c
+  intros v a c x y arc.
+  induction c.
 
+  inversion arc.
 
+(*   apply A_in_union_edge in arc.
+  apply IHc.
+  apply arc.
+  intuition.
+  destruct H.
+  destruct arc.
+  destruct x1.
+  unfold E_set in H. *)
+  admit.
 
-Inductive Connected : V_set -> A_set -> Set :=
-  | C_isolated : forall x : Vertex, Connected (V_single x) A_empty
-  | C_leaf :
-      forall (v : V_set) (a : A_set) (co : Connected v a) (x y : Vertex),
-      v x ->
-      ~ v y -> Connected (V_union (V_single y) v) (A_union (E_set x y) a)
-  | C_edge :
-      forall (v : V_set) (a : A_set) (co : Connected v a) (x y : Vertex),
-      v x ->
-      v y ->
-      x <> y ->
-      ~ a (A_ends x y) ->
-      ~ a (A_ends y x) -> Connected v (A_union (E_set x y) a)
-  | C_eq :
-      forall (v v' : V_set) (a a' : A_set),
-      v = v' -> a = a' -> Connected v a -> Connected v' a'.
+  admit.
+
+  apply IHc.
+  rewrite <- e0 in arc.
+  apply arc.
+Qed. *)
 
 End Help.
