@@ -62,12 +62,54 @@ Qed.
 
 
 Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
-  v x /\ v y /\ a (A_ends x y) /\ odd (distance x) = odd (distance y) /\ x <> y.
+  v x /\ v y /\ a (A_ends x y) /\ Nat.odd (distance x) = Nat.odd (distance y) /\ x <> y.
 (* Lemma special_vertices_no_parents: gamma_2 x y -> ~ parent (x) = y /\ ~ parent (y) = x. *)
 
-Definition gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
- {v2 : Vertex & (v v1 /\ v v2 /\ a (A_ends v1 v2) /\ odd (distance v1) = odd (distance v2))}.
+Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Vertex) :=
+  v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
+Definition gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
+ {v2 : Vertex & neighbors_with_same_color v a c t v1 v2}.
+
+
+Lemma gamma_2_no_parents: forall (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Vertex),
+  neighbors_with_same_color v a c t v1 v2 -> (~parent v1 = v2 /\ ~ parent v2 = v1).
+Proof.
+  intros v a c t v1 v2 neighbors.
+  unfold neighbors_with_same_color in neighbors.
+  unfold spanning_tree in t.
+  destruct t.
+  assert (H1 := H0).
+  rename H0 into H2.
+  specialize (H1 v1).
+  destruct H1.
+  destruct neighbors.
+  apply H0.
+  specialize (H2 v2).
+  destruct H2.
+  destruct neighbors.
+  destruct H3.
+  apply H3.
+  unfold distance_prop in H0.
+  destruct neighbors.
+  destruct H5.
+  destruct H6.
+  unfold distance_prop in H2.
+
+  split.
+  unfold not.
+  intros.
+  rewrite H8 in H0.
+  destruct H0.
+  destruct H0.
+  rewrite H9 in H7.
+  rewrite plus_comm in H7.
+  simpl in H7.
+  rewrite Nat.odd_succ in H7.
+  apply not_even_and_odd in H7.
+  inversion H7.
+
+  
 
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
@@ -77,7 +119,7 @@ Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_lis
   In a bipartite graph every vertex pair that is connected in the graph, must be of different color. Otherwise the very edge between the vertices is 
   in conflict with the definition of bipartiteness.
 *)
-Lemma neighbours_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
+Lemma neighbors_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
   a (A_ends y x) -> v x -> v y -> bipartite a -> color x <> color y.
 Proof.
   intros v a x y c ar vx vy bi.
@@ -94,7 +136,7 @@ Qed.
   In a bipartite graph, if a walk is of even length its start (x) and its end (y) have the same color. If the walk is of odd length x and y are of different
   color. 
   IStart: A walk of length 0 has x == y and therefore x and y are colored similarly.
-  IStep : A walk of length n (w') has its end at y'. A walk of length n + 1 (w) uses (wlog) y'-y as its final edge. Therefore, using neighbours_different, 
+  IStep : A walk of length n (w') has its end at y'. A walk of length n + 1 (w) uses (wlog) y'-y as its final edge. Therefore, using neighbors_different, 
   we know that color y' != color y. 
     1. If w' is of odd length, then color x != color y' != color y. Therefore w is of even length and color x = color y.
     2. If w' is of even length, then color x = color y' != color y. Therefore w is of odd length and color x != color y. Qed.
@@ -115,7 +157,7 @@ Proof.
   simpl.
 
   destruct H0.
-  apply (neighbours_different v a y0 x0 c) in a0.
+  apply (neighbors_different v a y0 x0 c) in a0.
   split.
   
   destruct (color x0).
@@ -195,7 +237,7 @@ Proof.
 Qed.
 
 (* is there a better subgraph function for this, maybe? *)
-(* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbours, 
+(* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbors, 
 with the same color still exists in the smaller graph. Each arc added in fact can only possibly add new conflicts or be neutral at best. *)
 Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
   ~ bipartite a -> ~ bipartite (A_union a a').
@@ -378,7 +420,7 @@ Qed.
 End Bipartion_related.
 
 (* INTUITION OF THIS FILE
-  - neighbours in bipartite graph different
+  - neighbors in bipartite graph different
   - walk every node alternates
   - same color in even length walks for start and finish /
     diff color in odd  length walks for start and finish
