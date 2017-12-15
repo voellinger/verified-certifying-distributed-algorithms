@@ -26,14 +26,13 @@ x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends (parent x) x)
 x=root /\ parent x = x.
 
 Definition distance_prop (x: Vertex) :=
-forall (x:Vertex), 
 x <> root /\ distance x = distance (parent x) + 1
 \/
 (x=root) /\ distance x = 0.
 
 Definition spanning_tree (c: Connected v a) :=
 root_prop c /\ (forall x, v x -> distance_prop x /\ parent_prop x).
-(* maybe we have to get rid of the \/ in spanning_tree *)
+(* This is Gamma 1 *)
 
 Variable s : spanning_tree g.
 (************ Definitions of the tree with distance ************)
@@ -119,7 +118,6 @@ Proof.
   apply H0 in H.
   destruct H.
   unfold distance_prop in H.
-  specialize (H root).
   destruct H.
   intuition.
   destruct H.
@@ -136,7 +134,6 @@ Proof.
   apply H1 in prop.
   destruct prop.
   unfold distance_prop in H2.
-  specialize (H2 x).
   destruct H2.
   destruct H2.
   apply H4.
@@ -412,7 +409,6 @@ specialize (H1 x).
 apply H1 in prop1.
 destruct prop1.
 unfold distance_prop in H2.
-specialize (H2 x).
 
 destruct H2.
 destruct H2.
@@ -437,7 +433,6 @@ destruct H3.
 destruct H3.
 intuition.
 unfold distance_prop in H2.
-specialize (H2 x).
 destruct H2.
 intuition.
 destruct H2.
@@ -454,7 +449,6 @@ destruct H3.
 destruct H3.
 intuition.
 unfold distance_prop in H2.
-specialize (H2 x).
 destruct H2.
 intuition.
 destruct H2.

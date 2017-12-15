@@ -33,13 +33,13 @@ Variable root: Vertex.
 
 
 
-Definition bipartite3 (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
-Definition bipartite4 (a: A_set) := ~exists (ar : Arc), a ar /\ color (A_tail ar) = color (A_head ar).
+Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
+Definition bipartite2 (a: A_set) := ~exists (ar : Arc), a ar /\ color (A_tail ar) = color (A_head ar).
 
-Lemma bipar3_eq_bipar4: forall (a: A_set), bipartite3 a <-> bipartite4 a.
+Lemma bipartite_eq_bipartite2: forall (a: A_set), bipartite a <-> bipartite2 a.
 Proof.
   intros a.
-  unfold bipartite3; unfold bipartite4.
+  unfold bipartite; unfold bipartite2.
   split.
   intros H.
   intros H0.
@@ -61,10 +61,15 @@ Proof.
 Qed.
 
 
-Definition special_vertices (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
+Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
   v x /\ v y /\ a (A_ends x y) /\ odd (distance x) = odd (distance y) /\ x <> y.
+(* Lemma special_vertices_no_parents: gamma_2 x y -> ~ parent (x) = y /\ ~ parent (y) = x. *)
 
-Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
+Definition gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
+ {v2 : Vertex & (v v1 /\ v v2 /\ a (A_ends v1 v2) /\ odd (distance v1) = odd (distance v2))}.
+
+
+Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
 
 
@@ -73,10 +78,10 @@ Definition odd_closed {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (e
   in conflict with the definition of bipartiteness.
 *)
 Lemma neighbours_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
-  a (A_ends y x) -> v x -> v y -> bipartite3 a -> color x <> color y.
+  a (A_ends y x) -> v x -> v y -> bipartite a -> color x <> color y.
 Proof.
   intros v a x y c ar vx vy bi.
-  unfold bipartite3 in bi.
+  unfold bipartite in bi.
   specialize (bi (A_ends y x)).
   unfold A_tail in bi.
   unfold A_head in bi.
@@ -95,7 +100,7 @@ Qed.
     2. If w' is of even length, then color x = color y' != color y. Therefore w is of odd length and color x != color y. Qed.
 *)
 Lemma walk_colored_ends: forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (c : Connected v a) (w: Walk v a x y vl el),
-  bipartite3 a -> ((odd (length el) -> color x <> color y) /\ (even (length el) -> color x = color y)).
+  bipartite a -> ((odd (length el) -> color x <> color y) /\ (even (length el) -> color x = color y)).
 Proof.
   intros v a vl el x y c w H.
 
@@ -170,14 +175,14 @@ Proof.
   apply H.
 Qed.
 
-(* odd_closed is an odd cycle, meaning it ends at the same component, it startet at and of odd length. Suppose the graph containing the closed_walk is bipartite.
-Call the first and last component of the odd_closed x. As it is a walk of odd length, we know by walk_colored_ends, that the first and last component 
+(* odd_closed_walk is an odd cycle, meaning it ends at the same component, it startet at and of odd length. Suppose the graph containing the closed_walk is bipartite.
+Call the first and last component of the odd_closed_walk x. As it is a walk of odd length, we know by walk_colored_ends, that the first and last component 
 must have different colors. As both first and last components are the same, we have a contradiction and the graph cannot be bipartite after all. *)
-Lemma odd_closed_no_bipartitition: forall (v : V_set) (a : A_set) (vl : V_list) (el: E_list) (x : Component) (c : Connected v a) (w: Walk v a x x vl el),
-  odd_closed x x vl el w -> ~ bipartite3 a.
+Lemma odd_closed_walk_no_bipartitition: forall (v : V_set) (a : A_set) (vl : V_list) (el: E_list) (x : Component) (c : Connected v a) (w: Walk v a x x vl el),
+  odd_closed_walk x x vl el w -> ~ bipartite a.
 Proof.
   intros.
-  unfold odd_closed in H.
+  unfold odd_closed_walk in H.
   destruct H.
   unfold not.
   intros.
@@ -193,31 +198,31 @@ Qed.
 (* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbours, 
 with the same color still exists in the smaller graph. Each arc added in fact can only possibly add new conflicts or be neutral at best. *)
 Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
-  ~ bipartite3 a -> ~ bipartite3 (A_union a a').
+  ~ bipartite a -> ~ bipartite (A_union a a').
 Proof.
   intros.
   unfold not.
   intros.
-  unfold bipartite3 in H0.
+  unfold bipartite in H0.
   unfold not in H.
   apply H.
-  unfold bipartite3.
+  unfold bipartite.
   intros.
   apply H0.
   apply A_in_left.
   apply H1.
 Qed.
 
-(* Here we just combine the last two lemmas: we know an odd_closed is not bipartite, if we add more arcs, then it still isn't bipartite, as per graph_not_bi_graph_plus_not_bi. *)
-Lemma odd_closed_rest_graph_not_bi: 
-  forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (vl : V_list) (el: E_list) (x :Component) (w : Walk v a x x vl el) (o: odd_closed x x vl el w) 
+(* Here we just combine the last two lemmas: we know an odd_closed_walk is not bipartite, if we add more arcs, then it still isn't bipartite, as per graph_not_bi_graph_plus_not_bi. *)
+Lemma odd_closed_walk_rest_graph_not_bi: 
+  forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (vl : V_list) (el: E_list) (x :Component) (w : Walk v a x x vl el) (o: odd_closed_walk x x vl el w) 
     (d : Connected (V_union v v') (A_union a a')),
-  ~ bipartite3 (A_union a a').
+  ~ bipartite (A_union a a').
 Proof.
   intros.
   unfold not.
   intros.
-  apply (odd_closed_no_bipartitition v a vl el x c w) in o.
+  apply (odd_closed_walk_no_bipartitition v a vl el x c w) in o.
   apply (graph_not_bi_graph_plus_not_bi v v' a a' c d) in o.
   intuition.
 Qed.
@@ -225,18 +230,18 @@ Qed.
 
 
 (* Here we show that if there are two vertices in a tree, with both odd or both even distance to the root and they share an edge,
-  (together they are special_vertices) that there must be an odd_closed altogether.
+  (together they are gamma_2) that there must be an odd_closed_walk altogether.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
-Lemma special_vertices_make_odd_closed: 
+Lemma gamma_2_make_odd_closed_walk: 
   forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x y: Component), 
-  special_vertices v a c t x y -> 
+  gamma_2 v a c t x y -> 
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
-odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
+odd_closed_walk y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 Proof.
   intros v a c t x y H.
 
-  unfold special_vertices in H.
+  unfold gamma_2 in H.
   destruct H.
   destruct H0.
   destruct H1.
@@ -291,7 +296,7 @@ Proof.
   simpl in x3.
   exists x3.
 
-  unfold odd_closed.
+  unfold odd_closed_walk.
   split.
   unfold Closed_walk.
   reflexivity.
@@ -352,87 +357,37 @@ Proof.
   apply temp''.
 Qed.
 
-(* if there are special_vertices in some subgraph, then the supergraph cannot be bipartite *)
+(* if there are gamma_2 in some subgraph, then the supergraph cannot be bipartite *)
 (* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
 (* also: a bipartiteness should be about graphs and not their arcs *)
-Lemma special_vertices_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
+Lemma gamma_2_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
   (d : Connected (V_union v v') (A_union a a')),
-  special_vertices v a e t x y -> ~ bipartite3 (A_union a a').
+  gamma_2 v a e t x y -> ~ bipartite (A_union a a').
 Proof.
   intros v0 v' a0 a' e t x y d H.
-  apply special_vertices_make_odd_closed in H.
+  apply gamma_2_make_odd_closed_walk in H.
   destruct H.
   destruct s.
   destruct s.
   destruct s.
   destruct s.
 
-  apply (odd_closed_rest_graph_not_bi v0 v' a0 a' e (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
+  apply (odd_closed_walk_rest_graph_not_bi v0 v' a0 a' e (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
 Qed.
 
-Definition bipartite (v : V_set) (a : A_set) (g: Graph v a) :=
-  bipartite3 a.
-
-Definition colored_spanning_tree (v: V_set) (a:A_set) (c: Connected v a):=
-  spanning_tree v a root parent distance c -> (color root = true /\ forall (x : Component), (v x /\ x <> root) -> color x <> color (parent x)).
-
-Definition colored_spanning_tree2 (v: V_set) (a:A_set) (c: Connected v a):=
-  spanning_tree v a root parent distance c -> forall (x : Component), odd (distance x) -> color x = false /\ even (distance x) -> color x = true.
-
-Lemma spanning_trees_can_be_colored: forall (v : V_set) (a : A_set) (c: Connected v a),
-  spanning_tree v a root parent distance c -> colored_spanning_tree v a c.
-Admitted.
-
-Lemma no_special_vertices_make_connected_bi: forall (v : V_set) (a : A_set) (c: Connected v a) (t: spanning_tree v a root parent distance c),
-  ~ (exists (x : Component), exists (y : Component), special_vertices v a c t x y) -> bipartite3 a.
-Proof.
-  intros v a c t H.
-  assert (cst := t).
-  apply (spanning_trees_can_be_colored v a c) in cst.
-  unfold colored_spanning_tree in cst.
-  destruct cst as [cst1 cst2].
-  apply t.
-  unfold not in H.
-  unfold special_vertices in H.
-  unfold bipartite3.
-  unfold spanning_tree in t.
-  destruct t as [t1 t2].
-  unfold root_prop in t1.
-  destruct ar.
-  intros.
-  exists v0 in H.
-  specialize (cst2 v0).
-  specialize (t2 v0).
-
+End Bipartion_related.
 
 (* INTUITION OF THIS FILE
   - neighbours in bipartite graph different
   - walk every node alternates
   - same color in even length walks for start and finish /
     diff color in odd  length walks for start and finish
-  - odd_closed has odd length
-  - odd_closed has different color for start/finish
-  - odd_closed is not bipartite
+  - odd_closed_walk has odd length
+  - odd_closed_walk has different color for start/finish
+  - odd_closed_walk is not bipartite
   - if graph not bipartite -> graph+x not bipartite
-  - odd_closed makes graph not bipartite
+  - odd_closed_walk makes graph not bipartite
 
   - special edge makes odd closed
   - special edge makes graph not bipartite
-*)
-
-(* TODO: 
-  - intros -> intros v a ...
-  - define coloring
-    - from a connected c get root
-    - from root build a spanning tree t
-    - color t bipartite
-    - prove that: if there are no odd_closed in c -> this coloring is indeed a bipartition 
-  - organize Variables and Axioms usefully
-  - how to use global Variables?
-  - how to generate Tree of some Connected : a -> ta --- maybe use Samira's work?
-  - combine local and global properties:
-    - from a connected c v a' get root
-    - from root build a spanning tree t v a of c
-    - there exists a special_vertices v a t x y /\ a' (A_ends x y)
-    - it follows that c is not bipartite / there is no coloring for c that is bipartite
 *)
