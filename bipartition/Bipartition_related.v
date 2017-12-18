@@ -109,7 +109,13 @@ Proof.
   apply not_even_and_odd in H7.
   inversion H7.
 
+  destruct H0.
+  rewrite H9 in H7.
   
+  apply (Connected_no_loops v a c) in H6.
+  destruct H2.
+  destruct H2.
+
 
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ odd (length el).
