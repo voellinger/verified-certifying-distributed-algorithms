@@ -50,33 +50,67 @@ Proof.
   apply H.
 Qed.
 
-Axiom Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
-  a (A_ends x y) -> x <> y.
-(* if all else fails, the x <> y part could be put into gamma_2 *)
-
-(* Lemma Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
+Lemma Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
   a (A_ends x y) -> x <> y.
 Proof.
   intros v a c x y arc.
+  assert (g:= c).
+  apply Connected_Isa_Graph in g.
+  assert (v x). 
+  apply (G_ina_inv1 v a g) in arc.
+  apply arc.
+  rename H into vx.
+  assert (v y).
+  apply (G_ina_inv2 v a g) in arc.
+  apply arc.
+  rename H into vy.
   induction c.
 
   inversion arc.
 
-(*   apply A_in_union_edge in arc.
-  apply IHc.
-  apply arc.
-  intuition.
-  destruct H.
-  destruct arc.
-  destruct x1.
-  unfold E_set in H. *)
-  admit.
+  assert (x0 <> y0).
+  unfold not. intros.
+  rewrite H in v0. intuition.
 
-  admit.
+  inversion arc.
+  inversion H0.
+  rewrite H3 in H. rewrite H4 in H. apply H.
+  rewrite H3 in H. rewrite H4 in H. intuition.
+  apply IHc.
+  apply H0.
+  apply Connected_Isa_Graph in c. apply c.
+  destruct vx.
+  inversion H2.
+  rewrite <- H3 in H0.
+  apply (G_ina_inv1 v a) in H0.
+  intuition.
+  apply Connected_Isa_Graph in c. apply c.
+  apply H2.
+  destruct vy.
+  inversion H2.
+  rewrite <- H3 in H0.
+  apply (G_ina_inv2 v a) in H0.
+  intuition.
+  apply Connected_Isa_Graph in c. apply c.
+  apply H2.
+
+  inversion arc.
+  inversion H.
+  rewrite H2 in n. rewrite H3 in n. apply n.
+  rewrite H2 in n. rewrite H3 in n. intuition.
+  apply (IHc H).
+  apply Connected_Isa_Graph in c. apply c.
+  apply vx. apply vy.
 
   apply IHc.
   rewrite <- e0 in arc.
   apply arc.
-Qed. *)
+  rewrite <- e0 in g. rewrite <- e in g.
+  apply g.
+  rewrite <- e in vx.
+  apply vx.
+  rewrite <- e in vy.
+  apply vy.
+Qed.
 
 End Help.

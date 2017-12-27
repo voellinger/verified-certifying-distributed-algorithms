@@ -66,7 +66,7 @@ Proof.
   reflexivity.
 Qed.
 
-Axiom nearly_all_connected_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Connected v a),
+(* Axiom nearly_all_connected_rooted': forall (v:V_set) (a:A_set) (x : Component) (g:Connected v a),
   v x -> v root.
 (* Axiom root_is_unique ?? *)
 
@@ -91,6 +91,6 @@ Proof.
   destruct H.
   apply (nearly_all_trees_rooted v a x t).
   apply H.
-Qed.
+Qed. *)
 
 End Tree_related.
