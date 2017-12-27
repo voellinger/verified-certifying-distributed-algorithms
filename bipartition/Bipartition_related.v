@@ -113,12 +113,45 @@ Proof.
   rewrite H9 in H7.
   
   apply (Connected_no_loops v a c) in H6.
+  unfold parent_prop in H1.
+  destruct H1.
+  destruct H1.
+  intuition.
+  destruct H1.
+  rewrite H8 in H10.
+  intuition.
+
+
+
+  unfold not.
+  intros.
+  rewrite H8 in H2.
   destruct H2.
   destruct H2.
+  rewrite H9 in H7.
+  rewrite plus_comm in H7.
+  simpl in H7.
+  rewrite Nat.odd_succ in H7.
+  symmetry in H7.
+  apply not_even_and_odd in H7.
+  inversion H7.
+
+  destruct H2.
+  rewrite H9 in H7.
+  
+  apply (Connected_no_loops v a c) in H6.
+  unfold parent_prop in H3.
+  destruct H3.
+  destruct H3.
+  intuition.
+  destruct H3.
+  rewrite H8 in H10.
+  intuition.
+Qed.
 
 
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
- := Closed_walk v a x y vl el w /\ odd (length el).
+ := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
 
 
 (* 
@@ -148,7 +181,7 @@ Qed.
     2. If w' is of even length, then color x = color y' != color y. Therefore w is of odd length and color x != color y. Qed.
 *)
 Lemma walk_colored_ends: forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (c : Connected v a) (w: Walk v a x y vl el),
-  bipartite a -> ((odd (length el) -> color x <> color y) /\ (even (length el) -> color x = color y)).
+  bipartite a -> ((Nat.odd (length el) = true -> color x <> color y) /\ (Nat.even (length el) = true -> color x = color y)).
 Proof.
   intros v a vl el x y c w H.
 
@@ -159,8 +192,7 @@ Proof.
   inversion H0.
   reflexivity.
   
-  intros .
-  simpl.
+  intros.
 
   destruct H0.
   apply (neighbors_different v a y0 x0 c) in a0.
@@ -171,13 +203,15 @@ Proof.
   destruct (color y0).
   intuition.
   intros.
-  apply S_even in H2.
+  simpl in H2.
+  rewrite Nat.odd_succ in H2.
   apply H1 in H2.
   inversion H2.
   destruct (color y0).
   intuition.
   intros.
-  apply S_even in H2.
+  simpl in H2.
+  rewrite Nat.odd_succ in H2.
   apply H1 in H2.
   intuition.
   destruct (color z).
@@ -186,11 +220,13 @@ Proof.
   intuition.
   destruct (color y0).
   intros.
-  apply S_even in H2.
+  simpl in H2.
+  rewrite Nat.odd_succ in H2.
   apply H1 in H2.
   intuition.
   intros.
-  apply S_even in H2.
+  simpl in H2.
+  rewrite Nat.odd_succ in H2.
   apply H1 in H2.
   intuition.
 
@@ -204,13 +240,24 @@ Proof.
   destruct (color y0).
   intuition.
   intros.
-  apply S_odd in H2.
+  
+  destruct el0.
+  simpl in H2.
+  intuition.
+  simpl in H2.
+  simpl in H0.
+  rewrite Nat.odd_succ in H0.
   apply H0 in H2.
   intuition.
   destruct (color z).
   destruct (color y0).
   intros.
-  apply S_odd in H2.
+  destruct el0.
+  simpl in H2.
+  intuition.
+  simpl in H2.
+  simpl in H0.
+  rewrite Nat.odd_succ in H0.
   apply H0 in H2.
   intuition.
   intuition.
@@ -222,6 +269,7 @@ Proof.
   apply v0.
   apply H.
 Qed.
+
 
 (* odd_closed_walk is an odd cycle, meaning it ends at the same component, it startet at and of odd length. Suppose the graph containing the closed_walk is bipartite.
 Call the first and last component of the odd_closed_walk x. As it is a walk of odd length, we know by walk_colored_ends, that the first and last component 
@@ -350,7 +398,7 @@ Proof.
   reflexivity.
 
   simpl.
-  apply odd_S.
+  rewrite Nat.odd_succ.
   rewrite <- e0 in H4.
   rewrite <- e in H4.
 

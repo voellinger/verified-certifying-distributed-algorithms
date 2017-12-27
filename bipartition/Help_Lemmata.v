@@ -34,6 +34,22 @@ Proof.
   apply H.
 Qed.
 
+Lemma even_or_odd: forall(n : nat),
+  Nat.even n = true \/ Nat.odd n = true.
+Proof.
+  intros n.
+  induction n.
+  left.
+  reflexivity.
+  destruct IHn.
+  right.
+  rewrite Nat.odd_succ.
+  apply H.
+  left.
+  rewrite Nat.even_succ.
+  apply H.
+Qed.
+
 Axiom Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
   a (A_ends x y) -> x <> y.
 (* if all else fails, the x <> y part could be put into gamma_2 *)
