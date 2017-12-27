@@ -32,6 +32,7 @@ Theorem special_vertices_make_odd_closed:
 odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 
 
+
 (* Theorem of witness property, PO I *)
 Theorem aus_Gamma_folgt_Psi.
 {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 

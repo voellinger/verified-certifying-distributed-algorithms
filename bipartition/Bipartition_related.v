@@ -11,10 +11,10 @@ Section Bipartion_related.
 (* 
 
 Lemma path_to_root:
-forall (n:nat) (x:Vertex) (prop1 : v x),
+forall (n:nat) (x:Component) (prop1 : v x),
 distance x = n -> {al : A_list & Connection x root al n }.
 
-Lemma Connection_to_walk: forall (n:nat)(x y:Vertex)(al:A_list),
+Lemma Connection_to_walk: forall (n:nat)(x y:Component)(al:A_list),
   (Connection x y al n) -> {vl : V_list & {el: E_list & {w: Walk v a x y vl el & length el = n}}}.
 
 
@@ -22,13 +22,13 @@ Lemma Connection_to_walk: forall (n:nat)(x y:Vertex)(al:A_list),
  *)
 
 
-Variable parent : Vertex -> Vertex.
-Variable distance : Vertex -> nat.
+Variable parent : Component -> Component.
+Variable distance : Component -> nat.
 Variable color : Component -> bool.
 
 
 
-Variable root: Vertex.
+Variable root: Component.
 
 
 
@@ -61,14 +61,14 @@ Proof.
 Qed.
 
 
-Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Vertex) :=
+Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
-Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
- {v2 : Vertex & neighbors_with_same_color v a c t v1 v2}.
+Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
+ {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
 
 
-Lemma gamma_2_no_parents: forall (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Vertex),
+Lemma gamma_2_no_parents: forall (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component),
   neighbors_with_same_color v a c t v1 v2 -> (~parent v1 = v2 /\ ~ parent v2 = v1).
 Proof.
   intros v a c t v1 v2 neighbors.
@@ -328,7 +328,7 @@ Qed.
 Lemma gamma_2_makes_odd_closed_walk: 
   forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x : Component), 
   gamma_2 v a c t x -> 
-{y: Vertex & {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
+{y: Component & {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed_walk y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}}.
 Proof.
   intros v a c t x H.
@@ -461,6 +461,44 @@ Proof.
 
   apply temp''.
   apply temp''.
+Qed.
+
+
+Definition Gamma_1 := spanning_tree.
+Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
+Definition Psi a := ~bipartite a.
+
+Lemma Gamma_1_gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c) (x: Component),
+  gamma_2 v a c G1 x -> Gamma v a.
+Proof.
+  intros v a c G1 x g2.
+  unfold Gamma.
+  apply gamma_2_makes_odd_closed_walk in g2.
+  destruct g2.
+  destruct s.
+  destruct s.
+  destruct s.
+  destruct s.
+  destruct s.
+  exists x0.
+  exists x.
+  exists (x :: x1 ++ x2).
+  exists (E_ends x0 x :: x3 ++ x4).
+  exists x5.
+  apply o.
+Qed.
+
+Lemma Gamma_implies_Psi: forall (v :V_set) (a :A_set)(c: Connected v a),
+  Gamma v a -> Psi a.
+Proof.
+  intros v a c Gamma.
+  destruct Gamma.
+  destruct s.
+  destruct s.
+  destruct s.
+  destruct s.
+  apply (odd_closed_walk_no_bipartitition v a x1 x2 x c x3) in o.
+  apply o.
 Qed.
 
 (* if there are gamma_2 in some subgraph, then the supergraph cannot be bipartite *)
