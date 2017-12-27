@@ -84,12 +84,5 @@ Proof.
     - from root build a spanning tree t
     - color t bipartite
     - prove that: if there are no odd_closed in c -> this coloring is indeed a bipartition 
-  - organize Variables and Axioms usefully
   - how to use global Variables?
-  - how to generate Tree of some Connected : a -> ta --- maybe use Samira's work?
-  - combine local and global properties:
-    - from a connected c v a' get root
-    - from root build a spanning tree t v a of c
-    - there exists a special_vertices v a t x y /\ a' (A_ends x y)
-    - it follows that c is not bipartite / there is no coloring for c that is bipartite
 *)
