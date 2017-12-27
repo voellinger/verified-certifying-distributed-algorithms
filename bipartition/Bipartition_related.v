@@ -402,39 +402,51 @@ Proof.
   rewrite <- e0 in H4.
   rewrite <- e in H4.
 
-  assert (even (length elx) \/ odd (length elx)).
+  assert (Nat.even (length elx) = true \/ Nat.odd (length elx) = true).
   apply even_or_odd.
   destruct H.
 
-
   rewrite app_length.
-  apply even_even_plus.
-  apply H.
-  assert (even (length elyy) \/ odd (length elyy)).
+  rewrite Nat.even_add.
+  assert (Nat.even (length elyy) = true \/ Nat.odd (length elyy) = true).
   apply even_or_odd.
   destruct H0.
-  apply H0.
+  apply Bool.eqb_true_iff.
+  rewrite H.
+  rewrite H0.
+  reflexivity.
   assert (length (elyy) = length (ely)).
 
   unfold elyy in H0.
   rewrite E_rev_len in H0.
   rewrite <- H4 in H0.
-  apply not_even_and_odd in H0.
-  inversion H0.
-  apply H.
+  rewrite <- H0 in H.
+  apply not_even_and_odd in H.
+  inversion H.
+
+
   rewrite <- H6 in H4.
   rewrite <- H4 in H0.
-  apply not_even_and_odd in H0.
-  inversion H0.
-  apply H.
+  rewrite <- H0 in H.
+  apply not_even_and_odd in H.
+  inversion H.
 
   rewrite app_length.
-  apply odd_even_plus.
-  apply H.
-  rewrite H4 in H.
+  rewrite Nat.even_add.
+  rewrite H in H4.
   unfold elyy.
   rewrite E_rev_len.
-  apply H.
+  apply Bool.eqb_true_iff.
+  rewrite <- H in H4.
+  rewrite <- Nat.negb_even in H4.
+  rewrite <- Nat.negb_even in H4.
+  destruct (Nat.even (length elx)).
+  destruct (Nat.even (length ely)).
+  reflexivity.
+  inversion H4.
+  destruct (Nat.even (length ely)).
+  inversion H4.
+  reflexivity.
   simpl.
 
   apply (W_step v a y x x (V_nil) (E_nil)).
