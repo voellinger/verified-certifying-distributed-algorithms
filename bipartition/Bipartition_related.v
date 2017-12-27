@@ -34,32 +34,13 @@ Variable root: Component.
 
 
 Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
-Definition bipartite2 (a: A_set) := ~exists (ar : Arc), a ar /\ color (A_tail ar) = color (A_head ar).
+Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
+ := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
 
-Lemma bipartite_eq_bipartite2: forall (a: A_set), bipartite a <-> bipartite2 a.
-Proof.
-  intros a.
-  unfold bipartite; unfold bipartite2.
-  split.
-  intros H.
-  intros H0.
-  destruct H0.
-  specialize (H x).
-  destruct H0.
-  apply H in H0.
-  intuition.
 
-  intros H ar H0.
-  unfold not in H.
-  unfold not.
-  intros.
-  apply H.
-  exists ar.
-  split.
-  apply H0.
-  apply H1.
-Qed.
-
+Definition Gamma_1 := spanning_tree.
+Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
+Definition Psi a := ~bipartite a.
 
 Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
@@ -146,8 +127,6 @@ Proof.
 Qed.
 
 
-Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
- := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
 
 
 (* 
@@ -462,11 +441,6 @@ Proof.
   apply temp''.
   apply temp''.
 Qed.
-
-
-Definition Gamma_1 := spanning_tree.
-Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
-Definition Psi a := ~bipartite a.
 
 Lemma Gamma_1_gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c) (x: Component),
   gamma_2 v a c G1 x -> Gamma v a.
