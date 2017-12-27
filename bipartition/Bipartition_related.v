@@ -325,7 +325,7 @@ Qed.
   (together they are gamma_2) that there must be an odd_closed_walk altogether.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
-Lemma gamma_2_make_odd_closed_walk: 
+Lemma gamma_2_makes_odd_closed_walk: 
   forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x : Component), 
   gamma_2 v a c t x -> 
 {y: Vertex & {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
@@ -471,7 +471,7 @@ Lemma gamma_2_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connect
   gamma_2 v a e t x -> ~ bipartite (A_union a a').
 Proof.
   intros v0 v' a0 a' e t x d H.
-  apply gamma_2_make_odd_closed_walk in H.
+  apply gamma_2_makes_odd_closed_walk in H.
   destruct H.
   rename x0 into y.
   destruct s.
