@@ -33,23 +33,6 @@ odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
 
 
 
-(* Theorem of witness property, PO I *)
-Theorem aus_Gamma_folgt_Psi.
-{vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
-odd_closed y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}} -> ~ bipartite3 a.
-
-
-
-
-
-
-(* *)
-Theorem special_vertices_make_connected_not_bi: forall (v:V_set) (a:A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component),
-  special_vertices v a e t x y -> ~ bipartite3 a.
-
-
-
-
 
 
 

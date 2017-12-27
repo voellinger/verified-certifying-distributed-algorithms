@@ -8,20 +8,6 @@ Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartit
 Section Bipartion_related.
 
 
-(* 
-
-Lemma path_to_root:
-forall (n:nat) (x:Component) (prop1 : v x),
-distance x = n -> {al : A_list & Connection x root al n }.
-
-Lemma Connection_to_walk: forall (n:nat)(x y:Component)(al:A_list),
-  (Connection x y al n) -> {vl : V_list & {el: E_list & {w: Walk v a x y vl el & length el = n}}}.
-
-
-
- *)
-
-
 Variable parent : Component -> Component.
 Variable distance : Component -> nat.
 Variable color : Component -> bool.
@@ -36,17 +22,20 @@ Variable root: Component.
 Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
-
-
-Definition Gamma_1 := spanning_tree.
-Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
-Definition Psi a := ~bipartite a.
-
 Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
+Definition Gamma_1 := spanning_tree.
 Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
+Definition Gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
+ {v1 : Component & gamma_2 v a c t v1}.
+Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
+Definition Psi a := ~bipartite a.
+
+
+
+
 
 
 Lemma gamma_2_no_parents: forall (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component),
@@ -301,7 +290,7 @@ Qed.
 
 
 (* Here we show that if there are two vertices in a tree, with both odd or both even distance to the root and they share an edge,
-  (together they are gamma_2) that there must be an odd_closed_walk altogether.
+  (together they are gamma_2) that there must be an odd_closed_walk in the graph.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
 Lemma gamma_2_makes_odd_closed_walk: 
@@ -442,13 +431,14 @@ Proof.
   apply temp''.
 Qed.
 
-Lemma Gamma_1_gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c) (x: Component),
-  gamma_2 v a c G1 x -> Gamma v a.
+Theorem Gamma_1_Gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c),
+  Gamma_2 v a c G1 -> Gamma v a.
 Proof.
-  intros v a c G1 x g2.
+  intros v a c G1 G2.
   unfold Gamma.
-  apply gamma_2_makes_odd_closed_walk in g2.
-  destruct g2.
+  destruct G2.
+  apply gamma_2_makes_odd_closed_walk in g.
+  destruct g.
   destruct s.
   destruct s.
   destruct s.
@@ -462,7 +452,8 @@ Proof.
   apply o.
 Qed.
 
-Lemma Gamma_implies_Psi: forall (v :V_set) (a :A_set)(c: Connected v a),
+
+Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set)(c: Connected v a),
   Gamma v a -> Psi a.
 Proof.
   intros v a c Gamma.
@@ -475,25 +466,6 @@ Proof.
   apply o.
 Qed.
 
-(* if there are gamma_2 in some subgraph, then the supergraph cannot be bipartite *)
-(* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
-(* also: a bipartiteness should be about graphs and not their arcs *)
-Lemma gamma_2_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x : Component)
-  (d : Connected (V_union v v') (A_union a a')),
-  gamma_2 v a e t x -> ~ bipartite (A_union a a').
-Proof.
-  intros v0 v' a0 a' e t x d H.
-  apply gamma_2_makes_odd_closed_walk in H.
-  destruct H.
-  rename x0 into y.
-  destruct s.
-  destruct s.
-  destruct s.
-  destruct s.
-  destruct s.
-
-  apply (odd_closed_walk_rest_graph_not_bi v0 v' a0 a' e (x :: x0 ++ x1) (E_ends y x :: x2 ++ x3) y x4 o d).
-Qed.
 
 End Bipartion_related.
 
