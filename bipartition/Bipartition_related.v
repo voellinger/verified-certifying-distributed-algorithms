@@ -61,14 +61,10 @@ Proof.
 Qed.
 
 
-Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (x y : Component) :=
-  v x /\ v y /\ a (A_ends x y) /\ Nat.odd (distance x) = Nat.odd (distance y) /\ x <> y.
-(* Lemma special_vertices_no_parents: gamma_2 x y -> ~ parent (x) = y /\ ~ parent (y) = x. *)
-
 Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Vertex) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
-Definition gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
+Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Vertex) :=
  {v2 : Vertex & neighbors_with_same_color v a c t v1 v2}.
 
 
@@ -330,48 +326,49 @@ Qed.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
 Lemma gamma_2_make_odd_closed_walk: 
-  forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x y: Component), 
-  gamma_2 v a c t x y -> 
-{vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
-odd_closed_walk y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}.
+  forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x : Component), 
+  gamma_2 v a c t x -> 
+{y: Vertex & {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
+odd_closed_walk y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}}.
 Proof.
-  intros v a c t x y H.
+  intros v a c t x H.
 
   unfold gamma_2 in H.
   destruct H.
+  destruct n.
   destruct H0.
   destruct H1.
-  destruct H2.
-  assert (H4 := H2). assert (H5 := H3).
+  assert (H4 := H2).
 
   assert (temp'' := t).
   unfold spanning_tree in t.
   destruct t.
-  unfold root_prop in H6.
-  rename H6 into rooted.
+  unfold root_prop in H3.
+  rename H3 into rooted.
 
   apply (path_to_root2 v a c root parent distance) in H.
   destruct H.
-  apply (Connection_to_walk v a parent (distance x) x root x0) in c0.
+  apply (Connection_to_walk v a parent (distance x) x root x1) in c0.
   destruct c0.
   destruct s.
   destruct s.
-  rename x1 into vlx.
-  rename x2 into elx.
+  rename x2 into vlx.
+  rename x3 into elx.
 
   apply (path_to_root2 v a c root parent distance) in H0.
   destruct H0.
-  apply (Connection_to_walk v a parent (distance y) y root x1) in c0.
+  apply (Connection_to_walk v a parent (distance x0) x0 root x2) in c0.
   destruct c0.
   destruct s.
   destruct s.
   assert (c' := c).
   apply Connected_Isa_Graph in c'.
-  assert (temp' := x5).
-  apply (Walk_reverse v a c' y root x2 x4) in x5.
-  rename x2 into vly.
-  rename x4 into ely.
+  apply (Walk_reverse v a c' x0 root x3 x5) in x6.
+  rename x3 into vly.
+  rename x5 into ely.
 
+  rename x0 into y.
+  exists y.
   exists vlx.
   set (vlyy := (Paths.cdr (rev (y :: vly)))).
   exists (vlyy).
@@ -382,15 +379,15 @@ Proof.
 
 
 
-  assert (temp := x3).
-  apply (Walk_append v a x root y vlx vlyy elx elyy) in x3.
+  assert (temp := x4).
+  apply (Walk_append v a x root y vlx vlyy elx elyy) in x4.
   
-  apply (Walk_append v a y x y (x :: V_nil) (vlx ++ vlyy) (E_ends y x :: E_nil) (elx ++ elyy)) in x3.
+  apply (Walk_append v a y x y (x :: V_nil) (vlx ++ vlyy) (E_ends y x :: E_nil) (elx ++ elyy)) in x4.
 
 
 
-  simpl in x3.
-  exists x3.
+  simpl in x4.
+  exists x4.
 
   unfold odd_closed_walk.
   split.
@@ -425,7 +422,7 @@ Proof.
   inversion H.
 
 
-  rewrite <- H6 in H4.
+  rewrite <- H3 in H4.
   rewrite <- H4 in H0.
   rewrite <- H0 in H.
   apply not_even_and_odd in H.
@@ -453,14 +450,15 @@ Proof.
   apply W_null.
   apply (W_endx_inv v a x root vlx elx) in temp.
   apply temp.
-  apply (W_endy_inv v a root y vlyy elyy) in x5.
-  apply x5.
+  apply (W_endy_inv v a x y (vlx ++ vlyy) (elx ++ elyy)) in x4.
+  apply x4.
 
   apply (G_non_directed v a) in H1.
   apply H1.
   apply c'.
 
-  apply x5.
+  auto.
+
   apply temp''.
   apply temp''.
 Qed.
@@ -468,13 +466,15 @@ Qed.
 (* if there are gamma_2 in some subgraph, then the supergraph cannot be bipartite *)
 (* this should be remade with c as a subgraph of connected d instead of doing it by hand*)
 (* also: a bipartiteness should be about graphs and not their arcs *)
-Lemma gamma_2_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x y : Component)
+Lemma gamma_2_make_connected_not_bi: forall (v v':V_set) (a a':A_set)(e: Connected v a) (t : spanning_tree v a root parent distance e) (x : Component)
   (d : Connected (V_union v v') (A_union a a')),
-  gamma_2 v a e t x y -> ~ bipartite (A_union a a').
+  gamma_2 v a e t x -> ~ bipartite (A_union a a').
 Proof.
-  intros v0 v' a0 a' e t x y d H.
+  intros v0 v' a0 a' e t x d H.
   apply gamma_2_make_odd_closed_walk in H.
   destruct H.
+  rename x0 into y.
+  destruct s.
   destruct s.
   destruct s.
   destruct s.
