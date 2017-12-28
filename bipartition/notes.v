@@ -79,10 +79,6 @@ Proof.
 
 (* TODO: 
   - intros -> intros v a ...
-  - define coloring
-    - from a connected c get root
-    - from root build a spanning tree t
-    - color t bipartite
-    - prove that: if there are no odd_closed in c -> this coloring is indeed a bipartition 
-  - how to use global Variables?
+  - bipartiteness of a graph, not of arcs --> Gammas of a graph etc.
+  - sort and delete unneeded stuff
 *)
