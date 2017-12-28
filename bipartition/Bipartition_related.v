@@ -30,7 +30,7 @@ Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a 
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
 Definition Gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
  {v1 : Component & gamma_2 v a c t v1}.
-Definition Gamma v a := {x:Component & {y : Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}}.
+Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
 Definition Psi a := ~bipartite a.
 
 
@@ -445,7 +445,6 @@ Proof.
   destruct s.
   destruct s.
   exists x0.
-  exists x.
   exists (x :: x1 ++ x2).
   exists (E_ends x0 x :: x3 ++ x4).
   exists x5.
@@ -461,8 +460,7 @@ Proof.
   destruct s.
   destruct s.
   destruct s.
-  destruct s.
-  apply (odd_closed_walk_no_bipartitition v a x1 x2 x c x3) in o.
+  apply (odd_closed_walk_no_bipartitition v a x0 x1 x c x2) in o.
   apply o.
 Qed.
 
