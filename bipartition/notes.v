@@ -78,6 +78,7 @@ Proof.
 
 
 (* TODO: 
+  - gamma_2 und Gamma_2 von spanning_tree bzw. Gamma_1 befreien
   - intros -> intros v a ...
   - bipartiteness of a graph, not of arcs --> Gammas of a graph etc.
   - sort and delete unneeded stuff
