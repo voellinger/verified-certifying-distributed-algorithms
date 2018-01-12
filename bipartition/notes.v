@@ -82,4 +82,13 @@ Proof.
   - bipartiteness of a graph, not of arcs --> Gammas of a graph etc.
   - sort and delete unneeded stuff
   - /usr/local/lib/coq/theories/Init/Nat.vo
+  - 8.5 pl2
+/etc/xdg/coq
+/home/lanpirot/backup/coq
+/home/lanpirot/.config/coq
+/home/lanpirot/.opam/repo/default/packages/coq
+/usr/local/share/doc/coq
+/usr/local/share/coq
+/usr/local/lib/coq
+
 *)
