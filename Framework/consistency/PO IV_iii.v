@@ -11,6 +11,7 @@ Require Import ExtrOcamlNatInt.
 Require Import Verdi.ExtrOcamlBasicExt.
 Require Import Verdi.ExtrOcamlList.
 
+Load nw-model-version-consistency.
 Load MA_theorem1_proof. 
 
 (* helping functions*)
