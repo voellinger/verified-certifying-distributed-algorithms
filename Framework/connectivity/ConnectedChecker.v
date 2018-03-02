@@ -21,7 +21,7 @@ Section ConnectedChecker.
 
 
 
-(* This is the content of a message and consists of some key and the current local leader for that key *)
+(* This is the content of a message and consists of some var and the current local leader for that var *)
 Inductive Leader_Entry := leader : (Var * nat) -> Leader_Entry.
 
 Definition Leader_Entry_eq_dec : forall x y : Leader_Entry, {x = y} + {x <> y}.
@@ -60,7 +60,7 @@ Record Data := mkData{
   leaders : list Leader_Entry
 }.
 
-(* all components first are their own leader for all fact_keys *)
+(* all components first are their own leader for all fact_vars *)
 Fixpoint init_leader_list (n:Name) (c: Certificate) :=
   match c with
   | [] => []
@@ -80,33 +80,32 @@ Fixpoint sendlist (neighbors: list Component) (new_l: Leader_Entry): list (Name 
     | hd :: tl => (Checker hd, new_l) :: (sendlist tl new_l)
   end.
 
-(* The component sends itself as the leader for all its fact_keys to all its neighbours *)
+(* The component sends itself as the leader for all its fact_vars to all its neighbours *)
 Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Leader_Entry) :=
   match cert with
     | [] => []
-    | hd :: tl => sendlist neighbours (leader (component_index (name_component me) (assignment_var hd))) ++ initial_send_list me tl neighbours
+    | hd :: tl => sendlist neighbours (leader ((assignment_var hd), component_index (name_component me))) ++ initial_send_list me tl neighbours
   end.
+
+(* This input starts a checker *)
+Inductive Input := alg_terminated : Input.
+
+(* kann weggelassen werden? *)
+Definition Output := Leader_Entry.
 
 
 (*  *)
-Definition InputHandler (v: V_set) (a: A_set) (g: Connected v a)(me : Name) (c : Input) (state: Data) :
+Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (list Output) * Data * list (Name * Leader_Entry) := 
-	match me,c  with
-    (**** Initialisierung mit Localinput  ****)
-    | Checker x, li locali   => if  (eqb state.(initialized_localinput) false) then
-                                  ([] , (mkData (leaders state) locali (checkerinput state) true (initialized_checkerinput state) (control_neighborlist state)), [])
-                                else ([], state, [])
-    (**** Initialisierung mit Checkerinput und Senden der ersten Nachrichten  ****)
-    | Checker x, ci checkeri => if  (eqb state.(initialized_checkerinput) false) then
-                                  let myneighbours := (neighbors v a g x) in
-                                  ([] , (mkData (leaders state) (localinput state) checkeri (initialized_localinput state) true (control_neighborlist state)), initial_send_list me (certificate checkeri) myneighbours)
-                                else ([], state, [])
+	match me  with
+    | Checker x => let myneighbours := (neighbors v a g x) in
+                     ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate (checkerinput state)) myneighbours)
     end.
 
 Fixpoint find_leader (k : nat) (leaders : list Leader_Entry) : option nat :=
   match leaders with
   | [] => None
-  | leader (key, ind) :: tl => if beq_nat k key 
+  | leader (var, ind) :: tl => if beq_nat k var
                             then Some ind
                             else find_leader k tl
   end.
@@ -117,13 +116,17 @@ Definition get_leader_index k (leaders: list Leader_Entry) : nat :=
   | None => 0
   end.
 
-Fixpoint set_leader key n (ls: list Leader_Entry) : list Leader_Entry :=
+Fixpoint set_leader var n (ls: list Leader_Entry) : list Leader_Entry :=
   match ls with
-  | [] => [leader (key, n)]
-  | leader (k, ind) :: tl => if beq_nat k key 
-                                 then leader (key, n) :: tl
-                                 else set_leader key n tl
+  | [] => [leader (var, n)]
+  | leader (k, ind) :: tl => if beq_nat k var 
+                                 then leader (var, n) :: tl
+                                 else set_leader var n tl
   end.
+
+
+Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
+Notation "a == b" := (beq_nat a b) (at level 70).
 
 Lemma beq_false_nat : forall n m : nat, 
   n <> m -> (n == m) = false.
@@ -137,12 +140,12 @@ Proof.
 Qed.
   
 
-Lemma set_leader_sets_leader: forall key n (ls: list Leader_Entry),
-    n = get_leader_index key (set_leader key n ls).
+Lemma set_leader_sets_leader: forall var n (ls: list Leader_Entry),
+    n = get_leader_index var (set_leader var n ls).
 Proof.
-  intros.
+  intros var n ls.
   induction ls.
-    destruct key.
+    destruct var.
     simpl.
     unfold get_leader_index.
     reflexivity.
@@ -154,9 +157,9 @@ Proof.
     reflexivity.
 
     simpl.
-    destruct a.
+    destruct a0.
     destruct p.
-    assert (k = key \/ k <> key).
+    assert (v0 = var \/ v0 <> var).
     apply classic.
     destruct H.
   
@@ -167,7 +170,7 @@ Proof.
     rewrite Nat.eqb_refl.
     reflexivity.
 
-    assert(k == key = false).
+    assert(v0 == var = false).
     apply beq_false_nat.
     intuition.
     rewrite H0.
@@ -186,18 +189,16 @@ Qed.
   Lemma: Man kann keine Komponente als Leader w\u00e4hlen, wenn der "Zeugenschnitt" mit der Komponente leer ist.
   
 *)
-  
+
 
 Definition NetHandler (me : Name) (src: Name) (le : Leader_Entry) (state: Data) : 
     (list Output) * Data * list (Name * Leader_Entry) :=
     match le with
 (* Zusatzvariable "terminated", wie/wann wird sie gesetzt? *)
 (* mitschicken, von wo der Leader kommt und diese dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
-      | leader (key, n)  => if (state.(initialized_localinput) && state.(initialized_checkerinput)) then
-                              if (Nat.ltb (get_leader_index key (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
-                                ([], set_leaders state (set_leader key n (leaders state)), sendlist (control_neighborlist state) (leader (key, n)))
-                              else ([], state, [])
-                            else ([], state,[])
+      | leader (var, n)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
+                              ([], set_leaders state (set_leader var n (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n)))
+                            else ([], state, [])
    end.
 
 
@@ -246,6 +247,7 @@ Proof.
     intros.
     apply H in H1.
     inversion H1. inversion H2. clear H3. clear x0.
+Admitted.
     
     
   

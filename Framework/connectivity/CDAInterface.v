@@ -29,7 +29,7 @@ Inductive Predicate_distribution: Set:=
 |or : Predicate_distribution.
 
 (* A sub-certificate is an assigment of variables to values. *)
-Inductive Var: Type.
+Definition Var:= nat.
 Inductive Value: Type. 
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
 Definition Certificate := list Assignment.
@@ -49,10 +49,9 @@ match assi with
   | assign_cons var value => value
 end.
 
-Definition assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
+Axiom assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
+(* Definition assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
 Proof.
-Admitted.
-(* Proof.
   destruct x, y.
   assert (H1: {k = k0} + {k <> k0}).
   apply Nat.eq_dec.
@@ -97,8 +96,8 @@ Variable init_outp_l : Name -> list outp.
 Variable init_certificate : Name -> list Assignment.
 
 (* initialisation of a sub-checker;
- * knowledge a sub-checker has even befor the cda computed and terminated *)
-Record Checkerknowledge: Set := mk_Checkerknowledge {
+ * knowledge a sub-checker has even before the cda computed and terminated *)
+Record Checkerknowledge : Set := mk_Checkerknowledge {
   inp_l : list inp;
   Predicate_distribution_l: list Predicate_distribution;
   var_l: list Var;
