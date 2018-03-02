@@ -31,9 +31,9 @@ Definition Distance := nat.
   - distance from where it was sent (the temporary local leader)
   - last sender, so that the receiving node can make a parent towards the temporary local leader
 *)
-Inductive Leader_Entry := leader : (Var * Component_Index * Distance * Name) -> Leader_Entry.
+Inductive Msg := leader : (Var * Component_Index * Distance * Name) -> Msg.
 
-Definition Leader_Entry_eq_dec : forall x y : Leader_Entry, {x = y} + {x <> y}.
+Definition Msg_eq_dec : forall x y : Msg, {x = y} + {x <> y}.
 Proof.
 Admitted.
 (* Proof.
@@ -66,7 +66,7 @@ Qed.
 Record Data := mkData{
   checkerknowledge: Checkerknowledge; 
   checkerinput : Checkerinput;
-  leaders : list Leader_Entry
+  leaders : list Msg
 }.
 
 (* all components first are their own leader for all fact_vars *)
@@ -83,14 +83,14 @@ Definition init_Data (me: Name) :=
 
 Definition set_leaders a v := mkData (checkerknowledge a) (checkerinput a) v.
 
-Fixpoint sendlist (neighbors: list Component) (new_l: Leader_Entry): list (Name * Leader_Entry)  :=
+Fixpoint sendlist (neighbors: list Component) (new_l: Msg): list (Name * Msg)  :=
   match neighbors with 
     | nil => []
     | hd :: tl => (Checker hd, new_l) :: (sendlist tl new_l)
   end.
 
 (* The component sends itself as the leader for all its fact_vars to all its neighbours *)
-Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Leader_Entry) :=
+Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Msg) :=
   match cert with
     | [] => []
     | hd :: tl => sendlist neighbours (leader ((assignment_var hd), component_index (name_component me), 0, me)) ++ initial_send_list me tl neighbours
@@ -100,18 +100,18 @@ Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Leader_Entr
 Inductive Input := alg_terminated : Input.
 
 (* kann weggelassen werden? *)
-Definition Output := Leader_Entry.
+Definition Output := Msg.
 
 
 (*  *)
 Definition InputHandler (me : Name) (c : Input) (state: Data) :
-            (list Output) * Data * list (Name * Leader_Entry) := 
+            (list Output) * Data * list (Name * Msg) := 
 	match me  with
     | Checker x => let myneighbours := (neighbors v a g x) in
                      ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate (checkerinput state)) myneighbours)
     end.
 
-Fixpoint find_leader (k : nat) (leaders : list Leader_Entry) : option nat :=
+Fixpoint find_leader (k : nat) (leaders : list Msg) : option nat :=
   match leaders with
   | [] => None
   | leader (var, ind, dis, par) :: tl => if beq_nat k var
@@ -119,13 +119,13 @@ Fixpoint find_leader (k : nat) (leaders : list Leader_Entry) : option nat :=
                             else find_leader k tl
   end.
 
-Definition get_leader_index k (leaders: list Leader_Entry) : nat :=
+Definition get_leader_index k (leaders: list Msg) : nat :=
   match (find_leader k leaders) with
   | Some x => x
   | None => 0
   end.
 
-Fixpoint set_leader var n d p (ls: list Leader_Entry) : list Leader_Entry :=
+Fixpoint set_leader var n d p (ls: list Msg) : list Msg :=
   match ls with
   | [] => [leader (var, n, d, p)]
   | leader (k, ind, dis, par) :: tl => if beq_nat k var
@@ -149,7 +149,7 @@ Proof.
 Qed.
   
 
-Lemma set_leader_sets_leader: forall var n (ls: list Leader_Entry) d p,
+Lemma set_leader_sets_leader: forall var n (ls: list Msg) d p,
     n = get_leader_index var (set_leader var n d p ls).
 Proof.
   intros var n ls d p.
@@ -203,12 +203,12 @@ Qed.
 *)
 
 
-Definition NetHandler (me : Name) (src: Name) (le : Leader_Entry) (state: Data) : 
-    (list Output) * Data * list (Name * Leader_Entry) :=
+Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) : 
+    (list Output) * Data * list (Name * Msg) :=
     match le with
 (* mitschicken, von wo der Leader kommt und diese Liste dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
-      | leader (var, n)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
-                              ([], set_leaders state (set_leader var n (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n)))
+      | leader (var, n, d, p)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
+                              ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
                             else ([], state, [])
    end.
 
