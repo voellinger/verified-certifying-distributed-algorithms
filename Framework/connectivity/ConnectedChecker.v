@@ -222,6 +222,13 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
 
 (* a subgraph of g *)
 Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
+  V_included vSG v /\
+  A_included aSG a /\
+  (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
+                                 (aSG ar) -> (vSG v1 /\ vSG v2)).
+
+
+Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
   (forall (c: Component), vSG c -> v c) /\ 
   (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
                                  (aSG ar) -> (a ar /\ vSG v1 /\ vSG v2)).
