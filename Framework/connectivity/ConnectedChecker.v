@@ -19,10 +19,19 @@ Load CDAInterface.
 Section ConnectedChecker.
 
 
+(* All components are already indexed by natural numbers via GraphBasics. *)
+Definition Component_Index := nat.
+(* A distance for how long a message has traveled to the recipient. *)
+Definition Distance := nat.
 
 
-(* This is the content of a message and consists of some var and the current local leader for that var *)
-Inductive Leader_Entry := leader : (Var * nat) -> Leader_Entry.
+(* This is the content of a message. It consists of:
+  - var 
+  - local leader for the var
+  - distance from where it was sent (the temporary local leader)
+  - last sender, so that the receiving node can make a parent towards the temporary local leader
+*)
+Inductive Leader_Entry := leader : (Var * Component_Index * Distance * Name) -> Leader_Entry.
 
 Definition Leader_Entry_eq_dec : forall x y : Leader_Entry, {x = y} + {x <> y}.
 Proof.
@@ -64,7 +73,7 @@ Record Data := mkData{
 Fixpoint init_leader_list (n:Name) (c: Certificate) :=
   match c with
   | [] => []
-  | hd :: tl => (leader (assignment_var hd, component_index (name_component n))) :: init_leader_list n tl
+  | hd :: tl => (leader (assignment_var hd, component_index (name_component n), 0, n)) :: init_leader_list n tl
   end.
 
 (* initialization of the network *)
@@ -84,7 +93,7 @@ Fixpoint sendlist (neighbors: list Component) (new_l: Leader_Entry): list (Name 
 Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Leader_Entry) :=
   match cert with
     | [] => []
-    | hd :: tl => sendlist neighbours (leader ((assignment_var hd), component_index (name_component me))) ++ initial_send_list me tl neighbours
+    | hd :: tl => sendlist neighbours (leader ((assignment_var hd), component_index (name_component me), 0, me)) ++ initial_send_list me tl neighbours
   end.
 
 (* This input starts a checker *)
@@ -105,7 +114,7 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
 Fixpoint find_leader (k : nat) (leaders : list Leader_Entry) : option nat :=
   match leaders with
   | [] => None
-  | leader (var, ind) :: tl => if beq_nat k var
+  | leader (var, ind, dis, par) :: tl => if beq_nat k var
                             then Some ind
                             else find_leader k tl
   end.
@@ -116,12 +125,12 @@ Definition get_leader_index k (leaders: list Leader_Entry) : nat :=
   | None => 0
   end.
 
-Fixpoint set_leader var n (ls: list Leader_Entry) : list Leader_Entry :=
+Fixpoint set_leader var n d p (ls: list Leader_Entry) : list Leader_Entry :=
   match ls with
-  | [] => [leader (var, n)]
-  | leader (k, ind) :: tl => if beq_nat k var 
-                                 then leader (var, n) :: tl
-                                 else set_leader var n tl
+  | [] => [leader (var, n, d, p)]
+  | leader (k, ind, dis, par) :: tl => if beq_nat k var
+                                 then leader (k, n, dis, par) :: tl
+                                 else set_leader var n d p tl
   end.
 
 
@@ -140,10 +149,10 @@ Proof.
 Qed.
   
 
-Lemma set_leader_sets_leader: forall var n (ls: list Leader_Entry),
-    n = get_leader_index var (set_leader var n ls).
+Lemma set_leader_sets_leader: forall var n (ls: list Leader_Entry) d p,
+    n = get_leader_index var (set_leader var n d p ls).
 Proof.
-  intros var n ls.
+  intros var n ls d p.
   induction ls.
     destruct var.
     simpl.
@@ -156,14 +165,16 @@ Proof.
     rewrite <- beq_nat_refl.
     reflexivity.
 
-    simpl.
     destruct a0.
-    destruct p.
+    destruct p0.
+    destruct p0.
+    destruct p0.
     assert (v0 = var \/ v0 <> var).
     apply classic.
     destruct H.
   
     rewrite H.
+    simpl.
     rewrite Nat.eqb_refl.
     unfold get_leader_index.
     simpl.
@@ -173,6 +184,7 @@ Proof.
     assert(v0 == var = false).
     apply beq_false_nat.
     intuition.
+    simpl.
     rewrite H0.
     apply IHls.
 Qed.
@@ -194,7 +206,7 @@ Qed.
 Definition NetHandler (me : Name) (src: Name) (le : Leader_Entry) (state: Data) : 
     (list Output) * Data * list (Name * Leader_Entry) :=
     match le with
-(* mitschicken, von wo der Leader kommt und diese dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
+(* mitschicken, von wo der Leader kommt und diese Liste dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
       | leader (var, n)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
                               ([], set_leaders state (set_leader var n (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n)))
                             else ([], state, [])
