@@ -32,10 +32,49 @@ Inductive Predicate_distribution: Set:=
 Inductive Var: Type.
 Inductive Value: Type. 
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
+Definition Certificate := list Assignment.
+
 
 (* These are two placeholders for actual Variables and Values *)
 Variable varnull: Var.
 Variable valuenull: Value.
+
+Definition assignment_var (assi: Assignment) :  Var :=
+match assi with
+  | assign_cons var value => var
+end.
+
+Definition assignment_value (assi: Assignment) :  Value :=
+match assi with
+  | assign_cons var value => value
+end.
+
+Definition assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
+Proof.
+Admitted.
+(* Proof.
+  destruct x, y.
+  assert (H1: {k = k0} + {k <> k0}).
+  apply Nat.eq_dec.
+  assert (H2: {v = v0} + {v <> v0}).
+  apply Nat.eq_dec.
+  destruct H1. rewrite e.
+    destruct H2. rewrite e0.
+      auto.
+      right.
+      destruct v.
+        destruct v0.
+          intuition.
+          intuition. inversion H.
+        destruct v0.
+          intuition. inversion H.
+          intuition. inversion H. rewrite H1 in n. apply eq_S in H1. intuition.
+    destruct H2. rewrite e.
+      right. intuition. inversion H. intuition.
+      right. intuition. inversion H. intuition.
+Qed.
+ *)
+
 
 
 (* Minimal input of a network is the network itself.
@@ -50,6 +89,7 @@ Definition init_neighbor_l (me : Name) := (neighbors v a g (name_component me)).
  * a list of sub-outputs init_outp_l,
  * and a sub-certificate init_certificate.
  *)
+
 Variable init_inp_l : Name -> list inp.
 Variable init_predicate_distribution_l : Name -> list Predicate_distribution.
 Variable init_var_l : Name -> list Var.
@@ -69,34 +109,10 @@ Definition init_Checkerknowledge (me : Name) :=
   mk_Checkerknowledge (init_inp_l me) (init_predicate_distribution_l me) (init_var_l me) (init_neighbor_l me).
 
 (* a sub-checker gets the sub-output and sub-certificate of its component after the cda computed and terminated *)
-Record Checkerinput  := mk_Checkerinput {
+Record Checkerinput : Set := mk_Checkerinput{
   outp_l : list outp;
   certificate : list Assignment
 }.
 
 Definition init_Checkerinput (me : Name) :=
   mk_Checkerinput (init_outp_l me) (init_certificate me).
-
-
-Record Checkerstartstate := mkCheckerstartstate{
- checkerknowledge: Checkerknowledge; 
- checkerinput : Checkerinput;
-}.
-
-(* the complete state of a sub-checker of component me after termination of the cda*)
-Definition set_checker_start_state (me: Name) := mkCheckerstartstate (init_Checkerknowledge me) (init_Checkerinput me).
-
-(* 
-(***************************************************************)
-(* User has to define this part for their algorithm themselves *)
-Record Data := mkData{
-  checkerstartstate: Checkerstartstate;
-  distance : nat;   (* change stuff here appropriately *)
-  queue : list Component (* change stuff here appropriately *)
-}.
-
-(* Verid initialization *)
-Definition init_Data (me: Name) := mkData (set_checker_start_state me) 0 nil.
-
-(***************************************************************) *)
-

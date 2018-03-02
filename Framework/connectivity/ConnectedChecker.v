@@ -22,10 +22,13 @@ Section ConnectedChecker.
 
 
 (* This is the content of a message and consists of some key and the current local leader for that key *)
-Inductive Leader_Entry := leader : (Key * nat) -> Leader_Entry.
+Inductive Leader_Entry := leader : (Var * nat) -> Leader_Entry.
 
 Definition Leader_Entry_eq_dec : forall x y : Leader_Entry, {x = y} + {x <> y}.
 Proof.
+Admitted.
+(* Proof.
+  intros x y.
   decide equality.
   destruct p.
   destruct p0.
@@ -33,8 +36,9 @@ Proof.
   apply Nat.eq_dec.
   destruct H1.
   rewrite e.
-  assert (H2: {k = k0} + {k <> k0}).
-  unfold Key in *.
+  assert (H2: {v0 = v1} + {v0 <> v1}).
+  (* This worked because Var was nat before *)
+  unfold Nat in *.
   apply Nat.eq_dec.
   destruct H2.
   left.
@@ -49,59 +53,26 @@ Proof.
   inversion H.
   intuition.
 Qed.
-
-
-
-Record Localinput: Set := mk_Localinput {
-(******** Eingabe des Algorithmus (x)  **********)
-  Inp : list inp
-}.
-
-Record Checkerinput  := mk_Checkerinput {
-(* Ausgabe des Algorithmus (y), Zeuge (w), zu pr\u00fcfende Pr\u00e4dikate *)
-  output : list outp;
-  certificate : list Fact;
-  Local_predicates: list Predicate
-}.
-
-Inductive Input : Type :=
-  | ci : Checkerinput -> Input
-  | li : Localinput -> Input.
-
-(* kann weggelassen werden? *)
-Definition Output := Leader_Entry.
-
+ *)
 Record Data := mkData{
-  leaders : list Leader_Entry;
-  localinput : Localinput;
+  checkerknowledge: Checkerknowledge; 
   checkerinput : Checkerinput;
-  initialized_localinput : bool;
-  initialized_checkerinput : bool;
-  control_neighborlist : list Component
+  leaders : list Leader_Entry
 }.
 
 (* all components first are their own leader for all fact_keys *)
 Fixpoint init_leader_list (n:Name) (c: Certificate) :=
   match c with
   | [] => []
-  | hd :: tl => (leader (fact_key hd, component_index (name_component n))) :: init_leader_list n tl
+  | hd :: tl => (leader (assignment_var hd, component_index (name_component n))) :: init_leader_list n tl
   end.
 
-Variable initial_checker_certificate : Certificate.
-Variable initial_output : list outp.
-Variable initial_checker_predicates : list Predicate.
+(* initialization of the network *)
+Definition init_Data (me: Name) := 
+  mkData (init_Checkerknowledge me) (init_Checkerinput me) (init_leader_list me (certificate (init_Checkerinput me))).
 
-Definition init_Data (v: V_set) (a: A_set) (g: Connected v a) (n: Name) := mkData
-  (init_leader_list n (certificate (mk_Checkerinput initial_output initial_checker_certificate initial_checker_predicates)))
-  (mk_Localinput []) 
-  (mk_Checkerinput initial_output initial_checker_certificate initial_checker_predicates)
-  false 
-  false 
-  (neighbors v a g (name_component n)).
 
-Definition set_leaders a v := mkData v (localinput a) (checkerinput a) (initialized_localinput a) (initialized_checkerinput a) (control_neighborlist a).
-Definition set_init_li a v := mkData (leaders a) (localinput a) (checkerinput a) v (initialized_checkerinput a) (control_neighborlist a).
-Definition set_init_ci a v := mkData (leaders a) (localinput a) (checkerinput a) (initialized_localinput a) v (control_neighborlist a).
+Definition set_leaders a v := mkData (checkerknowledge a) (checkerinput a) v.
 
 Fixpoint sendlist (neighbors: list Component) (new_l: Leader_Entry): list (Name * Leader_Entry)  :=
   match neighbors with 
@@ -113,7 +84,7 @@ Fixpoint sendlist (neighbors: list Component) (new_l: Leader_Entry): list (Name 
 Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Leader_Entry) :=
   match cert with
     | [] => []
-    | hd :: tl => sendlist neighbours (leader (component_index (name_component me), (fact_key hd))) ++ initial_send_list me tl neighbours
+    | hd :: tl => sendlist neighbours (leader (component_index (name_component me) (assignment_var hd))) ++ initial_send_list me tl neighbours
   end.
 
 
