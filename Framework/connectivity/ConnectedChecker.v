@@ -194,7 +194,6 @@ Qed.
 Definition NetHandler (me : Name) (src: Name) (le : Leader_Entry) (state: Data) : 
     (list Output) * Data * list (Name * Leader_Entry) :=
     match le with
-(* Zusatzvariable "terminated", wie/wann wird sie gesetzt? *)
 (* mitschicken, von wo der Leader kommt und diese dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
       | leader (var, n)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
                               ([], set_leaders state (set_leader var n (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n)))
@@ -248,8 +247,5 @@ Proof.
     apply H in H1.
     inversion H1. inversion H2. clear H3. clear x0.
 Admitted.
-    
-    
-  
 
 End ConnectedChecker.
