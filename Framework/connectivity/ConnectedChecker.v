@@ -103,12 +103,12 @@ Inductive Input := alg_terminated : Input.
 Definition Output := Msg.
 
 
-(*  *)
+(* eigentlich muss noch irgendwo eine Pr\u00fcfung rein, dass certificate zu var_l passt, denn sonst kann der Algorithmus den Checker betr\u00fcgen... *)
 Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (list Output) * Data * list (Name * Msg) := 
 	match me  with
     | Checker x => let myneighbours := (neighbors v a g x) in
-                     ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate (checkerinput state)) myneighbours)
+                     ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate(* das hier m\u00fcsste var_l sein oder eine Pr\u00fcfung beinhalten *) (checkerinput state)) myneighbours)
     end.
 
 Fixpoint find_leader (k : nat) (leaders : list Msg) : option nat :=
@@ -189,11 +189,17 @@ Proof.
     apply IHls.
 Qed.
 
+Fixpoint cert_has_var (vl : list Var) (v : Var) : bool :=
+  match vl with
+  | nil => false
+  | hd :: tl => beq_nat hd v && cert_has_var tl v
+  end.
+
 (* 
 
-  Theorem: F\u00fcr jeden a-Teilgraph gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
+  Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
 
-  Invarianten: Nachrichten k\u00f6nnen nur eins aus der a-Komponente geschickt werden
+  Invarianten: Nachrichten k\u00f6nnen nur eine Komponente au\u00dferhalb des a-Teilgraphen geschickt werden
   Invarianten: Von allen Komponenten, die man gesehen hat, nimmt man die "h\u00f6chst"-m\u00f6gliche.
 
   Lemma: Man nimmt nie einen kleineren Leader, als man schon hat.
@@ -202,14 +208,12 @@ Qed.
   
 *)
 
-
 Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) : 
     (list Output) * Data * list (Name * Msg) :=
     match le with
-(* mitschicken, von wo der Leader kommt und diese Liste dann r\u00fcckw\u00e4rts als parent/distance-relation aufbauen *)
-      | leader (var, n, d, p)  => if (Nat.ltb (get_leader_index var (leaders state)) n) then (* //nur, wenn find_leader Some x zur\u00fcck gibt!! *)
-                              ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
-                            else ([], state, [])
+      | leader (var, n, d, p)  => if (cert_has_var (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
+                                    then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
+                                  else ([], state, [])
    end.
 
 
@@ -239,7 +243,14 @@ Proof.
   apply H.
 Qed.
 
-
+Lemma EmptyGraph_isa_SubGraph: forall v a g, SubGraph V_empty v A_empty a g.
+Proof.
+  intros v a g.
+  unfold SubGraph.
+  split ; intros.
+  inversion H.
+  inversion H.
+Qed.
 
 Lemma SubGraph_isa_Graph : forall vSG v aSG a g, SubGraph vSG v aSG a g -> Graph vSG aSG.
 Proof.
@@ -247,17 +258,8 @@ Proof.
   unfold SubGraph in H.
   destruct H.
   induction g.
-    assert (vSG = V_empty).
     admit.
-    assert (aSG = A_empty).
-    admit.
-    rewrite H1. rewrite H2.
-    apply G_empty.
-    
     apply IHg.
-    intros.
-    apply H in H1.
-    inversion H1. inversion H2. clear H3. clear x0.
 Admitted.
 
 End ConnectedChecker.
