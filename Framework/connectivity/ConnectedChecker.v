@@ -224,9 +224,12 @@ Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
   | SG_empty : forall v a (g: Graph v a), SubGraph V_empty v A_empty a
   | SG_vertex: forall (vSG v : V_set) (aSG a : A_set) x (g: Graph v a),
       ~ vSG x -> v x -> SubGraph vSG v aSG a -> SubGraph (V_union (V_single x) vSG) v aSG a
-  | SG_edge : forall (vSG v : V_set) (aSG a : A_set) (x : Arc) v1 v2 (g: Graph v a),
-      let x := (A_ends v1 v2) in
-      ~ aSG x -> a x -> SubGraph vSG v aSG a -> vSG v1 -> vSG v2 -> SubGraph vSG v (A_union aSG (E_set v1 v2)) a
+  | SG_vertexp: forall (vSG v : V_set) (aSG a : A_set) x (g: Graph v a),
+      Graph (V_union (V_single x) v) a -> SubGraph vSG v aSG a -> SubGraph vSG (V_union (V_single x) v) aSG a
+  | SG_edge : forall (vSG v : V_set) (aSG a : A_set) v1 v2 (g: Graph v a),
+      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> SubGraph vSG v aSG a -> vSG v1 -> vSG v2 -> v1 <> v2 -> SubGraph vSG v (A_union (E_set v1 v2) aSG) a
+  | SG_edgep : forall (vSG v : V_set) (aSG a : A_set) (x : Arc) v1 v2 (g: Graph v a),
+    Graph v (A_union (E_set v1 v2) a) -> SubGraph vSG v aSG a -> SubGraph vSG v aSG (A_union (E_set v1 v2) a)
   | SG_eq: forall vSG vSG' v aSG aSG' a (g: Graph v a),
     vSG = vSG' -> aSG = aSG' -> SubGraph vSG v aSG a -> SubGraph vSG' v aSG' a.
 
@@ -240,31 +243,45 @@ Proof.
     apply (SG_vertex v0 (V_union (V_single x) v0) a0 a0).
     apply G_vertex.
     apply g0. apply n. apply n. apply In_left. apply In_single.
+    apply (SG_vertexp).
+    apply g0. apply G_vertex. apply g0. apply n.
+    apply IHg.
 
-  unfold SubGraph.
-  split.
-  unfold V_included.
-  unfold Included.
-  auto.
-  split.
-  unfold A_included. unfold Included.
-  auto.
-  split.
-  apply (G_ina_inv1 v a g) in H.
-  apply H.
-  apply (G_ina_inv2 v a g) in H.
-  apply H.
+    apply (SG_edge v0 v0 a0 (A_union (E_set x y) a0) x y).
+    apply (G_edge). apply g0. apply v1. apply v2. apply n. apply n0. apply n1. apply n0. apply n1.
+    apply In_left. apply E_right.
+    apply (SG_edgep v0 v0 a0 a0 (A_ends x y)).
+    apply g0. apply G_edge. apply g0. apply v1. apply v2. apply n. apply n0. apply n1.
+    apply IHg. apply v1. apply v2. apply n.
+
+    rewrite <- e. rewrite <- e0. apply IHg.
 Qed.
 
-Lemma EmptyGraph_isa_SubGraph: forall v a g, SubGraph V_empty v A_empty a g.
+Lemma EmptyGraph_isa_SubGraph: forall v a (g: Graph v a), SubGraph V_empty v A_empty a.
 Proof.
   intros v a g.
-  unfold SubGraph.
-  split ; intros.
-  unfold V_included. unfold Included. intros.
-  inversion H.
-  unfold A_included. unfold Included. intros.
-  split ; intros ; inversion H.
+  apply SG_empty. apply g.
+Qed.
+
+Lemma SubGraph_isa_Graph : forall vSG v aSG a (g: Graph v a), SubGraph vSG v aSG a -> Graph vSG aSG.
+Proof.
+  intros vSG v aSG a g H.
+  induction H.
+
+    apply G_empty.
+
+    apply G_vertex.
+    apply (IHSubGraph g). apply n.
+
+    apply (IHSubGraph g0).
+
+    apply G_edge.
+    apply (IHSubGraph g).
+    apply v3. apply v4. apply n1. apply n. apply n0.
+
+    apply (IHSubGraph g0).
+
+    rewrite <- e. rewrite <- e0. apply (IHSubGraph g0).
 Qed.
 
 Lemma empty_sub_set: forall T vSG, Included T vSG (Empty T) -> vSG = Empty T.
@@ -279,153 +296,25 @@ Proof.
   inversion H0.
 Qed.
 
-(* Lemma incl_impl_incl_in_less: forall vSG v0 x, (V_included vSG (V_union (V_single x) v0) /\ ~ v0 x) -> V_included vSG v0.
+Lemma SubGraph_vertices_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
+  SubGraph vSG v aSG a -> V_included vSG v.
 Proof.
-  intros.
-  unfold V_included in * ; unfold V_union in * ; unfold V_single in *.
-  destruct H.
-  unfold Included in *.
+  intros vSG v aSG a g SG.
+  induction SG ; unfold V_included ; unfold Included ; intros.
+    inversion H.
 
-  intros.
-  apply (H x0) in H1.
+    inversion H. inversion H0. rewrite H2 in *. apply v1.
+    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
+    apply g0 in H0. apply H0.
+
+    
   
-  destruct H1.
-  inversion H1.
-  rewrite H2 in *.
-  admit.
-  apply H1.
-  
+Lemma SubGraph_arcs_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
+  A_included aSG a.
 
-Lemma incl_impl_incl_in_less: forall T vSG v0, Included T vSG (V_union (V_single x) v0) -> V_included vSG v0 *)
-
-Lemma SubGraph_isa_Graph : forall vSG v aSG a g, SubGraph vSG v aSG a g -> Graph vSG aSG.
-Proof.
-  intros vSG v aSG a g H.
-  unfold SubGraph in H.
-  destruct H.
-  destruct H0.
-  induction g.
-    apply (empty_sub_set Vertex) in H.
-    apply (empty_sub_set Arc) in H0.
-    rewrite H ; rewrite H0.
-    apply G_empty.
-
-    apply IHg.
-    unfold V_union in H.
-    unfold V_single in H.
-    unfold V_included in H.
-    admit.
-    apply H0.
-
-    apply IHg.
-    apply H.
-    admit.
-
-    rewrite e in *; rewrite e0 in *.
-    apply IHg.
-    apply H ; apply H0.
-Admitted.
-
-(* (* a subgraph of g *)
-Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
-  V_included vSG v /\
+Lemma SubGraph_arcs_correct : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
+  SubGraph vSG v aSG a -> (V_included vSG v /\
   A_included aSG a /\
   (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
-                                 (aSG ar) -> (vSG v1 /\ vSG v2)).
-
-
-(* Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
-  (forall (c: Component), vSG c -> v c) /\ 
-  (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
-                                 (aSG ar) -> (a ar /\ vSG v1 /\ vSG v2)).
- *)
-
-Lemma TotalGraph_isa_SubGraph: forall v a g, SubGraph v v a a g.
-Proof.
-  intros v a g.
-  unfold SubGraph.
-  split.
-  unfold V_included.
-  unfold Included.
-  auto.
-  split.
-  unfold A_included. unfold Included.
-  auto.
-  split.
-  apply (G_ina_inv1 v a g) in H.
-  apply H.
-  apply (G_ina_inv2 v a g) in H.
-  apply H.
-Qed.
-
-Lemma EmptyGraph_isa_SubGraph: forall v a g, SubGraph V_empty v A_empty a g.
-Proof.
-  intros v a g.
-  unfold SubGraph.
-  split ; intros.
-  unfold V_included. unfold Included. intros.
-  inversion H.
-  unfold A_included. unfold Included. intros.
-  split ; intros ; inversion H.
-Qed.
-
-Lemma empty_sub_set: forall T vSG, Included T vSG (Empty T) -> vSG = Empty T.
-Proof.
-  intros.
-  apply U_set_eq.
-  intros.
-  split.
-  intros.
-  apply (H x H0).
-  intros.
-  inversion H0.
-Qed.
-
-(* Lemma incl_impl_incl_in_less: forall vSG v0 x, (V_included vSG (V_union (V_single x) v0) /\ ~ v0 x) -> V_included vSG v0.
-Proof.
-  intros.
-  unfold V_included in * ; unfold V_union in * ; unfold V_single in *.
-  destruct H.
-  unfold Included in *.
-
-  intros.
-  apply (H x0) in H1.
-  
-  destruct H1.
-  inversion H1.
-  rewrite H2 in *.
-  admit.
-  apply H1.
-  
-
-Lemma incl_impl_incl_in_less: forall T vSG v0, Included T vSG (V_union (V_single x) v0) -> V_included vSG v0 *)
-
-Lemma SubGraph_isa_Graph : forall vSG v aSG a g, SubGraph vSG v aSG a g -> Graph vSG aSG.
-Proof.
-  intros vSG v aSG a g H.
-  unfold SubGraph in H.
-  destruct H.
-  destruct H0.
-  induction g.
-    apply (empty_sub_set Vertex) in H.
-    apply (empty_sub_set Arc) in H0.
-    rewrite H ; rewrite H0.
-    apply G_empty.
-
-    apply IHg.
-    unfold V_union in H.
-    unfold V_single in H.
-    unfold V_included in H.
-    admit.
-    apply H0.
-
-    apply IHg.
-    apply H.
-    admit.
-
-    rewrite e in *; rewrite e0 in *.
-    apply IHg.
-    apply H ; apply H0.
-Admitted. *)
-
+                                 (aSG ar) -> (vSG v1 /\ vSG v2))).
 End ConnectedChecker.
