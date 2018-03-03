@@ -307,6 +307,11 @@ Proof.
     apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
     apply g0 in H0. apply H0.
 
+    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
+    apply g0 in H. apply In_right. apply H.
+
+    
+
     
   
 Lemma SubGraph_arcs_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
