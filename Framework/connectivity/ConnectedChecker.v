@@ -228,20 +228,22 @@ Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) :=
                                  (aSG ar) -> (vSG v1 /\ vSG v2)).
 
 
-Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
+(* Definition SubGraph (vSG v : V_set) (aSG a : A_set) (g : Graph v a) := 
   (forall (c: Component), vSG c -> v c) /\ 
   (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
                                  (aSG ar) -> (a ar /\ vSG v1 /\ vSG v2)).
-
+ *)
 
 Lemma TotalGraph_isa_SubGraph: forall v a g, SubGraph v v a a g.
 Proof.
   intros v a g.
   unfold SubGraph.
   split.
+  unfold V_included.
+  unfold Included.
   auto.
-  intros.
   split.
+  unfold A_included. unfold Included.
   auto.
   split.
   apply (G_ina_inv1 v a g) in H.
@@ -255,18 +257,67 @@ Proof.
   intros v a g.
   unfold SubGraph.
   split ; intros.
+  unfold V_included. unfold Included. intros.
   inversion H.
-  inversion H.
+  unfold A_included. unfold Included. intros.
+  split ; intros ; inversion H.
 Qed.
+
+Lemma empty_sub_set: forall T vSG, Included T vSG (Empty T) -> vSG = Empty T.
+Proof.
+  intros.
+  apply U_set_eq.
+  intros.
+  split.
+  intros.
+  apply (H x H0).
+  intros.
+  inversion H0.
+Qed.
+
+Lemma incl_impl_incl_in_less: forall vSG v0 x, V_included vSG (V_union (V_single x) v0) -> V_included vSG v0.
+Proof.
+  intros.
+  unfold V_included in * ; unfold V_union in * ; unfold V_single in *.
+  unfold Included in *.
+  intros.
+  apply (H x0) in H0.
+  destruct H0.
+  destruct (H x0 H0).
+  inversion H1.
+  rewrite H2 in *.
+  admit.
+  apply H1.
+  
+
+Lemma incl_impl_incl_in_less: forall T vSG v0, Included T vSG (V_union (V_single x) v0) -> V_included vSG v0
 
 Lemma SubGraph_isa_Graph : forall vSG v aSG a g, SubGraph vSG v aSG a g -> Graph vSG aSG.
 Proof.
   intros vSG v aSG a g H.
   unfold SubGraph in H.
   destruct H.
+  destruct H0.
   induction g.
-    admit.
+    apply (empty_sub_set Vertex) in H.
+    apply (empty_sub_set Arc) in H0.
+    rewrite H ; rewrite H0.
+    apply G_empty.
+
     apply IHg.
+    unfold V_union in H.
+    unfold V_single in H.
+    unfold V_included in H.
+    admit.
+    apply H0.
+
+    apply IHg.
+    apply H.
+    admit.
+
+    rewrite e in *; rewrite e0 in *.
+    apply IHg.
+    apply H ; apply H0.
 Admitted.
 
 End ConnectedChecker.
