@@ -2,8 +2,8 @@ Require Import PeanoNat.
 Local Open Scope nat_scope.
 Require Import Verdi.Verdi.
 
-Load nw-model-version-consistency.
-Load MA_Basics.
+
+Load nw_model_version_consistency.
 
 (*ZVA Interface*)
 

@@ -2,8 +2,6 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Prop.
 Require Export Coq.Bool.BoolEq.
-Require Import Verdi.Verdi.
-
 
 Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
 Notation "a == b" := (beq_nat a b) (at level 70).
@@ -150,7 +148,8 @@ unfold neighbors.
 unfold A_in_neighborhood.
 induction ( (CA_list v a g)).
 contradiction.
-repeat break_match.
+destruct a0. 
+destruct (V_eq_dec y v1).
 destruct H.
 unfold In.
 left.
