@@ -4,26 +4,29 @@ Require Import Coq.Logic.Classical_Prop.
 Require Export Coq.Bool.BoolEq.
 
 
+(* part of the network model that represents the underlying network graph *)
+(* we model the topology of a network as a connected undirected graph *)
 Section Topology.
 
 Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
 Notation "a == b" := (beq_nat a b) (at level 70).
 
-(* representation of network *)
 
+(* a component is modelled as a vertex (of a graph) *)
 Definition Component := Vertex.
 
-
+(* each component has a unique identifier *)
 Definition component_index (c : Component):nat := match c with
                           | index x => x
                           end.
 
+(* from vertices to components *)
+(* our universe is a set of components *)
 Definition C_set := U_set Component.
-
 Definition C_list := U_list Component.
-
 Definition C_nil:= V_nil.
 
+(* it is decidable whether two components x,y are the same or different *)
 Lemma C_eq_dec : forall x y : Component, {x = y} + {x <> y}.
 Proof.
         simple destruct x; simple destruct y; intros.
@@ -32,8 +35,8 @@ Proof.
         right; injection; trivial.
 Qed.
 
-
-
+(* CA_list is a list of the set of arcs a *)
+(* we match over the constructors of the connected graph c *)
 Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
  A_list :=
   match c with
@@ -44,6 +47,7 @@ Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CA_list v' a' c'
   end.
 
+(* CV_list is a list of the set vertices v *)
 Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
  V_list :=
   match c with
@@ -53,22 +57,22 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
   end.
 
-(* das habe ich als Axiom
-
+(* necessary as an Axiom?
 Variable Component_prop: forall (c:Component)(v : V_set) (a : A_set)(g : Connected v a),
 In c (CV_list v a g). *)
 
-Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+(* connected graph is symmetric and thereby represents an undirected graph *)
+Lemma C_non_directed: forall (v : V_set) (a : A_set) (c : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).
 Proof.
 intros.
-apply Connected_Isa_Graph in g.
+apply Connected_Isa_Graph in c.
 apply G_non_directed with (v:=v).
-apply g.
+apply c.
 apply H.
 Qed.
 
-
+(**)
 Fixpoint beq_nat (n m : nat) : bool :=
   match n with
   | O => match m with
@@ -81,12 +85,15 @@ Fixpoint beq_nat (n m : nat) : bool :=
             end
   end.
 
+(* true iff components n and m are equal *)
 Definition beq (n m : Component) : bool :=
 beq_nat (component_index n) (component_index m). 
 
 
-(*Variable beq : Component -> Component -> bool.*)
-(* Basic properties for beq: maybe these arent used
+(* Basic properties for beq: maybe these arent used*)
+(*
+(* alternatively to the definition of beq *)
+Variable beq : Component -> Component -> bool.
 Variable beq_refl : forall x:Component, true = beq x x.
 
 Variable beq_eq : forall x y:Component, true = beq x y -> x = y.
@@ -101,17 +108,21 @@ Variable exists_beq_eq : forall x y:Component, {b : bool | b = beq x y}.
 
 Variable not_eq_false_beq : forall x y:Component, x <> y -> false = beq x y.
 
-Variable eq_dec : forall x y:Component, {x = y} + {x <> y}. *)
+Variable eq_dec : forall x y:Component, {x = y} + {x <> y}. 
+*)
 
+(* true iff component a is in list l *)
 Fixpoint In_bool (a: Component) (l:C_list) : bool:=
   match l with
   | nil => false
   | b :: m => beq b a || In_bool a m
   end.
 
-Definition neighbors (v : V_set) (a : A_set)(g : Connected v a) (c: Component) : C_list :=
+(* list of neighbors of component c *)
+Definition neighbors (v : V_set) (a : A_set) (g : Connected v a) (c: Component) : C_list :=
 (A_in_neighborhood c (CA_list v a g)).
 
+(* since the graph is symmetric, the in- and out-neighborhood is the same*)
 Lemma neighbors_connected_prop :
 forall k (v : V_set) (a : A_set)(g : Connected v a) (c: Component),
  In k (A_out_neighborhood c (CA_list v a g)) <-> In k (A_in_neighborhood c (CA_list v a g)).
@@ -193,6 +204,7 @@ Proof.
     apply (IHg H). }
 Qed.
 
+(* for a parent k of c holds that k is also a neighbor of c *)
 Lemma parent_neighbors_: forall (v: V_set) (a: A_set)(g: Connected v a) (c k:Component),
 a (A_ends c k) <-> In k (A_in_neighborhood c (CA_list v a g)).
 Proof.
@@ -293,14 +305,14 @@ Proof.
 Qed.
 
 
-(* list contains only one kind of component: c *)
+(* true iff list l contains (multiple times) only component c *)
 Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
       match l with
         | nil => true
         | a::k => beq a c && forallb_neighbors k c
       end.
 
-
+(*  *)
 Lemma forallb_forall_ : forall (l:C_list) (c:Component), 
 (forallb_neighbors l c = true) <-> (forall x, In x l ->  x = c).
 Proof.
@@ -343,7 +355,8 @@ Proof.
     simpl. right. apply H0. }
 Qed.
 
-Lemma  arc_list_set: forall (v: V_set)(a: A_set)(g: Connected v a) (x y : Component),
+(* if an arc is in the arc set a, then it is also in the arc list CA_list *)
+Lemma arc_list_set: forall (v: V_set)(a: A_set)(g: Connected v a) (x y : Component),
 a (A_ends x y) -> In (A_ends x y) (CA_list v a g).
 Proof.
   intros.
@@ -363,8 +376,9 @@ Proof.
     apply (IHg H).
 Qed.
 
+(* if there is an arc from y to x in the list CA_list, then x is a neighbor of y *)
 Lemma arc_list_neighbors:
-forall (v: V_set)(a: A_set)(g: Connected v a)x y,
+forall (v: V_set)(a: A_set)(g: Connected v a) x y,
 In (A_ends x y) (CA_list v a g) -> In x (neighbors v a g y).
 Proof.
 intros.
@@ -394,9 +408,10 @@ apply IHa0.
 trivial.
 Qed. 
 
+(* if there is an arc from y to x in a, then comp1 is a neighbor of comp2 *)
 Lemma neighbourslist_prep:
-forall (v: V_set)(a: A_set)(g: Connected v a)(x comp1 comp2: Component),
-a (A_ends comp1 x) -> In comp1 (neighbors v a g x).
+forall (v: V_set)(a: A_set)(g: Connected v a)(comp1 comp2: Component),
+a (A_ends comp1 comp2) -> In comp1 (neighbors v a g comp2).
 Proof.
 unfold neighbors.
 intros.
@@ -406,27 +421,26 @@ unfold neighbors in H.
 trivial.
 Qed.
 
-
-
+(* if there is a path from comp1 to comp2 with x being the first component on the path,
+ * then comp1 is a neighbor of x *)
 Lemma neighbourslist2:
 forall (v: V_set)(a: A_set)(g: Connected v a)(x comp1 comp2: Component)  (el : E_list) (clist: list Component),
  Path v a comp1 comp2 (x::clist) el -> In comp1  (neighbors v a g x).
 Proof.
 intros.
 apply neighbourslist_prep.
-apply x.
 inversion H.
 trivial.
 Qed.
 
-
-
+(* removes a component from a list of components *)
 Fixpoint remove (x : Component) (l : list Component) : list Component :=
     match l with
     | nil => nil
     | y::tl => if ((component_index x) == (component_index y)) then tl else y::(remove x tl)
     end.
 
+(* true iff a list of component is empty *)
 Definition empty (l : list Component) : bool :=
   match l with
   | nil => true
