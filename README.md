@@ -26,6 +26,35 @@ We use the proof assistant Coq for program verification as well as for
 theorem proving, and use Coq's program extraction.
 
 
+## How do I get set up?
+
+Install [Coqide](https://coq.inria.fr/download) in version 8.5pl2 or 
+later. Start it with the parameter `coqide -impredicative-set`. Further 
+compile and install ![GraphBasics](https://github.com/coq-contribs/graph-basics). If you need further help, do not hesitate to contact us!
+
+
+##Framework
+
+
+PO III(ii) verified termination detection -- work in progress.
+
+PO IV
+
+(i.) verified completeness check -- work in progress
+(ii.) verified connectivity check -- work in progress
+(iii.) verified consistency check -- PO IV_iii.v
+
+
+PO II witness predicate (i) has witness property (ii) is distributable -- has to be done for each CDA. See examples here:
+https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/leader-election
+https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/shortest-path-problem
+
+(iv.) decision of sub-predicates -- has to be done for each CDA. See examples here:
+https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/leader-election
+https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/shortest-path-problem
+(v.) verified evaluation of witness predicate -- work in progress
+
+
 ## Case Studies
 
 ### Certifying Leader Election:
@@ -50,12 +79,5 @@ The coq formalisation is work in progress.
 ### Certifying Shortest Path Construction:
 The certifying variant of distributed shortest path construction is
 published at [SEFM15](https://link.springer.com/chapter/10.1007%2F978-3-319-22969-0_14) but not the coq formalisation.
-
-
-## How do I get set up?
-
-Install [Coqide](https://coq.inria.fr/download) in version 8.5pl2 or 
-later. Start it with the parameter `coqide -impredicative-set`. Further 
-compile and install ![GraphBasics](https://github.com/coq-contribs/graph-basics). If you need further help, do not hesitate to contact us!
 
 
