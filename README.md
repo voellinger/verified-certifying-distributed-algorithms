@@ -54,10 +54,12 @@ https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/ma
 
 
 **PO III** The Theorem 1 for distributed checking of consistency.
+
 See https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/framework/consistency
 
 
 **PO IV** The implemented distributed checker is correct:
+
 **(i)** Each sub-checker checks if its sub-witness is complete.
 -- work in progress
 
@@ -70,6 +72,7 @@ neighborhood.
 See https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/framework/consistency
 
 **(iv)** Each sub-checker decides the sub-predicates for its component.
+
 See Case Studies as described below:
 https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/leader-election
 https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/shortest-path-problem
@@ -79,6 +82,7 @@ https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/ma
 
 Moreover, as a foundation, we have a model of the network (topology and communication) and the interface of a
 CDA.
+
 See https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/framework/newtorkmodel
 
 
