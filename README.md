@@ -43,8 +43,11 @@ The implemented termination detection is correct.
 
 **PO II**
 Witness predicate Γ has the following properties:
+
 **(i)** Γ has the witness property.
+
 **(ii)** Γ is distributable.
+
 See Case Studies as described below:
 https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/leader-election
 https://github.com/voellinger/verified-certifying-distributed-algorithms/tree/master/shortest-path-problem
