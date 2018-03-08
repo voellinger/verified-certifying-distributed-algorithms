@@ -310,12 +310,47 @@ Proof.
     apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
     apply g0 in H. apply In_right. apply H.
 
-    
+    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
+    apply g0 in H. apply H.
 
-    
-  
+    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
+    apply g0 in H. apply H.
+
+    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
+    rewrite <- e in *. rewrite e0 in *. apply g0 in H. apply H.
+Qed.
+
+
 Lemma SubGraph_arcs_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
-  A_included aSG a.
+  SubGraph vSG v aSG a -> A_included aSG a.
+Proof.
+  intros vSG v aSG a g SG.
+  induction SG ; unfold A_included ; unfold Included ; intros.
+    inversion H.
+
+    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
+    apply g0 in H. apply H.
+
+    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
+    apply g0 in H. apply H.
+
+
+    inversion H. inversion H0. rewrite H2 in *. apply a1.
+    apply (G_non_directed v0 a0 g v1 v2 a1).
+    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
+    apply (g0 x H0).
+
+    unfold A_union. apply In_right. apply IHSG in g0.
+    unfold A_included in g0. unfold Included in g0.
+    apply (g0 x0 H).
+
+    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
+    rewrite <- e0 in *. apply (g0 x H).
+Qed.
+
+
+
+
 
 Lemma SubGraph_arcs_correct : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
   SubGraph vSG v aSG a -> (V_included vSG v /\
