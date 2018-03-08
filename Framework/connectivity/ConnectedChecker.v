@@ -320,7 +320,6 @@ Proof.
     rewrite <- e in *. rewrite e0 in *. apply g0 in H. apply H.
 Qed.
 
-
 Lemma SubGraph_arcs_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
   SubGraph vSG v aSG a -> A_included aSG a.
 Proof.
@@ -348,13 +347,53 @@ Proof.
     rewrite <- e0 in *. apply (g0 x H).
 Qed.
 
-
-
-
-
 Lemma SubGraph_arcs_correct : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
-  SubGraph vSG v aSG a -> (V_included vSG v /\
-  A_included aSG a /\
-  (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
-                                 (aSG ar) -> (vSG v1 /\ vSG v2))).
+  SubGraph vSG v aSG a -> (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
+                                 (aSG ar) -> (vSG v1 /\ vSG v2)).
+Proof.
+  intros vSG v0 aSG a0 g SG.
+  induction SG ; unfold V_included ; unfold A_included ; unfold Included ; split ; intros.
+    inversion H.
+
+    inversion H.
+
+    unfold V_union. apply In_right.
+    apply IHSG with (v1 := v2) (v2 := v3) in g0.
+    destruct g0. apply H0. apply H.
+
+    unfold V_union. apply In_right.
+    apply IHSG with (v1 := v2) (v2 := v3) in g0.
+    destruct g0. apply H1. apply H.
+
+    apply IHSG with (v1 := v1) (v2 := v2) in g0.
+    destruct g0. apply H0. apply H.
+
+    apply IHSG with (v1 := v1) (v2 := v2) in g0.
+    destruct g0. apply H1. apply H.
+
+    inversion H. inversion H0 ; rewrite H3 in * ; rewrite H4 in *.
+    apply v3. apply v4.
+    apply IHSG with (v1 := v5) (v2 := v6) in g0.
+    destruct g0. apply H2. apply H0.
+
+    inversion H. inversion H0 ; rewrite H3 in * ; rewrite H4 in *.
+    apply v4. apply v3.
+    apply IHSG with (v1 := v5) (v2 := v6) in g0.
+    destruct g0. apply H3. apply H0.
+
+    apply IHSG with (v1 := v3) (v2 := v4) in g0. destruct g0.
+    apply H0. apply H.
+
+    apply IHSG with (v1 := v3) (v2 := v4) in g0. destruct g0.
+    apply H1. apply H.
+
+    rewrite <- e in *. rewrite <- e0 in *.
+    apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
+    apply H0. apply H.    
+
+    rewrite <- e in *. rewrite <- e0 in *.
+    apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
+    apply H1. apply H.
+Qed.
+
 End ConnectedChecker.
