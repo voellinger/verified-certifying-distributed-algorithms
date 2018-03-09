@@ -32,6 +32,8 @@ Inductive Predicate_distribution: Set:=
 Inductive Var: Type.
 Inductive Value: Type. 
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
+(* Modelling decision: For variables equality is decidable. *)
+Axiom Var_eq_dec : forall x y : Var, {x = y} + {x <> y}.
 
 (* Minimal input of a network is the network itself.
  * Hence, each component me knows its neighbors in the network graph
