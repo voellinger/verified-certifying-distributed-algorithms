@@ -13,7 +13,7 @@ Require Import Verdi.ExtrOcamlList.
 
 Require Import FunInd.
 
-Load CDAInterface. 
+Load CDAInterface.
 
 
 Section ConnectedChecker.
