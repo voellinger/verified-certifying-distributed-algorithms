@@ -214,11 +214,8 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
       | leader (var, n, d, p)  => if (cert_has_var (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
                                     then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
                                   else ([], state, [])
-   end.
+    end.
 
-
-
-(* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
 
 Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
   | SG_empty : forall v a (g: Graph v a), SubGraph V_empty v A_empty a
@@ -389,11 +386,31 @@ Proof.
 
     rewrite <- e in *. rewrite <- e0 in *.
     apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
-    apply H0. apply H.    
+    apply H0. apply H.
 
     rewrite <- e in *. rewrite <- e0 in *.
     apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
     apply H1. apply H.
 Qed.
+
+Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Graph v1 a1) := 
+  V_inter v0 v1 = V_empty.
+
+Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) := 
+  V_inter v1 v2 = V_empty.
+
+
+jeder Komponente wird ein Zertifikat () zugeordnet,
+je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
+der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
+und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG
+
+Definition isa_a_Component :. 
+
+Definition a_SubGraph : 
+(* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
+
+
+
 
 End ConnectedChecker.
