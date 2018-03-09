@@ -13,6 +13,7 @@ Require Import Verdi.ExtrOcamlList.
 
 Require Import FunInd.
 
+Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/framework/networkmodel/CDAInterface.v".
 Load CDAInterface.
 
 
