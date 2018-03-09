@@ -229,7 +229,7 @@ Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
     Graph v (A_union (E_set v1 v2) a) -> SubGraph vSG v aSG a -> SubGraph vSG v aSG (A_union (E_set v1 v2) a)
   | SG_eq: forall vSG vSG' v aSG aSG' a (g: Graph v a),
     vSG = vSG' -> aSG = aSG' -> SubGraph vSG v aSG a -> SubGraph vSG' v aSG' a.
-(* vllt muss auch noch rein: SG_eqp *)
+(* TODO: vllt muss auch noch rein: SG_eqp *)
 
 Lemma Graph_is_a_SubGraph: forall v a (g: Graph v a), SubGraph v v a a.
 Proof.
@@ -393,7 +393,7 @@ Proof.
     apply H1. apply H.
 Qed.
 
-(* gibts das in graphbasics? *)
+(* TODO: gibts das in graphbasics? *)
 Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Graph v1 a1) := 
   V_inter v0 v1 = V_empty.
 
@@ -407,7 +407,9 @@ je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
 der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
 und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG.
 
-Definition isa_aVar_Component :. 
+(* TODO: cert_has_var muss noch ordentlich gemacht werden *)
+Definition isa_aVar_Component (c: Component) (a : Var) : bool :=
+  cert_has_var a (init_certificate (component_name c)).
 
 Definition aVar_SubGraph : 
 (* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
