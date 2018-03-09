@@ -229,9 +229,9 @@ Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
     Graph v (A_union (E_set v1 v2) a) -> SubGraph vSG v aSG a -> SubGraph vSG v aSG (A_union (E_set v1 v2) a)
   | SG_eq: forall vSG vSG' v aSG aSG' a (g: Graph v a),
     vSG = vSG' -> aSG = aSG' -> SubGraph vSG v aSG a -> SubGraph vSG' v aSG' a.
+(* vllt muss auch noch rein: SG_eqp *)
 
-
-Lemma TotalGraph_isa_SubGraph: forall v a (g: Graph v a), SubGraph v v a a.
+Lemma Graph_is_a_SubGraph: forall v a (g: Graph v a), SubGraph v v a a.
 Proof.
   intros v a g.
   induction g.
@@ -393,21 +393,23 @@ Proof.
     apply H1. apply H.
 Qed.
 
+(* gibts das in graphbasics? *)
 Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Graph v1 a1) := 
   V_inter v0 v1 = V_empty.
 
 Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) := 
   V_inter v1 v2 = V_empty.
 
+Definition Graph_covered_by_SGs (* *).
 
 jeder Komponente wird ein Zertifikat () zugeordnet,
 je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
 der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
-und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG
+und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG.
 
-Definition isa_a_Component :. 
+Definition isa_aVar_Component :. 
 
-Definition a_SubGraph : 
+Definition aVar_SubGraph : 
 (* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
 
 
