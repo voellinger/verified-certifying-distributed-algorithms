@@ -393,14 +393,23 @@ Proof.
     apply H1. apply H.
 Qed.
 
-(* TODO: gibts das in graphbasics? *)
 Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Graph v1 a1) := 
   V_inter v0 v1 = V_empty.
 
-Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) := 
+Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) : Prop := 
   V_inter v1 v2 = V_empty.
 
-Definition Graph_covered_by_SGs (* *).
+Fixpoint SG_list_union (vSG : V_set) (aSG : A_set) (v_a_l : list (V_set * A_set)) : (V_set * A_set) := 
+  match v_a_l with
+  | nil => (vSG, aSG)
+  | (v0, a0) :: tl => SG_list_union (V_union vSG v0) (A_union aSG a0) tl
+  end.
+
+Definition SGs_cover_Graph (v : V_set) (a : A_set) (g : Graph v a) (v_a_l : list (V_set * A_set)) : Prop :=
+  match (SG_list_union V_empty A_empty v_a_l) with
+  |(vSG_union, aSG_union) => V_included v vSG_union /\ A_included a aSG_union
+  end.
+
 
 jeder Komponente wird ein Zertifikat () zugeordnet,
 je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
@@ -414,7 +423,7 @@ Definition isa_aVar_Component (c: Component) (a : Var) : bool :=
 Definition aVar_SubGraph : 
 (* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
 
-
+(* TODO: bipartition pr\u00fcfen und mit master mergen *)
 
 
 End ConnectedChecker.
