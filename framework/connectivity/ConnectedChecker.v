@@ -13,7 +13,6 @@ Require Import Verdi.ExtrOcamlList.
 
 Require Import FunInd.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/framework/networkmodel/CDAInterface.v".
 Load CDAInterface.
 
 
@@ -407,9 +406,8 @@ Fixpoint SG_list_union (vSG : V_set) (aSG : A_set) (v_a_l : list (V_set * A_set)
   end.
 
 Definition SGs_cover_Graph (v : V_set) (a : A_set) (g : Graph v a) (v_a_l : list (V_set * A_set)) : Prop :=
-  match (SG_list_union V_empty A_empty v_a_l) with
-  |(vSG_union, aSG_union) => V_included v vSG_union /\ A_included a aSG_union
-  end.
+  let (vSG_union, aSG_union) := (SG_list_union V_empty A_empty v_a_l) in 
+    V_included v vSG_union /\ A_included a aSG_union.
 
 
 jeder Komponente wird ein Zertifikat () zugeordnet,
