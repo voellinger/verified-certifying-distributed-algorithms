@@ -412,6 +412,9 @@ Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : V
 (* TODO: bipartition pr\u00fcfen und mit master mergen *)
 
 
+
+
+
 (* 
 
   Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.

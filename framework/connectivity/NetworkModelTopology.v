@@ -53,11 +53,6 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
   end.
 
-(* das habe ich als Axiom
-
-Variable Component_prop: forall (c:Component)(v : V_set) (a : A_set)(g : Connected v a),
-In c (CV_list v a g). *)
-
 Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).
 Proof.
@@ -82,7 +77,7 @@ Fixpoint beq_nat (n m : nat) : bool :=
   end.
 
 Definition beq_comp (n m : Component) : bool :=
-beq_nat (component_index n) (component_index m). 
+Nat.eq_nat (component_index n) (component_index m). 
 
 
 (*Variable beq : Component -> Component -> bool.*)
