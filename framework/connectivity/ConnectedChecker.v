@@ -114,7 +114,7 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
 Fixpoint find_leader (k : Var) (leaders : list Msg) : option nat :=
   match leaders with
   | [] => None
-  | leader (var, ind, dis, par) :: tl => if beq k var
+  | leader (var, ind, dis, par) :: tl => if var_beq k var
                             then Some ind
                             else find_leader k tl
   end.
@@ -128,7 +128,7 @@ Definition get_leader_index k (leaders: list Msg) : nat :=
 Fixpoint set_leader var n d p (ls: list Msg) : list Msg :=
   match ls with
   | [] => [leader (var, n, d, p)]
-  | leader (k, ind, dis, par) :: tl => if beq_nat k var
+  | leader (k, ind, dis, par) :: tl => if var_beq k var
                                  then leader (k, n, dis, par) :: tl
                                  else set_leader var n d p tl
   end.
@@ -147,22 +147,17 @@ Proof.
   simpl.
   intuition.
 Qed.
-  
+
 
 Lemma set_leader_sets_leader: forall var n (ls: list Msg) d p,
     n = get_leader_index var (set_leader var n d p ls).
 Proof.
   intros var n ls d p.
   induction ls.
-    destruct var.
     simpl.
     unfold get_leader_index.
-    reflexivity.
     simpl.
-    unfold get_leader_index.
-    unfold find_leader.
-    simpl.
-    rewrite <- beq_nat_refl.
+    rewrite var_eq_refl.
     reflexivity.
 
     destruct a0.
@@ -175,24 +170,26 @@ Proof.
   
     rewrite H.
     simpl.
-    rewrite Nat.eqb_refl.
+    rewrite var_eq_refl.
     unfold get_leader_index.
     simpl.
-    rewrite Nat.eqb_refl.
+    rewrite var_eq_refl.
     reflexivity.
 
-    assert(v0 == var = false).
-    apply beq_false_nat.
+    assert (var_beq v0 var = false).
+    unfold var_beq.
+    destruct var_eq_dec.
     intuition.
+    reflexivity.
     simpl.
     rewrite H0.
     apply IHls.
 Qed.
 
-Fixpoint cert_has_var (vl : list Var) (v : Var) : bool :=
+Fixpoint varList_has_var (vl : list Var) (v : Var) : bool :=
   match vl with
   | nil => false
-  | hd :: tl => beq_nat hd v && cert_has_var tl v
+  | hd :: tl => var_beq hd v && varList_has_var tl v
   end.
 
 (* 
@@ -211,7 +208,7 @@ Fixpoint cert_has_var (vl : list Var) (v : Var) : bool :=
 Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) : 
     (list Output) * Data * list (Name * Msg) :=
     match le with
-      | leader (var, n, d, p)  => if (cert_has_var (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
+      | leader (var, n, d, p)  => if (varList_has_var (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
                                     then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
                                   else ([], state, [])
     end.
@@ -399,25 +396,25 @@ Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Gr
 Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) : Prop := 
   V_inter v1 v2 = V_empty.
 
-Fixpoint SG_list_union (vSG : V_set) (aSG : A_set) (v_a_l : list (V_set * A_set)) : (V_set * A_set) := 
+Fixpoint SG_list_union (vSG : V_set) (aSG : A_set) (v_a_l : list (V_set * A_set)) : (V_set * A_set) :=
   match v_a_l with
   | nil => (vSG, aSG)
   | (v0, a0) :: tl => SG_list_union (V_union vSG v0) (A_union aSG a0) tl
   end.
 
 Definition SGs_cover_Graph (v : V_set) (a : A_set) (g : Graph v a) (v_a_l : list (V_set * A_set)) : Prop :=
-  let (vSG_union, aSG_union) := (SG_list_union V_empty A_empty v_a_l) in 
+  let (vSG_union, aSG_union) := (SG_list_union V_empty A_empty v_a_l) in
     V_included v vSG_union /\ A_included a aSG_union.
 
 
-jeder Komponente wird ein Zertifikat () zugeordnet,
+(* jeder Komponente wird ein Zertifikat () zugeordnet,
 je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
 der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
-und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG.
+und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG. *)
 
 (* TODO: cert_has_var muss noch ordentlich gemacht werden *)
 Definition isa_aVar_Component (c: Component) (a : Var) : bool :=
-  cert_has_var a (init_certificate (component_name c)).
+  varList_has_var (init_var_l (component_name c)) a.
 
 Definition aVar_SubGraph : 
 (* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)

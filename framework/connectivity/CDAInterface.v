@@ -44,9 +44,38 @@ Proof.
 Qed.
 Definition Certificate := list Assignment.
 
-Definition beq_var (n m : Var) : bool :=
-  if n <> m then true else false.
-  end.
+Definition var_beq (x y : Var) : bool :=
+  if var_eq_dec x y then true else false.
+
+Lemma var_eq_refl : forall x : Var, var_beq x x = true.
+Proof.
+  intros.
+  unfold var_beq.
+  destruct (var_eq_dec).
+  reflexivity.
+  intuition.
+Qed.
+
+Lemma var_eq_symm : forall x y : Var, var_beq x y = var_beq y x.
+Proof.
+  intros.
+  unfold var_beq.
+  destruct (var_eq_dec).
+  rewrite e.
+  destruct var_eq_dec ; auto ; intuition.
+  destruct var_eq_dec ; intuition.
+Qed.
+
+Lemma var_eq_diff : forall x y : Var, x <> y -> var_beq x y = false.
+Proof.
+  intros.
+  unfold var_beq.
+  destruct var_eq_dec.
+  intuition.
+  reflexivity.
+Qed.
+  
+
 
 (* These are two placeholders for actual Variables and Values *)
 Variable varnull: Var.
