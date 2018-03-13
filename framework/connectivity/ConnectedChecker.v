@@ -81,7 +81,7 @@ Definition init_Data (me: Name) :=
   mkData (init_Checkerknowledge me) (init_Checkerinput me) (init_leader_list me (certificate (init_Checkerinput me))).
 
 
-Definition set_leaders a v := mkData (checkerknowledge a) (checkerinput a) v.
+Definition set_leaders (d : Data) (new_leaders : list Msg) := mkData (checkerknowledge d) (checkerinput d) new_leaders.
 
 Fixpoint sendlist (neighbors: list Component) (new_l: Msg): list (Name * Msg)  :=
   match neighbors with 
@@ -186,11 +186,17 @@ Proof.
     apply IHls.
 Qed.
 
-Fixpoint varList_has_var (vl : list Var) (v : Var) : bool :=
+
+
+
+Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
   match vl with
   | nil => false
-  | hd :: tl => var_beq hd v && varList_has_var tl v
+  | hd :: tl => var_beq hd v && varList_has_varb tl v
   end.
+
+Definition varList_has_var (vl : list Var) (v : Var) : Prop :=
+  varList_has_varb vl v = true.
 
 (* 
 
@@ -412,12 +418,14 @@ je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
 der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
 und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG. *)
 
-(* TODO: cert_has_var muss noch ordentlich gemacht werden *)
-Definition isa_aVar_Component (c: Component) (a : Var) : bool :=
-  varList_has_var (init_var_l (component_name c)) a.
 
-Definition aVar_SubGraph : 
-(* a-Komponente: ist eine Komponente c, bei der a in der Liste von Variablen von c vorkommt *)
+Definition isa_aVar_Component (c: Component) (aVar : Var) : bool :=
+  varList_has_var (init_var_l (component_name c)) aVar.
+
+
+Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) : SubGraph vSG v aSG a :=
+  (forall c : Component, (v c /\ isa_aVar_Component c aVar) -> vSG c) /\
+  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar) -> vSG (A_ends c1 c2)).
 
 (* TODO: bipartition pr\u00fcfen und mit master mergen *)
 
