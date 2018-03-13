@@ -214,7 +214,7 @@ Definition varList_has_var (vl : list Var) (v : Var) : Prop :=
 Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) : 
     (list Output) * Data * list (Name * Msg) :=
     match le with
-      | leader (var, n, d, p)  => if (varList_has_var (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
+      | leader (var, n, d, p)  => if (varList_has_varb (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
                                     then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
                                   else ([], state, [])
     end.
@@ -419,13 +419,13 @@ der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponen
 und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG. *)
 
 
-Definition isa_aVar_Component (c: Component) (aVar : Var) : bool :=
+Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
 
-Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) : SubGraph vSG v aSG a :=
-  (forall c : Component, (v c /\ isa_aVar_Component c aVar) -> vSG c) /\
-  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar) -> vSG (A_ends c1 c2)).
+Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+  (forall c : Component, (v c /\ isa_aVar_Component c aVar) <-> vSG c) /\
+  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar) <-> aSG (A_ends c1 c2)).
 
 (* TODO: bipartition pr\u00fcfen und mit master mergen *)
 
