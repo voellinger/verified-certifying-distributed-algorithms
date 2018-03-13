@@ -198,19 +198,6 @@ Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
 Definition varList_has_var (vl : list Var) (v : Var) : Prop :=
   varList_has_varb vl v = true.
 
-(* 
-
-  Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
-
-  Invarianten: Nachrichten k\u00f6nnen nur eine Komponente au\u00dferhalb des a-Teilgraphen geschickt werden
-  Invarianten: Von allen Komponenten, die man gesehen hat, nimmt man die "h\u00f6chst"-m\u00f6gliche.
-
-  Lemma: Man nimmt nie einen kleineren Leader, als man schon hat.
-  Lemma: Man nimmt nur einen Leader von alpha, wenn alpha Teil vom Zeugen des Leaders ist.
-  Lemma: Man kann keine Komponente als Leader w\u00e4hlen, wenn der "Zeugenschnitt" mit der Komponente leer ist.
-  
-*)
-
 Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) : 
     (list Output) * Data * list (Name * Msg) :=
     match le with
@@ -414,12 +401,6 @@ Definition SGs_cover_Graph (v : V_set) (a : A_set) (g : Graph v a) (v_a_l : list
     V_included v vSG_union /\ A_included a aSG_union.
 
 
-(* jeder Komponente wird ein Zertifikat () zugeordnet,
-je nach Zertifikat ist die Komponente dann eine a-Komponente oder nicht
-der a-Teil-Graph ist der Teil eines Graphen, von dem alle Komponenten a-Komponenten sind 
-und keine weiteren a-Komponenten im Graphen sind, aber nicht im aTG. *)
-
-
 Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
@@ -430,5 +411,18 @@ Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : V
 
 (* TODO: bipartition pr\u00fcfen und mit master mergen *)
 
+
+(* 
+
+  Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
+
+  Invarianten: Nachrichten k\u00f6nnen nur eine Komponente au\u00dferhalb des a-Teilgraphen geschickt werden
+  Invarianten: Von allen Komponenten, die man gesehen hat, nimmt man die "h\u00f6chst"-m\u00f6gliche.
+
+  Lemma: Man nimmt nie einen kleineren Leader, als man schon hat.
+  Lemma: Man nimmt nur einen Leader von alpha, wenn alpha Teil vom Zeugen des Leaders ist.
+  Lemma: Man kann keine Komponente als Leader w\u00e4hlen, wenn der "Zeugenschnitt" mit der Komponente leer ist.
+  
+*)
 
 End ConnectedChecker.
