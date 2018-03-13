@@ -86,7 +86,7 @@ Fixpoint beq_nat (n m : nat) : bool :=
   end.
 
 (* true iff components n and m are equal *)
-Definition beq (n m : Component) : bool :=
+Definition beq_comp (n m : Component) : bool :=
 beq_nat (component_index n) (component_index m). 
 
 
@@ -115,7 +115,7 @@ Variable eq_dec : forall x y:Component, {x = y} + {x <> y}.
 Fixpoint In_bool (a: Component) (l:C_list) : bool:=
   match l with
   | nil => false
-  | b :: m => beq b a || In_bool a m
+  | b :: m => beq_comp b a || In_bool a m
   end.
 
 (* list of neighbors of component c *)
@@ -309,7 +309,7 @@ Qed.
 Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
       match l with
         | nil => true
-        | a::k => beq a c && forallb_neighbors k c
+        | a::k => beq_comp a c && forallb_neighbors k c
       end.
 
 (*  *)
@@ -322,7 +322,7 @@ Proof.
   - simpl in H.
     apply andb_prop in H.
     destruct H.
-    unfold beq in H.
+    unfold beq_comp in H.
     apply Nat.eqb_eq in H.
     destruct (a).
     destruct (c).
@@ -339,7 +339,7 @@ Proof.
     symmetry. apply beq_eq_true.
     simpl in H. intuition.
     destruct x.
-    unfold beq.
+    unfold beq_comp.
     simpl.
     symmetry.
     apply <- Nat.eqb_eq.

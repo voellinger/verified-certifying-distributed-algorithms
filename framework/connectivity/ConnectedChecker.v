@@ -111,10 +111,10 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
                      ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate(* das hier m\u00fcsste var_l sein oder eine Pr\u00fcfung beinhalten *) (checkerinput state)) myneighbours)
     end.
 
-Fixpoint find_leader (k : nat) (leaders : list Msg) : option nat :=
+Fixpoint find_leader (k : Var) (leaders : list Msg) : option nat :=
   match leaders with
   | [] => None
-  | leader (var, ind, dis, par) :: tl => if beq_nat k var
+  | leader (var, ind, dis, par) :: tl => if beq k var
                             then Some ind
                             else find_leader k tl
   end.

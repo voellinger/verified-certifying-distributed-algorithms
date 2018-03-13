@@ -29,11 +29,24 @@ Inductive Predicate_distribution: Set:=
 |or : Predicate_distribution.
 
 (* A sub-certificate is an assigment of variables to values. *)
-Definition Var:= nat.
-Inductive Value: Type. 
+Inductive Var: Type.
+(* Design choice: Var needs to be differentiable *)
+Axiom var_eq_dec : forall x y : Var, {x = y} + {x <> y}.
+Inductive Value: Type.
+(* Design choice: Value needs to be differentiable *)
+Axiom val_eq_dec : forall x y : Value, {x = y} + {x <> y}.
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
+Lemma assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
+Proof.
+  intros.
+  destruct x, y.
+  destruct v0. destruct v1. destruct v2. destruct v3. left. reflexivity.
+Qed.
 Definition Certificate := list Assignment.
 
+Definition beq_var (n m : Var) : bool :=
+  if n <> m then true else false.
+  end.
 
 (* These are two placeholders for actual Variables and Values *)
 Variable varnull: Var.
@@ -48,31 +61,6 @@ Definition assignment_value (assi: Assignment) :  Value :=
 match assi with
   | assign_cons var value => value
 end.
-
-Axiom assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
-(* Definition assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
-Proof.
-  destruct x, y.
-  assert (H1: {k = k0} + {k <> k0}).
-  apply Nat.eq_dec.
-  assert (H2: {v = v0} + {v <> v0}).
-  apply Nat.eq_dec.
-  destruct H1. rewrite e.
-    destruct H2. rewrite e0.
-      auto.
-      right.
-      destruct v.
-        destruct v0.
-          intuition.
-          intuition. inversion H.
-        destruct v0.
-          intuition. inversion H.
-          intuition. inversion H. rewrite H1 in n. apply eq_S in H1. intuition.
-    destruct H2. rewrite e.
-      right. intuition. inversion H. intuition.
-      right. intuition. inversion H. intuition.
-Qed.
- *)
 
 
 
