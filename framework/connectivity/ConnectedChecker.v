@@ -409,11 +409,31 @@ Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : V
   (forall c : Component, (v c /\ isa_aVar_Component c aVar) <-> vSG c) /\
   (forall c1 c2 : Component, (a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar) <-> aSG (A_ends c1 c2)).
 
-(* TODO: bipartition pr\u00fcfen und mit master mergen *)
+
+(* A maximally connected aVar-subgraph has no outward edge, of which the outer vertex also is a aVar-Component. *)
+Definition is_max_connected_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
+
+(* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
+
+
+Definition SG_list := list (V_set * A_set).
+Lemma SG_eq_dec: forall x y : (V_set * A_set), {x = y} + {x <> y}.
+Proof.
+  intros.
+  destruct x. destruct y. 
+
+(* A Graph is cut into a list of subgraphs, for some aVar. All vertices that are aVar-Components must be represented in some subgraph.
+   The list must be unique. For alle subgraphs it must be an aVar-subgraph and maximal. *)
+Definition Graph_in_aVar_max_connected_SubGraphs (v : V_set) (a : A_set) (g : Graph v a) (aVar : Var) (sgs : SG_list) : Prop :=
+  (forall (comp : Component), (v comp /\ isa_aVar_Component comp aVar) -> (exists vSG aSG, In (vSG, aSG) sgs /\ vSG comp)) /\
+  nodup SG_eq_dec sgs = sgs /\
+  (forall vSG aSG, In (vSG, aSG) sgs -> (exists (sg : SubGraph vSG v aSG a), 
+                                          aVar_SubGraph v vSG a aSG g aVar sg /\ is_max_connected_SubGraph v vSG a aSG g aVar sg)).
 
 
 
-
+How to define a list of subgraphs, for each variable?
 
 (* 
 
@@ -427,5 +447,5 @@ Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : V
   Lemma: Man kann keine Komponente als Leader w\u00e4hlen, wenn der "Zeugenschnitt" mit der Komponente leer ist.
   
 *)
-
+(* TODO: bipartition pr\u00fcfen und mit master mergen *)
 End ConnectedChecker.
