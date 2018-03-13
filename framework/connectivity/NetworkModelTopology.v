@@ -64,39 +64,8 @@ apply H.
 Qed.
 
 
-Fixpoint beq_nat (n m : nat) : bool :=
-  match n with
-  | O => match m with
-         | O => true
-         | S m' => false
-         end
-  | S n' => match m with
-            | O => false
-            | S m' => beq_nat n' m'
-            end
-  end.
-
 Definition beq_comp (n m : Component) : bool :=
-Nat.eq_nat (component_index n) (component_index m). 
-
-
-(*Variable beq : Component -> Component -> bool.*)
-(* Basic properties for beq: maybe these arent used
-Variable beq_refl : forall x:Component, true = beq x x.
-
-Variable beq_eq : forall x y:Component, true = beq x y -> x = y.
-
-Variable beq_eq_true : forall x y:Component, x = y -> true = beq x y.
-
-Variable beq_eq_not_false : forall x y:Component, x = y -> false <> beq x y.
-
-Variable beq_false_not_eq : forall x y:Component, false = beq x y -> x <> y.
-
-Variable exists_beq_eq : forall x y:Component, {b : bool | b = beq x y}.
-
-Variable not_eq_false_beq : forall x y:Component, x <> y -> false = beq x y.
-
-Variable eq_dec : forall x y:Component, {x = y} + {x <> y}. *)
+Nat.eqb (component_index n) (component_index m). 
 
 Fixpoint In_bool (a: Component) (l:C_list) : bool:=
   match l with
