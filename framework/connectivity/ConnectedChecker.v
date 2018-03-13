@@ -90,10 +90,10 @@ Fixpoint sendlist (neighbors: list Component) (new_l: Msg): list (Name * Msg)  :
   end.
 
 (* The component sends itself as the leader for all its fact_vars to all its neighbours *)
-Fixpoint initial_send_list (me : Name) cert neighbours: list (Name * Msg) :=
-  match cert with
+Fixpoint initial_send_list (me : Name) (var_l : list Var) neighbours: list (Name * Msg) :=
+  match var_l with
     | [] => []
-    | hd :: tl => sendlist neighbours (leader ((assignment_var hd), component_index (name_component me), 0, me)) ++ initial_send_list me tl neighbours
+    | hd :: tl => sendlist neighbours (leader (hd, component_index (name_component me), 0, me)) ++ initial_send_list me tl neighbours
   end.
 
 (* This input starts a checker *)
@@ -103,12 +103,12 @@ Inductive Input := alg_terminated : Input.
 Definition Output := Msg.
 
 
-(* eigentlich muss noch irgendwo eine Pr\u00fcfung rein, dass certificate zu var_l passt, denn sonst kann der Algorithmus den Checker betr\u00fcgen... *)
+(* Sendet zu Beginn die Initial-Liste an alle Nachbarn *)
 Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (list Output) * Data * list (Name * Msg) := 
 	match me  with
     | Checker x => let myneighbours := (neighbors v a g x) in
-                     ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (certificate(* das hier m\u00fcsste var_l sein oder eine Pr\u00fcfung beinhalten *) (checkerinput state)) myneighbours)
+      ([] , (mkData (checkerknowledge state) (checkerinput state) (leaders state)), initial_send_list me (var_l (checkerknowledge state)) myneighbours)
     end.
 
 Fixpoint find_leader (k : Var) (leaders : list Msg) : option nat :=
@@ -215,8 +215,8 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
     (list Output) * Data * list (Name * Msg) :=
     match le with
       | leader (var, n, d, p)  => if (varList_has_varb (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
-                                    then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
-                                  else ([], state, [])
+        then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
+          else ([], state, [])
     end.
 
 
@@ -227,7 +227,8 @@ Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
   | SG_vertexp: forall (vSG v : V_set) (aSG a : A_set) x (g: Graph v a),
       Graph (V_union (V_single x) v) a -> SubGraph vSG v aSG a -> SubGraph vSG (V_union (V_single x) v) aSG a
   | SG_edge : forall (vSG v : V_set) (aSG a : A_set) v1 v2 (g: Graph v a),
-      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> SubGraph vSG v aSG a -> vSG v1 -> vSG v2 -> v1 <> v2 -> SubGraph vSG v (A_union (E_set v1 v2) aSG) a
+      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> SubGraph vSG v aSG a -> vSG v1 -> vSG v2 -> v1 <> v2 -> 
+      SubGraph vSG v (A_union (E_set v1 v2) aSG) a
   | SG_edgep : forall (vSG v : V_set) (aSG a : A_set) (x : Arc) v1 v2 (g: Graph v a),
     Graph v (A_union (E_set v1 v2) a) -> SubGraph vSG v aSG a -> SubGraph vSG v aSG (A_union (E_set v1 v2) a)
   | SG_eq: forall vSG vSG' v aSG aSG' a (g: Graph v a),
