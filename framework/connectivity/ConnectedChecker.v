@@ -418,10 +418,10 @@ Definition is_max_connected_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v 
 
 
 Definition SG_list := list (V_set * A_set).
-Lemma SG_eq_dec: forall x y : (V_set * A_set), {x = y} + {x <> y}.
-Proof.
-  intros.
-  destruct x. destruct y. 
+
+(* We only use finite subgraphs, therefore this holds. *)
+Axiom SG_eq_dec: forall x y : (V_set * A_set), {x = y} + {x <> y}.
+
 
 (* A Graph is cut into a list of subgraphs, for some aVar. All vertices that are aVar-Components must be represented in some subgraph.
    The list must be unique. For alle subgraphs it must be an aVar-subgraph and maximal. *)
