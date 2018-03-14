@@ -431,10 +431,12 @@ Definition Graph_in_aVar_max_connected_SubGraphs (v : V_set) (a : A_set) (g : Gr
   (forall vSG aSG, In (vSG, aSG) sgs -> (exists (sg : SubGraph vSG v aSG a), 
                                           aVar_SubGraph v vSG a aSG g aVar sg /\ is_max_connected_SubGraph v vSG a aSG g aVar sg)).
 
+Definition Graph_in_SubGraphs (v : V_set) (a : A_set) (g : Graph v a) (aVarSG : list (Var * SG_list)) : Prop :=
+  (forall (aVar : Var) (sgl : SG_list), In (aVar, sgl) aVarSG -> (Graph_in_aVar_max_connected_SubGraphs v a g aVar sgl)).
 
+Leader von Knoten-Kantenmenge
 
-How to define a list of subgraphs, for each variable?
-
+Theorem 
 (* 
 
   Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
