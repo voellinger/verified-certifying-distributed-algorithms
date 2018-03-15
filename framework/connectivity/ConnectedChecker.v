@@ -407,24 +407,62 @@ Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
 
 Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
   (forall c : Component, vSG c -> v c /\ isa_aVar_Component c aVar) /\
-  (forall c1 c2 : Component, aSG (A_ends c1 c2) -> a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar).
+  (forall c1 c2 : Component, aSG (A_ends c1 c2) -> vSG c1 /\ vSG c2).
 
+Definition max_aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+  (forall c : Component, vSG c <-> v c /\ isa_aVar_Component c aVar) /\
+  (forall c1 c2 : Component, aSG (A_ends c1 c2) <-> vSG c1 /\ vSG c2 /\ a (A_ends c1 c2)).
 
 (* A maximally connected aVar-subgraph has no outward edge, of which the outer vertex also is a aVar-Component. *)
-Definition is_aVar_connected_Component (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  ( exists c : Component, vSG c) /\ (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
+Definition aVar_connected_Component (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+  (vSG <> V_empty) /\ (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
+
+Lemma aVar_connected_Component_is_Connected : forall (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a),
+  aVar_connected_Component v vSG a aSG g aVar sg -> Connected vSG aSG.
+Proof.
+  intros v vSG a aSG g aVar sg H.
+  induction sg ; unfold aVar_connected_Component in * ; destruct H.
+  + intuition.
+  + admit.
+  + apply IHsg.
+    apply g0.
+    split.
+    apply H.
+    apply H0.
+  + admit.
+  + apply IHsg.
+    apply g0.
+    split.
+    apply H.
+    intros.
+    apply (H0 c1 c2).
+    split ; destruct H1.
+    apply In_right.
+    apply H1.
+    apply H2.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    apply IHsg.
+    apply g0.
+    split.
+    apply H.
+    apply H0.
+Qed.
+    
+    
+  
 
 (* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
 Lemma two_max_sgs_are_same: forall (v vSG1 vSG2: V_set) (a aSG1 aSG2: A_set) (g : Graph v a) (aVar : Var) 
                                    (sg1 : SubGraph vSG1 v aSG1 a) (sg2 : SubGraph vSG2 v aSG2 a),
   aVar_SubGraph v vSG1 a aSG1 g aVar sg1 -> aVar_SubGraph v vSG2 a aSG2 g aVar sg2 -> 
-  is_aVar_connected_Component v vSG1 a aSG1 g aVar sg1 -> is_aVar_connected_Component v vSG2 a aSG2 g aVar sg2 -> 
+  aVar_connected_Component v vSG1 a aSG1 g aVar sg1 -> aVar_connected_Component v vSG2 a aSG2 g aVar sg2 -> 
   {c : Component & (vSG1 c /\ vSG2 c)} ->
   (vSG1 = vSG2 /\ aSG1 = aSG2).
 Proof.
   intros v vSG1 vSG2 a aSG1 aSG2 g aVar sg1 sg2 H1 H2 H3 H4 H5.
   unfold aVar_SubGraph in *.
-  unfold is_aVar_connected_Component in *.
+  unfold aVar_connected_Component in *.
   destruct H5.
   destruct a0.
   destruct H1.
@@ -432,7 +470,7 @@ Proof.
 (* Axiom U_set_eq : forall E F : U_set, (forall x : U, E x <-> F x) -> E = F. *)
 Admitted.
 
-Definition SG_list := list (V_set * A_set).
+(* Definition SG_list := list (V_set * A_set).
 
 (* We only use finite subgraphs, therefore this holds. *)
 Axiom SG_eq_dec: forall x y : (V_set * A_set), {x = y} + {x <> y}.
@@ -447,11 +485,40 @@ Definition Graph_in_aVar_max_connected_SubGraphs (v : V_set) (a : A_set) (g : Gr
                                           aVar_SubGraph v vSG a aSG g aVar sg /\ is_max_connected_SubGraph v vSG a aSG g aVar sg)).
 
 Definition Graph_in_SubGraphs (v : V_set) (a : A_set) (g : Graph v a) (aVarSG : list (Var * SG_list)) : Prop :=
-  (forall (aVar : Var) (sgl : SG_list), In (aVar, sgl) aVarSG -> (Graph_in_aVar_max_connected_SubGraphs v a g aVar sgl)).
+  (forall (aVar : Var) (sgl : SG_list), In (aVar, sgl) aVarSG -> (Graph_in_aVar_max_connected_SubGraphs v a g aVar sgl)). *)
 
-Leader von Knoten-Kantenmenge
+Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
+(leader_neighbors : C_list)
+:Prop :=
+aSG (A_ends i (parent i)) /\
+distance i = distance (parent i) + 1 /\
+/\ ((forall (k:Component), In k leader_neighbors-> k = leader i))
+/\ ((forall (c:Component), In c (neighbors g i) -> In (leader c) leader_neighbors)). (*consistency in neighbourhood leader*)
+
+Definition gamma_root (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_neighbors : C_list)
+: Prop :=
+leader i = i /\
+parent i = i /\
+distance i = 0
+/\ ((forall (k:Component), In k leader_neighbors -> k = leader i))
+/\ ((forall (c:Component), In c (neighbors g i)  -> In (leader c) leader_neighbors)). 
+
+
+
+
+
+
+
+
+
+
 
 Theorem 
+
+(* 
+  von Samira
+  exists (l : Component), v l -> forall (x:Component)(prop1: v x), leader x = l.
+*)
 (* 
 
   Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
