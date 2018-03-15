@@ -406,36 +406,31 @@ Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
 
 
 Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  (forall c : Component, (v c /\ isa_aVar_Component c aVar) <- vSG c) /\
-  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar) <- aSG (A_ends c1 c2)).
+  (forall c : Component, vSG c -> v c /\ isa_aVar_Component c aVar) /\
+  (forall c1 c2 : Component, aSG (A_ends c1 c2) -> a (A_ends c1 c2) /\ isa_aVar_Component c1 aVar /\ isa_aVar_Component c2 aVar).
 
-{c : Component, vSG c}
+
 (* A maximally connected aVar-subgraph has no outward edge, of which the outer vertex also is a aVar-Component. *)
-Definition is_max_connected_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
+Definition is_aVar_connected_Component (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+  ( exists c : Component, vSG c) /\ (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
 
 (* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
 Lemma two_max_sgs_are_same: forall (v vSG1 vSG2: V_set) (a aSG1 aSG2: A_set) (g : Graph v a) (aVar : Var) 
                                    (sg1 : SubGraph vSG1 v aSG1 a) (sg2 : SubGraph vSG2 v aSG2 a),
   aVar_SubGraph v vSG1 a aSG1 g aVar sg1 -> aVar_SubGraph v vSG2 a aSG2 g aVar sg2 -> 
-  is_max_connected_SubGraph v vSG1 a aSG1 g aVar sg1 -> is_max_connected_SubGraph v vSG2 a aSG2 g aVar sg2 -> 
+  is_aVar_connected_Component v vSG1 a aSG1 g aVar sg1 -> is_aVar_connected_Component v vSG2 a aSG2 g aVar sg2 -> 
   {c : Component & (vSG1 c /\ vSG2 c)} ->
   (vSG1 = vSG2 /\ aSG1 = aSG2).
 Proof.
   intros v vSG1 vSG2 a aSG1 aSG2 g aVar sg1 sg2 H1 H2 H3 H4 H5.
   unfold aVar_SubGraph in *.
-  unfold is_max_connected_SubGraph in *.
+  unfold is_aVar_connected_Component in *.
   destruct H5.
   destruct a0.
   destruct H1.
   destruct H2.
-  specialize (H1 x).
-  destruct H1.
-  apply H7 in H.
-  destruct H.
-  
-
-Axiom U_set_eq : forall E F : U_set, (forall x : U, E x <-> F x) -> E = F.
+(* Axiom U_set_eq : forall E F : U_set, (forall x : U, E x <-> F x) -> E = F. *)
+Admitted.
 
 Definition SG_list := list (V_set * A_set).
 
