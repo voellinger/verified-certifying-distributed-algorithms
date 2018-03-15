@@ -206,6 +206,28 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
           else ([], state, [])
     end.
 
+Definition isa_aVar_Component (aVar : Var) (c: Component) : Prop :=
+  varList_has_var (init_var_l (component_name c)) aVar.
+
+Inductive aVar_Conn_Comp : Var -> V_set -> A_set -> Set :=
+  | CC_isolated : forall (aVar : Var) (x : Vertex), isa_aVar_Component aVar x -> v x -> aVar_Conn_Comp aVar (V_single x) A_empty
+  | CC_leaf: forall (aVar : Var) (vSG : V_set) (aSG : A_set) x y,
+      vSG x -> ~ vSG y -> v y -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar (V_union (V_single y) v) (A_union (E_set x y) a)
+  | CC_edge : forall (aVar : Var)  (vSG : V_set) (aSG : A_set) v1 v2,
+      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> aVar_Conn_Comp aVar vSG aSG -> vSG v1 -> vSG v2 -> v1 <> v2 -> 
+      aVar_Conn_Comp aVar vSG (A_union (E_set v1 v2) aSG)
+  | CC_eq: forall aVar vSG vSG' aSG aSG',
+    vSG = vSG' -> aSG = aSG' -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar vSG' aSG'.
+
+Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC): Prop :=
+  (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2) /\
+  (forall c1 c2 : Component, vCC c1 /\ vCC c2 /\ a (A_ends c1 c2) -> aCC (A_ends c1 c2)).
+
+Lemma aVar_Connected_Component_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
+  aVar_Connected_Component aVar vCC aCC cc -> Connected vCC aCC.
+Proof.
+  intros aVar vCC aCC cc H.
+  
 
 Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
   | SG_empty : forall v a (g: Graph v a), SubGraph V_empty v A_empty a
@@ -405,25 +427,33 @@ Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
 
-Definition aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+Definition aVar_SubGraph (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
   (forall c : Component, vSG c -> v c /\ isa_aVar_Component c aVar) /\
   (forall c1 c2 : Component, aSG (A_ends c1 c2) -> vSG c1 /\ vSG c2).
 
-Definition max_aVar_SubGraph (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+Definition max_aVar_SubGraph (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
   (forall c : Component, vSG c <-> v c /\ isa_aVar_Component c aVar) /\
   (forall c1 c2 : Component, aSG (A_ends c1 c2) <-> vSG c1 /\ vSG c2 /\ a (A_ends c1 c2)).
 
 (* A maximally connected aVar-subgraph has no outward edge, of which the outer vertex also is a aVar-Component. *)
-Definition aVar_connected_Component (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
+Definition aVar_connected_Component (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
   (vSG <> V_empty) /\ (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
 
-Lemma aVar_connected_Component_is_Connected : forall (v vSG: V_set) (a aSG: A_set) (g : Graph v a) (aVar : Var) (sg : SubGraph vSG v aSG a),
-  aVar_connected_Component v vSG a aSG g aVar sg -> Connected vSG aSG.
+Axiom not_empty_exists_one : forall (T : Set) (s : U_set T),
+  s <> Empty T -> {t : T & s t}.
+
+Lemma aVar_connected_Component_is_Connected : forall (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a),
+  aVar_connected_Component vSG aSG aVar sg -> Connected vSG aSG.
 Proof.
   intros v vSG a aSG g aVar sg H.
   induction sg ; unfold aVar_connected_Component in * ; destruct H.
   + intuition.
-  + admit.
+  + apply (IHsg in g0.
+    admit.
+    (* apply (C_leaf vSG aSG g0 x). *)
+    split.
+    apply Connected_not_empty in g0.
+    
   + apply IHsg.
     apply g0.
     split.
@@ -448,12 +478,10 @@ Proof.
     apply H.
     apply H0.
 Qed.
-    
-    
   
 
 (* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
-Lemma two_max_sgs_are_same: forall (v vSG1 vSG2: V_set) (a aSG1 aSG2: A_set) (g : Graph v a) (aVar : Var) 
+Lemma two_max_sgs_are_same: forall (vSG1 vSG2: V_set) (a aSG1 aSG2: A_set) (g : Graph v a) (aVar : Var) 
                                    (sg1 : SubGraph vSG1 v aSG1 a) (sg2 : SubGraph vSG2 v aSG2 a),
   aVar_SubGraph v vSG1 a aSG1 g aVar sg1 -> aVar_SubGraph v vSG2 a aSG2 g aVar sg2 -> 
   aVar_connected_Component v vSG1 a aSG1 g aVar sg1 -> aVar_connected_Component v vSG2 a aSG2 g aVar sg2 -> 
