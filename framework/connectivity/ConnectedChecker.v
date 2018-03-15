@@ -212,7 +212,7 @@ Definition isa_aVar_Component (aVar : Var) (c: Component) : Prop :=
 Inductive aVar_Conn_Comp : Var -> V_set -> A_set -> Set :=
   | CC_isolated : forall (aVar : Var) (x : Vertex), isa_aVar_Component aVar x -> v x -> aVar_Conn_Comp aVar (V_single x) A_empty
   | CC_leaf: forall (aVar : Var) (vSG : V_set) (aSG : A_set) x y,
-      vSG x -> ~ vSG y -> v y -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar (V_union (V_single y) v) (A_union (E_set x y) a)
+      vSG x -> ~ vSG y -> v y -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar (V_union (V_single y) vSG) (A_union (E_set x y) aSG)
   | CC_edge : forall (aVar : Var)  (vSG : V_set) (aSG : A_set) v1 v2,
       ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> aVar_Conn_Comp aVar vSG aSG -> vSG v1 -> vSG v2 -> v1 <> v2 -> 
       aVar_Conn_Comp aVar vSG (A_union (E_set v1 v2) aSG)
@@ -227,7 +227,33 @@ Lemma aVar_Connected_Component_is_Connected : forall (aVar : Var) (vCC: V_set) (
   aVar_Connected_Component aVar vCC aCC cc -> Connected vCC aCC.
 Proof.
   intros aVar vCC aCC cc H.
-  
+  induction cc.
+  + apply C_isolated.
+  + apply C_leaf.
+    apply IHcc.
+    admit.
+    auto.
+    auto.
+  + apply C_edge.
+    apply IHcc.
+    admit.
+    apply v0.
+    apply v3.
+    apply n1.
+    apply n.
+    apply n0.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    apply IHcc.
+    unfold aVar_Connected_Component in H.
+    destruct H.
+    unfold aVar_Connected_Component.
+    split ; intros.
+    apply (H c1 c2).
+    apply H1.
+    apply (H0 c1 c2 H1).
+Qed.
+    
 
 Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
   | SG_empty : forall v a (g: Graph v a), SubGraph V_empty v A_empty a
