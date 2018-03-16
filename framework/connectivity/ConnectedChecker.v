@@ -210,7 +210,7 @@ Definition isa_aVar_Component (aVar : Var) (c: Component) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
 Inductive aVar_Conn_Comp : Var -> V_set -> A_set -> Set :=
-  | CC_isolated : forall (aVar : Var) (x : Vertex), isa_aVar_Component aVar x -> v x -> aVar_Conn_Comp aVar (V_single x) A_empty
+  | CC_isolated : forall (aVar : Var) (x : Component), isa_aVar_Component aVar x -> v x -> aVar_Conn_Comp aVar (V_single x) A_empty
   | CC_leaf: forall (aVar : Var) (vCC : V_set) (aCC : A_set) x y,
       vCC x -> ~ vCC y -> v y -> a (A_ends x y) -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vCC aCC -> aVar_Conn_Comp aVar (V_union (V_single y) vCC) (A_union (E_set x y) aCC)
   | CC_edge : forall (aVar : Var)  (vCC : V_set) (aCC : A_set) v1 v2,
@@ -274,13 +274,29 @@ Proof.
     apply (IHcc vCCx).
 Qed.
 
+alle Komponenten eines CC haben einen aVar-Walk zueinander
+alle Komponenten mit einem aVar-Walk zu einer Komponente eines CCs sind Teil des CCs
+wenn sich zwei CCs in x \u00fcberschneiden, so sind \u00fcber x aVar-Walks m\u00f6glich und daher CC1 = CC2
+
 Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
   aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
-    ((forall x : Vertex, v1 x -> v2 x) /\ forall x : Arc, a1 x -> a2 x).
+    ((forall x : Component, v1 x -> v2 x) /\ forall x : Arc, a1 x -> a2 x).
 Proof.
   intros v1 v2 a1 a2 aVar c1 c2 acc1 acc2 same.
   destruct same.
   destruct a0.
+  induction c2.
+  inversion H0.
+  rewrite <- H1 in *.
+  clear H0 ; clear H1 ; clear x.
+  + admit.
+  + 
+    
+    
+    
+    
+
+
   induction c1.
   inversion H.
   rewrite <- H in *.
@@ -292,7 +308,16 @@ Proof.
     apply H0.
     intros.
     inversion H.
-  +   
+  + inversion H ; split ; intros.
+    inversion H1.
+    rewrite <- H2 in *.
+    inversion H3.
+    inversion H5.
+    rewrite <- H7 in *.
+    rewrite H4.
+    apply H0.
+    clear H6 ; clear x3.
+    clear IHc1.
        
     
 
