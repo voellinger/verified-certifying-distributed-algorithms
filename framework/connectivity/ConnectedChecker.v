@@ -257,6 +257,46 @@ Qed.
 Definition disjoint_CC (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2) : Prop := 
   V_inter v1 v2 = V_empty. *)
 
+Lemma only_aVars_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVar_Conn_Comp aVar vCC aCC) (x : Component),
+  vCC x -> isa_aVar_Component aVar x.
+Proof.
+  intros vCC aCC aVar cc x vCCx.
+  induction cc.
+  + inversion vCCx.
+    rewrite H in *.
+    apply i.
+  + inversion vCCx.
+    inversion H.
+    rewrite <- H1 ; auto.
+    apply (IHcc H).
+  + apply (IHcc vCCx).
+  + rewrite <- e in vCCx.
+    apply (IHcc vCCx).
+Qed.
+
+Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+    ((forall x : Vertex, v1 x -> v2 x) /\ forall x : Arc, a1 x -> a2 x).
+Proof.
+  intros v1 v2 a1 a2 aVar c1 c2 acc1 acc2 same.
+  destruct same.
+  destruct a0.
+  induction c1.
+  inversion H.
+  rewrite <- H in *.
+  clear H1 ; clear H ; clear x.
+  + split.
+    intros.
+    inversion H.
+    rewrite H1 in *.
+    apply H0.
+    intros.
+    inversion H.
+  +   
+       
+    
+
+
 
 Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
   aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
@@ -265,17 +305,72 @@ Proof.
   intros v1 v2 a1 a2 aVar c1. (* intros c1 c2 H1 H2 H3. *)
   induction c1.
   intros c2 H1 H2 H3.
-  + induction c2 ; destruct H3.
+  + destruct H3.
+    destruct a0.
+    inversion H.
+    rewrite <- H3 in *.
+    clear H ; clear H3 ; clear x0.
+    induction c2.
+    - inversion H0.
+      auto.
+    - clear IHc2.
+      destruct H1.
+      destruct H2.
+      inversion H0.
+      inversion H4.
+      clear H5 ; clear x1 ; clear H4.
+      rewrite H6 in *.
+      clear H0.
+      specialize (H x x0).
+      assert (V_single x x0).
+      apply H.
+      split.
+      apply In_single.
+      split.
+      admit. (* G_non_directed *)
+      apply (only_aVars_inCC vCC aCC aVar c2 x0).
+      apply v1.
+      inversion H0.
+      rewrite <- H4 in *.
+      apply n in v1.
+      intuition.
+      clear H5 ; clear x1.
+      
+    
+
+    induction c2 ; destruct H3.
     - destruct a0.
       inversion H.
       inversion H0.
       auto.
-    - unfold aVar_Connected_Component in *.
+    - specialize (IHc2 i).
+      assert (H1' := H1).
+      apply IHc2 in H1.
       destruct H1.
-      destruct H2.
+      rewrite <- H0 in *.
+      assert (v7 := v1).
+      rewrite <- H in v7.
+      inversion v7.
+      rewrite <- H1 in *.
+      unfold aVar_Connected_Component in H1'.
+      destruct H1'.
+      specialize (H3 x y).
+      assert (V_single x y).
+      apply H3.
+      split ; auto.
+      rewrite H1.
+      auto.
+      inversion H5.
+      assert (H7:=v1).
+      rewrite <- H1 in H7.
+      rewrite H6 in H7.
+      apply n in H7.
       
-      specialize (H x0 y).
-      specialize (H0 x0 y).
+      intuition.
+      
+
+      
+      
       
   
 
