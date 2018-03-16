@@ -211,36 +211,26 @@ Definition isa_aVar_Component (aVar : Var) (c: Component) : Prop :=
 
 Inductive aVar_Conn_Comp : Var -> V_set -> A_set -> Set :=
   | CC_isolated : forall (aVar : Var) (x : Vertex), isa_aVar_Component aVar x -> v x -> aVar_Conn_Comp aVar (V_single x) A_empty
-  | CC_leaf: forall (aVar : Var) (vSG : V_set) (aSG : A_set) x y,
-      vSG x -> ~ vSG y -> v y -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar (V_union (V_single y) vSG) (A_union (E_set x y) aSG)
-  | CC_edge : forall (aVar : Var)  (vSG : V_set) (aSG : A_set) v1 v2,
-      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> aVar_Conn_Comp aVar vSG aSG -> vSG v1 -> vSG v2 -> v1 <> v2 -> 
-      aVar_Conn_Comp aVar vSG (A_union (E_set v1 v2) aSG)
-  | CC_eq: forall aVar vSG vSG' aSG aSG',
-    vSG = vSG' -> aSG = aSG' -> aVar_Conn_Comp aVar vSG aSG -> aVar_Conn_Comp aVar vSG' aSG'.
+  | CC_leaf: forall (aVar : Var) (vCC : V_set) (aCC : A_set) x y,
+      vCC x -> ~ vCC y -> v y -> a (A_ends x y) -> isa_aVar_Component aVar y -> aVar_Conn_Comp aVar vCC aCC -> aVar_Conn_Comp aVar (V_union (V_single y) vCC) (A_union (E_set x y) aCC)
+  | CC_edge : forall (aVar : Var)  (vCC : V_set) (aCC : A_set) v1 v2,
+      ~ aCC (A_ends v1 v2) -> ~aCC (A_ends v2 v1) -> a (A_ends v1 v2) -> aVar_Conn_Comp aVar vCC aCC -> vCC v1 -> vCC v2 -> v1 <> v2 -> 
+      aVar_Conn_Comp aVar vCC (A_union (E_set v1 v2) aCC)
+  | CC_eq: forall aVar vCC vCC' aCC aCC',
+    vCC = vCC' -> aCC = aCC' -> aVar_Conn_Comp aVar vCC aCC -> aVar_Conn_Comp aVar vCC' aCC'.
 
-Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC): Prop :=
-  (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2) /\
-  (forall c1 c2 : Component, vCC c1 /\ vCC c2 /\ a (A_ends c1 c2) -> aCC (A_ends c1 c2)).
-
-Lemma aVar_Connected_Component_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
-  aVar_Connected_Component aVar vCC aCC cc -> Connected vCC aCC.
+Lemma aVar_Conn_Comp_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set),
+  aVar_Conn_Comp aVar vCC aCC -> Connected vCC aCC.
 Proof.
-  intros aVar vCC aCC cc H.
+  intros aVar vCC aCC cc.
   induction cc.
   + apply C_isolated.
   + apply C_leaf.
     apply IHcc.
-    unfold aVar_Connected_Component in *.
-    split ; intros.
-    destruct H.
-    
-    admit.
-    auto.
-    auto.
+    apply v0.
+    apply n.
   + apply C_edge.
     apply IHcc.
-    admit.
     apply v0.
     apply v3.
     apply n1.
@@ -249,265 +239,44 @@ Proof.
   + rewrite <- e in *.
     rewrite <- e0 in *.
     apply IHcc.
-    unfold aVar_Connected_Component in H.
-    destruct H.
-    unfold aVar_Connected_Component.
-    split ; intros.
-    apply (H c1 c2).
-    apply H1.
-    apply (H0 c1 c2 H1).
 Qed.
-    
 
-Inductive SubGraph : V_set -> V_set -> A_set -> A_set -> Set :=
-  | SG_empty : forall v a (g: Graph v a), SubGraph V_empty v A_empty a
-  | SG_vertex: forall (vSG v : V_set) (aSG a : A_set) x (g: Graph v a),
-      ~ vSG x -> v x -> SubGraph vSG v aSG a -> SubGraph (V_union (V_single x) vSG) v aSG a
-  | SG_vertexp: forall (vSG v : V_set) (aSG a : A_set) x (g: Graph v a),
-      Graph (V_union (V_single x) v) a -> SubGraph vSG v aSG a -> SubGraph vSG (V_union (V_single x) v) aSG a
-  | SG_edge : forall (vSG v : V_set) (aSG a : A_set) v1 v2 (g: Graph v a),
-      ~ aSG (A_ends v1 v2) -> ~aSG (A_ends v2 v1) -> a (A_ends v1 v2) -> SubGraph vSG v aSG a -> vSG v1 -> vSG v2 -> v1 <> v2 -> 
-      SubGraph vSG v (A_union (E_set v1 v2) aSG) a
-  | SG_edgep : forall (vSG v : V_set) (aSG a : A_set) (x : Arc) v1 v2 (g: Graph v a),
-    Graph v (A_union (E_set v1 v2) a) -> SubGraph vSG v aSG a -> SubGraph vSG v aSG (A_union (E_set v1 v2) a)
-  | SG_eq: forall vSG vSG' v aSG aSG' a (g: Graph v a),
-    vSG = vSG' -> aSG = aSG' -> SubGraph vSG v aSG a -> SubGraph vSG' v aSG' a.
-(* TODO: vllt muss auch noch rein: SG_eqp *)
+Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC): Prop :=
+  (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2) /\
+  (forall c1 c2 : Component, vCC c1 /\ vCC c2 /\ a (A_ends c1 c2) -> aCC (A_ends c1 c2)).
 
-Lemma Graph_is_a_SubGraph: forall v a (g: Graph v a), SubGraph v v a a.
+(* Lemma aVar_Connected_Component_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
+  aVar_Connected_Component aVar vCC aCC cc -> Connected vCC aCC.
 Proof.
-  intros v a g.
-  induction g.
-    apply SG_empty. apply G_empty.
-
-    apply (SG_vertex v0 (V_union (V_single x) v0) a0 a0).
-    apply G_vertex.
-    apply g0. apply n. apply n. apply In_left. apply In_single.
-    apply (SG_vertexp).
-    apply g0. apply G_vertex. apply g0. apply n.
-    apply IHg.
-
-    apply (SG_edge v0 v0 a0 (A_union (E_set x y) a0) x y).
-    apply (G_edge). apply g0. apply v1. apply v2. apply n. apply n0. apply n1. apply n0. apply n1.
-    apply In_left. apply E_right.
-    apply (SG_edgep v0 v0 a0 a0 (A_ends x y)).
-    apply g0. apply G_edge. apply g0. apply v1. apply v2. apply n. apply n0. apply n1.
-    apply IHg. apply v1. apply v2. apply n.
-
-    rewrite <- e. rewrite <- e0. apply IHg.
+  intros aVar vCC aCC cc H.
+  clear H.
+  apply aVar_Conn_Comp_is_Connected in cc.
+  apply cc.
 Qed.
 
-Lemma EmptyGraph_isa_SubGraph: forall v a (g: Graph v a), SubGraph V_empty v A_empty a.
+Definition disjoint_CC (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2) : Prop := 
+  V_inter v1 v2 = V_empty. *)
+
+
+Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+    (v1 = v2 /\ a1 = a2).
 Proof.
-  intros v a g.
-  apply SG_empty. apply g.
-Qed.
-
-Lemma SubGraph_isa_Graph : forall vSG v aSG a (g: Graph v a), SubGraph vSG v aSG a -> Graph vSG aSG.
-Proof.
-  intros vSG v aSG a g H.
-  induction H.
-
-    apply G_empty.
-
-    apply G_vertex.
-    apply (IHSubGraph g). apply n.
-
-    apply (IHSubGraph g0).
-
-    apply G_edge.
-    apply (IHSubGraph g).
-    apply v3. apply v4. apply n1. apply n. apply n0.
-
-    apply (IHSubGraph g0).
-
-    rewrite <- e. rewrite <- e0. apply (IHSubGraph g0).
-Qed.
-
-Lemma empty_sub_set: forall T vSG, Included T vSG (Empty T) -> vSG = Empty T.
-Proof.
-  intros.
-  apply U_set_eq.
-  intros.
-  split.
-  intros.
-  apply (H x H0).
-  intros.
-  inversion H0.
-Qed.
-
-Lemma SubGraph_vertices_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
-  SubGraph vSG v aSG a -> V_included vSG v.
-Proof.
-  intros vSG v aSG a g SG.
-  induction SG ; unfold V_included ; unfold Included ; intros.
-    inversion H.
-
-    inversion H. inversion H0. rewrite H2 in *. apply v1.
-    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
-    apply g0 in H0. apply H0.
-
-    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
-    apply g0 in H. apply In_right. apply H.
-
-    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
-    apply g0 in H. apply H.
-
-    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
-    apply g0 in H. apply H.
-
-    apply IHSG in g0. unfold V_included in g0. unfold Included in g0.
-    rewrite <- e in *. rewrite e0 in *. apply g0 in H. apply H.
-Qed.
-
-Lemma SubGraph_arcs_included : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
-  SubGraph vSG v aSG a -> A_included aSG a.
-Proof.
-  intros vSG v aSG a g SG.
-  induction SG ; unfold A_included ; unfold Included ; intros.
-    inversion H.
-
-    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
-    apply g0 in H. apply H.
-
-    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
-    apply g0 in H. apply H.
-
-
-    inversion H. inversion H0. rewrite H2 in *. apply a1.
-    apply (G_non_directed v0 a0 g v1 v2 a1).
-    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
-    apply (g0 x H0).
-
-    unfold A_union. apply In_right. apply IHSG in g0.
-    unfold A_included in g0. unfold Included in g0.
-    apply (g0 x0 H).
-
-    apply IHSG in g0. unfold A_included in g0. unfold Included in g0.
-    rewrite <- e0 in *. apply (g0 x H).
-Qed.
-
-Lemma SubGraph_arcs_correct : forall (vSG v : V_set) (aSG a : A_set) (g : Graph v a),
-  SubGraph vSG v aSG a -> (forall (v1 v2 : Component), let ar := (A_ends v1 v2) in
-                                 (aSG ar) -> (vSG v1 /\ vSG v2)).
-Proof.
-  intros vSG v0 aSG a0 g SG.
-  induction SG ; unfold V_included ; unfold A_included ; unfold Included ; split ; intros.
-    inversion H.
-
-    inversion H.
-
-    unfold V_union. apply In_right.
-    apply IHSG with (v1 := v2) (v2 := v3) in g0.
-    destruct g0. apply H0. apply H.
-
-    unfold V_union. apply In_right.
-    apply IHSG with (v1 := v2) (v2 := v3) in g0.
-    destruct g0. apply H1. apply H.
-
-    apply IHSG with (v1 := v1) (v2 := v2) in g0.
-    destruct g0. apply H0. apply H.
-
-    apply IHSG with (v1 := v1) (v2 := v2) in g0.
-    destruct g0. apply H1. apply H.
-
-    inversion H. inversion H0 ; rewrite H3 in * ; rewrite H4 in *.
-    apply v3. apply v4.
-    apply IHSG with (v1 := v5) (v2 := v6) in g0.
-    destruct g0. apply H2. apply H0.
-
-    inversion H. inversion H0 ; rewrite H3 in * ; rewrite H4 in *.
-    apply v4. apply v3.
-    apply IHSG with (v1 := v5) (v2 := v6) in g0.
-    destruct g0. apply H3. apply H0.
-
-    apply IHSG with (v1 := v3) (v2 := v4) in g0. destruct g0.
-    apply H0. apply H.
-
-    apply IHSG with (v1 := v3) (v2 := v4) in g0. destruct g0.
-    apply H1. apply H.
-
-    rewrite <- e in *. rewrite <- e0 in *.
-    apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
-    apply H0. apply H.
-
-    rewrite <- e in *. rewrite <- e0 in *.
-    apply IHSG with (v1 := v1) (v2 := v2) in g0. destruct g0.
-    apply H1. apply H.
-Qed.
-
-Definition disjoint_G (v0 v1 : V_set) (a0 a1 : A_set) (g0 : Graph v0 a0) (g1: Graph v1 a1) := 
-  V_inter v0 v1 = V_empty.
-
-Definition disjoint_SG (v0 v1 v2: V_set) (a0 a1 a2: A_set) (g0 : SubGraph v1 v0 a1 a0) (g1: SubGraph v2 v0 a2 a0) : Prop := 
-  V_inter v1 v2 = V_empty.
-
-Fixpoint SG_list_union (vSG : V_set) (aSG : A_set) (v_a_l : list (V_set * A_set)) : (V_set * A_set) :=
-  match v_a_l with
-  | nil => (vSG, aSG)
-  | (v0, a0) :: tl => SG_list_union (V_union vSG v0) (A_union aSG a0) tl
-  end.
-
-Definition SGs_cover_Graph (v : V_set) (a : A_set) (g : Graph v a) (v_a_l : list (V_set * A_set)) : Prop :=
-  let (vSG_union, aSG_union) := (SG_list_union V_empty A_empty v_a_l) in
-    V_included v vSG_union /\ A_included a aSG_union.
-
-
-Definition isa_aVar_Component (c: Component) (aVar : Var) : Prop :=
-  varList_has_var (init_var_l (component_name c)) aVar.
-
-
-Definition aVar_SubGraph (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  (forall c : Component, vSG c -> v c /\ isa_aVar_Component c aVar) /\
-  (forall c1 c2 : Component, aSG (A_ends c1 c2) -> vSG c1 /\ vSG c2).
-
-Definition max_aVar_SubGraph (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  (forall c : Component, vSG c <-> v c /\ isa_aVar_Component c aVar) /\
-  (forall c1 c2 : Component, aSG (A_ends c1 c2) <-> vSG c1 /\ vSG c2 /\ a (A_ends c1 c2)).
-
-(* A maximally connected aVar-subgraph has no outward edge, of which the outer vertex also is a aVar-Component. *)
-Definition aVar_connected_Component (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a) : Prop :=
-  (vSG <> V_empty) /\ (forall c1 c2 : Component, (a (A_ends c1 c2) /\ vSG c1 /\ isa_aVar_Component c2 aVar) -> vSG c2).
-
-Axiom not_empty_exists_one : forall (T : Set) (s : U_set T),
-  s <> Empty T -> {t : T & s t}.
-
-Lemma aVar_connected_Component_is_Connected : forall (vSG: V_set) (aSG: A_set) (aVar : Var) (sg : SubGraph vSG v aSG a),
-  aVar_connected_Component vSG aSG aVar sg -> Connected vSG aSG.
-Proof.
-  intros v vSG a aSG g aVar sg H.
-  induction sg ; unfold aVar_connected_Component in * ; destruct H.
-  + intuition.
-  + apply (IHsg in g0.
-    admit.
-    (* apply (C_leaf vSG aSG g0 x). *)
-    split.
-    apply Connected_not_empty in g0.
-    
-  + apply IHsg.
-    apply g0.
-    split.
-    apply H.
-    apply H0.
-  + admit.
-  + apply IHsg.
-    apply g0.
-    split.
-    apply H.
-    intros.
-    apply (H0 c1 c2).
-    split ; destruct H1.
-    apply In_right.
-    apply H1.
-    apply H2.
-  + rewrite <- e in *.
-    rewrite <- e0 in *.
-    apply IHsg.
-    apply g0.
-    split.
-    apply H.
-    apply H0.
-Qed.
+  intros v1 v2 a1 a2 aVar c1. (* intros c1 c2 H1 H2 H3. *)
+  induction c1.
+  intros c2 H1 H2 H3.
+  + induction c2 ; destruct H3.
+    - destruct a0.
+      inversion H.
+      inversion H0.
+      auto.
+    - unfold aVar_Connected_Component in *.
+      destruct H1.
+      destruct H2.
+      
+      specialize (H x0 y).
+      specialize (H0 x0 y).
+      
   
 
 (* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
