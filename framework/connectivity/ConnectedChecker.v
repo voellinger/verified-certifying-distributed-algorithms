@@ -231,6 +231,10 @@ Proof.
   + apply C_isolated.
   + apply C_leaf.
     apply IHcc.
+    unfold aVar_Connected_Component in *.
+    split ; intros.
+    destruct H.
+    
     admit.
     auto.
     auto.
