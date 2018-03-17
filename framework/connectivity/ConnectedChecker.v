@@ -572,6 +572,13 @@ Proof.
     apply H0.
 Qed.
 
+Definition aVar_leader (aVar : Var) (state : Data) : Component :=
+  index (get_leader_index aVar (leaders state)).
+
+Definition is_aVar_leader_of_CC (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+    (acc: aVar_Connected_Component aVar vCC aCC cc) (c : Component) (state : Data) : Prop :=
+  vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar state = c).
+
 
 
 
