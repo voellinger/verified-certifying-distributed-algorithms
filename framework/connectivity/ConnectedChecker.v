@@ -245,15 +245,7 @@ Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set) (cc
   (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2) /\
   (forall c1 c2 : Component, vCC c1 /\ vCC c2 /\ a (A_ends c1 c2) -> aCC (A_ends c1 c2)).
 
-(* Lemma aVar_Connected_Component_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
-  aVar_Connected_Component aVar vCC aCC cc -> Connected vCC aCC.
-Proof.
-  intros aVar vCC aCC cc H.
-  clear H.
-  apply aVar_Conn_Comp_is_Connected in cc.
-  apply cc.
-Qed.
-
+(* 
 Definition disjoint_CC (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2) : Prop := 
   V_inter v1 v2 = V_empty. *)
 
@@ -273,6 +265,95 @@ Proof.
   + rewrite <- e in vCCx.
     apply (IHcc vCCx).
 Qed.
+
+Lemma only_vs_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVar_Conn_Comp aVar vCC aCC) (x : Component),
+  vCC x -> v x.
+Proof.
+  intros vCC aCC aVar cc x H.
+  induction cc.
+  + inversion H.
+    rewrite <- H0.
+    apply v0.
+  + inversion H.
+    inversion H0.
+    rewrite <- H2.
+    apply v1.
+    apply IHcc.
+    apply H0.
+  + apply (IHcc H).
+  + rewrite <- e in *.
+    apply (IHcc H).
+Qed.
+
+Lemma only_as_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVar_Conn_Comp aVar vCC aCC) (x : Arc),
+  aCC x -> a x.
+Proof.
+  intros vCC aCC aVar cc x H.
+  induction cc.
+  + inversion H.
+  + inversion H.
+    inversion H0.
+    apply a0.
+    assert (Graph v a).
+    apply (Connected_Isa_Graph v a g).
+    apply (G_non_directed v a H3 x0 y a0).
+    apply IHcc.
+    apply H0.
+  + inversion H.
+    inversion H0.
+    apply a0.
+    assert (Graph v a).
+    apply (Connected_Isa_Graph v a g).
+    apply (G_non_directed v a H3 v1 v2 a0).
+    apply IHcc.
+    apply H0.
+  + rewrite <- e0 in *.
+    apply (IHcc H).
+Qed.
+
+Definition aVar_Walk (aVar : Var) (c1 c2 : Component) (vl : V_list) (el : E_list) (w : Walk v a c1 c2 vl el) :=
+  forall (c : Component), In c (c1 :: vl) -> isa_aVar_Component aVar c.
+
+Definition aVar_Path (aVar : Var) (c1 c2 : Component) (vl : V_list) (el : E_list) (p : Path v a c1 c2 vl el) :=
+  forall (c : Component), In c (c1 :: vl) -> isa_aVar_Component aVar c.
+
+Lemma CCs_are_aVar_Paths: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
+ (forall (v1 v2 : Component), vCC v1 -> vCC v2 -> {vl : V_list & {el : E_list & {p : Path v a v1 v2 vl el & aVar_Path aVar v1 v2 vl el p}}}).
+Proof.
+  intros aVar vCC aCC cc v1 v2 vCCv1 vCCv2.
+  apply aVar_Conn_Comp_is_Connected in cc.
+  apply (Connected_path) with (x := v1) (y := v2) in cc.
+  destruct cc.
+  destruct s.
+  exists x.
+  exists x0.
+  exists p.
+
+
+Lemma Connected_path :
+ forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+ v x -> v y -> {vl : V_list &  {el : E_list &  Path v a x y vl el}}.
+
+  induction cc.
+  + inversion vCCv1.
+    inversion vCCv2.
+    rewrite <- H0. rewrite <- H.
+    exists nil. exists nil.
+    assert (Walk v a x x [] []).
+    apply W_null.
+    apply v0.
+    exists H1.
+    unfold aVar_Walk.
+    intros.
+    inversion H2.
+    rewrite <- H3.
+    apply i.
+    inversion H3.
+  + assert ({vCC v1} + {~vCC v1}).
+    apply classic.  
+    destruct H.
+    
+    
 
 alle Komponenten eines CC haben einen aVar-Walk zueinander
 alle Komponenten mit einem aVar-Walk zu einer Komponente eines CCs sind Teil des CCs
