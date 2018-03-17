@@ -515,7 +515,7 @@ Lemma two_CCs_same_a: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aV
   aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (forall x : Arc, a1 x -> a2 x).
 Proof.
-  intros aVar v1 v2 a1 a2  c1 c2 acc1 acc2 same.
+  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
   assert (same' := same).
   destruct same.
   destruct a0. intros.
@@ -531,28 +531,49 @@ Proof.
   apply (CC_a_means_a aVar v1 a1 c1 (A_ends v0 v3)) in H1'.
   apply H1'.
 Qed.
-  
+
+Lemma two_CCs_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+    (v1 = v2 /\ a1 = a2).
+Proof.
+  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
+  split.
+  + assert (forall x : Component, v1 x -> v2 x).
+    intros.
+    apply (two_CCs_same_v aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same x) in H.
+    apply H.
+    assert ({c : Component & v2 c /\ v1 c}).
+    destruct same.
+    destruct a0.
+    exists x. auto.
+    assert (forall x : Component, v2 x -> v1 x).
+    intros.
+    apply (two_CCs_same_v aVar v2 v1 a2 a1 c2 c1 acc2 acc1 H0 x) in H1.
+    apply H1.
+    apply U_set_eq.
+    split.
+    apply H.
+    apply H1.
+  + assert (forall x : Arc, a1 x -> a2 x).
+    intros.
+    apply (two_CCs_same_a aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same x) in H.
+    apply H.
+    assert (forall x : Arc, a2 x -> a1 x).
+    intros.
+    assert ({c : Component & v2 c /\ v1 c}).
+    destruct same.
+    destruct a0.
+    exists x0. auto.
+    apply (two_CCs_same_a aVar v2 v1 a2 a1 c2 c1 acc2 acc1 H1 x) in H0.
+    apply H0.
+    apply U_set_eq.
+    split.
+    apply H.
+    apply H0.
+Qed.
 
 
-(* Axiom U_set_eq : forall E F : U_set, (forall x : U, E x <-> F x) -> E = F. *)
-Admitted.
 
-(* Definition SG_list := list (V_set * A_set).
-
-(* We only use finite subgraphs, therefore this holds. *)
-Axiom SG_eq_dec: forall x y : (V_set * A_set), {x = y} + {x <> y}.
-
-
-(* A Graph is cut into a list of subgraphs, for some aVar. All vertices that are aVar-Components must be represented in some subgraph.
-   The list must be unique. For alle subgraphs it must be an aVar-subgraph and maximal. *)
-Definition Graph_in_aVar_max_connected_SubGraphs (v : V_set) (a : A_set) (g : Graph v a) (aVar : Var) (sgs : SG_list) : Prop :=
-  (forall (comp : Component), (v comp /\ isa_aVar_Component comp aVar) -> (exists vSG aSG, In (vSG, aSG) sgs /\ vSG comp)) /\
-  nodup SG_eq_dec sgs = sgs /\
-  (forall vSG aSG, In (vSG, aSG) sgs -> (exists (sg : SubGraph vSG v aSG a), 
-                                          aVar_SubGraph v vSG a aSG g aVar sg /\ is_max_connected_SubGraph v vSG a aSG g aVar sg)).
-
-Definition Graph_in_SubGraphs (v : V_set) (a : A_set) (g : Graph v a) (aVarSG : list (Var * SG_list)) : Prop :=
-  (forall (aVar : Var) (sgl : SG_list), In (aVar, sgl) aVarSG -> (Graph_in_aVar_max_connected_SubGraphs v a g aVar sgl)). *)
 
 Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
 (leader_neighbors : C_list)
