@@ -395,149 +395,93 @@ Proof.
   apply vCCv1.
   apply vCCv2.
 Qed.
-    
-    
 
-alle Komponenten eines CC haben einen aVar-Walk zueinander
-alle Komponenten mit einem aVar-Walk zu einer Komponente eines CCs sind Teil des CCs
-wenn sich zwei CCs in x \u00fcberschneiden, so sind \u00fcber x aVar-Walks m\u00f6glich und daher CC1 = CC2
-
-Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
-  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
-    ((forall x : Component, v1 x -> v2 x) /\ forall x : Arc, a1 x -> a2 x).
+Lemma aVar_Walk_in_CC: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+                       (v1 v2: Component) (vl : V_list) (el : E_list) (w : Walk v a v1 v2 vl el),
+  aVar_Connected_Component aVar vCC aCC cc -> vCC v1 -> aVar_Walk aVar v1 v2 vl el w -> vCC v2.
 Proof.
-  intros v1 v2 a1 a2 aVar c1 c2 acc1 acc2 same.
-  destruct same.
-  destruct a0.
-  induction c2.
-  inversion H0.
-  rewrite <- H1 in *.
-  clear H0 ; clear H1 ; clear x.
-  + admit.
-  + 
-    
-    
-    
-    
-
-
-  induction c1.
-  inversion H.
-  rewrite <- H in *.
-  clear H1 ; clear H ; clear x.
-  + split.
+  intros aVar vCC aCC cc v1 v2 vl el w CC vCCv1 aWalk.
+  induction w ; unfold aVar_Connected_Component in CC ; destruct CC.
+  + apply vCCv1.
+  + apply IHw.
+    unfold aVar_Walk in aWalk.
+    specialize (aWalk y).
+    simpl in aWalk.
+    intuition.
+    apply (H x y).
+    auto.
+    unfold aVar_Walk in *.
     intros.
-    inversion H.
-    rewrite H1 in *.
-    apply H0.
-    intros.
-    inversion H.
-  + inversion H ; split ; intros.
+    apply aWalk.
     inversion H1.
-    rewrite <- H2 in *.
-    inversion H3.
-    inversion H5.
-    rewrite <- H7 in *.
-    rewrite H4.
-    apply H0.
-    clear H6 ; clear x3.
-    clear IHc1.
-       
-    
+    simpl.
+    right. left. auto.
+    simpl. right. right. auto.
+Qed.
 
-
-
-Lemma two_CCs_are_same: forall (v1 v2: V_set) (a1 a2: A_set) (aVar : Var) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+(* wenn sich zwei CCs in c \u00fcberschneiden, so sind \u00fcber c aVar-Walks m\u00f6glich und daher CC1 = CC2 *)
+Lemma two_CCs_same_v: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
   aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
-    (v1 = v2 /\ a1 = a2).
+    (forall x : Component, v1 x -> v2 x).
 Proof.
-  intros v1 v2 a1 a2 aVar c1. (* intros c1 c2 H1 H2 H3. *)
-  induction c1.
-  intros c2 H1 H2 H3.
-  + destruct H3.
-    destruct a0.
-    inversion H.
-    rewrite <- H3 in *.
-    clear H ; clear H3 ; clear x0.
-    induction c2.
-    - inversion H0.
-      auto.
-    - clear IHc2.
-      destruct H1.
-      destruct H2.
-      inversion H0.
-      inversion H4.
-      clear H5 ; clear x1 ; clear H4.
-      rewrite H6 in *.
-      clear H0.
-      specialize (H x x0).
-      assert (V_single x x0).
-      apply H.
-      split.
-      apply In_single.
-      split.
-      admit. (* G_non_directed *)
-      apply (only_aVars_inCC vCC aCC aVar c2 x0).
-      apply v1.
-      inversion H0.
-      rewrite <- H4 in *.
-      apply n in v1.
-      intuition.
-      clear H5 ; clear x1.
-      
-    
+  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
+  destruct same.
+  destruct a0. intros.
+  apply (CCs_are_aVar_Walks aVar v1 a1 c1 x x0) in H1.
+  destruct H1.
+  destruct s.
+  destruct s.
+  apply (aVar_Walk_in_CC aVar v2 a2 c2 x x0 x1 x2 x3 acc2 H0 a0).
+  apply H.
+Qed.
 
-    induction c2 ; destruct H3.
-    - destruct a0.
-      inversion H.
-      inversion H0.
-      auto.
-    - specialize (IHc2 i).
-      assert (H1' := H1).
-      apply IHc2 in H1.
-      destruct H1.
-      rewrite <- H0 in *.
-      assert (v7 := v1).
-      rewrite <- H in v7.
-      inversion v7.
-      rewrite <- H1 in *.
-      unfold aVar_Connected_Component in H1'.
-      destruct H1'.
-      specialize (H3 x y).
-      assert (V_single x y).
-      apply H3.
-      split ; auto.
-      rewrite H1.
-      auto.
-      inversion H5.
-      assert (H7:=v1).
-      rewrite <- H1 in H7.
-      rewrite H6 in H7.
-      apply n in H7.
-      
-      intuition.
-      
+Lemma CC_all_connections: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+                       (v1 v2: Component),
+  aVar_Connected_Component aVar vCC aCC cc -> vCC v1 -> vCC v2 -> a (A_ends v1 v2) -> aCC (A_ends v1 v2).
+Proof.
+  intros aVar vCC aCC cc v1 v2 CC vCCv1 vCCv2 aends.
+  unfold aVar_Connected_Component in CC.
+  destruct CC.
+  specialize (H0 v1 v2).
+  apply H0.
+  auto.
+Qed.
 
-      
-      
-      
+Lemma CC_a_means_v: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+                       (v1 v2: Component),
+  aCC (A_ends v1 v2) -> (vCC v1 /\ vCC v2).
+Proof.
+Admitted.
+
+Lemma CC_a_means_a: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+                       (ar: Arc),
+  aCC ar -> a ar.
+Proof.
+Admitted.
+
+Lemma two_CCs_same_a: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+    (forall x : Arc, a1 x -> a2 x).
+Proof.
+  intros aVar v1 v2 a1 a2  c1 c2 acc1 acc2 same.
+  assert (same' := same).
+  destruct same.
+  destruct a0. intros.
+  destruct x0.
+  assert (H1' := H1).
+  apply (CC_a_means_v aVar v1 a1 c1 v0 v3) in H1.
+  destruct H1.
+  apply (two_CCs_same_v aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same') in H1.
+  apply (two_CCs_same_v aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same') in H2.
+  apply (CC_all_connections aVar v2 a2 c2 v0 v3 acc2).
+  apply H1.
+  apply H2.
+  apply (CC_a_means_a aVar v1 a1 c1 (A_ends v0 v3)) in H1'.
+  apply H1'.
+Qed.
   
 
-(* Lemma: if two subgraphs are maximal for some aVar, and share some vertex -> they are the same. *)
-Lemma two_max_sgs_are_same: forall (vSG1 vSG2: V_set) (a aSG1 aSG2: A_set) (g : Graph v a) (aVar : Var) 
-                                   (sg1 : SubGraph vSG1 v aSG1 a) (sg2 : SubGraph vSG2 v aSG2 a),
-  aVar_SubGraph v vSG1 a aSG1 g aVar sg1 -> aVar_SubGraph v vSG2 a aSG2 g aVar sg2 -> 
-  aVar_connected_Component v vSG1 a aSG1 g aVar sg1 -> aVar_connected_Component v vSG2 a aSG2 g aVar sg2 -> 
-  {c : Component & (vSG1 c /\ vSG2 c)} ->
-  (vSG1 = vSG2 /\ aSG1 = aSG2).
-Proof.
-  intros v vSG1 vSG2 a aSG1 aSG2 g aVar sg1 sg2 H1 H2 H3 H4 H5.
-  unfold aVar_SubGraph in *.
-  unfold aVar_connected_Component in *.
-  destruct H5.
-  destruct a0.
-  destruct H1.
-  destruct H2.
+
 (* Axiom U_set_eq : forall E F : U_set, (forall x : U, E x <-> F x) -> E = F. *)
 Admitted.
 
