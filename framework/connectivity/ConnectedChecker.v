@@ -311,23 +311,90 @@ Proof.
     apply (IHcc H).
 Qed.
 
+Lemma Walk_in_bigger_conn : forall (v vB : V_set) (a aB : A_set) (v1 v2 : Component) (vl : V_list) (el : E_list),
+  V_included v vB -> A_included a aB -> Walk v a v1 v2 vl el -> Walk vB aB v1 v2 vl el.
+Proof.
+  intros v vB a aB v1 v2 vl el vI aI w.
+  induction w.
+  + apply W_null.
+    unfold V_included in vI.
+    unfold Included in vI.
+    apply (vI x v0).
+  + apply W_step.
+    apply IHw.
+    unfold V_included in vI.
+    unfold Included in vI.
+    apply (vI x v0).
+    unfold A_included in aI.
+    unfold Included in aI.
+    apply (aI (A_ends x y) a0).
+Qed.
+
 Definition aVar_Walk (aVar : Var) (c1 c2 : Component) (vl : V_list) (el : E_list) (w : Walk v a c1 c2 vl el) :=
   forall (c : Component), In c (c1 :: vl) -> isa_aVar_Component aVar c.
 
-Definition aVar_Path (aVar : Var) (c1 c2 : Component) (vl : V_list) (el : E_list) (p : Path v a c1 c2 vl el) :=
-  forall (c : Component), In c (c1 :: vl) -> isa_aVar_Component aVar c.
+
+Lemma W_endx_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v x.
+Proof.
+        intros v a x y vl el w; elim w; auto.
+Qed.
+
+Lemma W_endy_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
+Proof.
+        intros x y vl el w; elim w; auto.
+Qed.
+
+Lemma W_invl_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el -> forall z : Vertex, In z vl -> v z.
+Proof.
+        intros v a x y vl el w; elim w; intros.
+        inversion H.
+
+        inversion H0.
+        rewrite <- H1; apply (W_endx_inv _ _ _ _ _ _ w0).
+
+        auto.
+Qed.
 
 Lemma CCs_are_aVar_Paths: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
- (forall (v1 v2 : Component), vCC v1 -> vCC v2 -> {vl : V_list & {el : E_list & {p : Path v a v1 v2 vl el & aVar_Path aVar v1 v2 vl el p}}}).
+ (forall (v1 v2 : Component), vCC v1 -> vCC v2 -> {vl : V_list & {el : E_list & {w : Walk v a v1 v2 vl el & aVar_Walk aVar v1 v2 vl el w}}}).
 Proof.
   intros aVar vCC aCC cc v1 v2 vCCv1 vCCv2.
+  assert (cc' := cc).
   apply aVar_Conn_Comp_is_Connected in cc.
   apply (Connected_path) with (x := v1) (y := v2) in cc.
   destruct cc.
   destruct s.
   exists x.
   exists x0.
+  apply Path_isa_trail in p.
+  apply Trail_isa_walk in p.
+  assert (p' := p).
+  apply (Walk_in_bigger_conn vCC v aCC a v1 v2 x x0) in p.
   exists p.
+  unfold aVar_Walk.
+  intros.
+  inversion H.
+  rewrite <- H0.
+  apply W_endx_inv in p'.
+  apply (only_aVars_inCC vCC aCC aVar cc' v1 p').
+  assert (vCC c).
+  apply (W_invl_inv vCC aCC v1 v2 x x0 p' c H0).
+  apply (only_aVars_inCC vCC aCC aVar cc' c H1).
+  unfold V_included. unfold Included.
+  intros.
+  apply (only_vs_inCC vCC aCC aVar cc') in H.
+  apply H.
+  unfold A_included. unfold Included.
+  intros.
+  apply (only_as_inCC vCC aCC aVar cc') in H.
+  apply H.
+  apply vCCv1.
+  apply vCCv2.
+Qed.
 
 
 Lemma Connected_path :
