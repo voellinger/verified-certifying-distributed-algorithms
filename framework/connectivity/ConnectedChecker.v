@@ -451,13 +451,65 @@ Lemma CC_a_means_v: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_C
                        (v1 v2: Component),
   aCC (A_ends v1 v2) -> (vCC v1 /\ vCC v2).
 Proof.
-Admitted.
+  intros aVar vCC aCC cc v1 v2 acca.
+  induction cc.
+  + inversion acca.
+  + inversion acca.
+    - inversion H.
+      rewrite <- H2 in *.
+      rewrite <- H3 in *.
+      split.
+      apply In_right. apply v0.
+      apply In_left.
+      apply In_single.
+      split.
+      apply In_left ; apply In_single.
+      rewrite <- H2 in *.
+      rewrite <- H3 in *.
+      apply In_right. apply v0.
+    - apply IHcc in H.
+      destruct H.
+      split ; apply In_right.
+      apply H.
+      apply H1.
+  + inversion acca.
+    - inversion H.
+      rewrite <- H2 in *.
+      rewrite <- H3 in *.
+      auto.
+      rewrite <- H2.
+      rewrite <- H3.
+      auto.
+    - apply (IHcc H).
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    apply (IHcc acca).
+Qed.
 
 Lemma CC_a_means_a: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
                        (ar: Arc),
   aCC ar -> a ar.
 Proof.
-Admitted.
+  intros aVar vCC aCC cc ar acca.
+  induction cc.
+  + inversion acca.
+  + inversion acca.
+    inversion H.
+    apply a0.
+    assert (Graph v a).
+    apply (Connected_Isa_Graph v a g).
+    apply (G_non_directed v a H2 x y a0).
+    apply (IHcc H).
+  + inversion acca.
+    inversion H.
+    apply a0.
+    assert (Graph v a).
+    apply (Connected_Isa_Graph v a g).
+    apply (G_non_directed v a H2 v1 v2 a0).
+    apply (IHcc H).
+  + rewrite <- e0 in *.
+    apply (IHcc acca).
+Qed.    
 
 Lemma two_CCs_same_a: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
   aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
