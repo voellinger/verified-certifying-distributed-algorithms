@@ -359,7 +359,7 @@ Proof.
         auto.
 Qed.
 
-Lemma CCs_are_aVar_Paths: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
+Lemma CCs_are_aVar_Walks: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC),
  (forall (v1 v2 : Component), vCC v1 -> vCC v2 -> {vl : V_list & {el : E_list & {w : Walk v a v1 v2 vl el & aVar_Walk aVar v1 v2 vl el w}}}).
 Proof.
   intros aVar vCC aCC cc v1 v2 vCCv1 vCCv2.
@@ -395,30 +395,6 @@ Proof.
   apply vCCv1.
   apply vCCv2.
 Qed.
-
-
-Lemma Connected_path :
- forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
- v x -> v y -> {vl : V_list &  {el : E_list &  Path v a x y vl el}}.
-
-  induction cc.
-  + inversion vCCv1.
-    inversion vCCv2.
-    rewrite <- H0. rewrite <- H.
-    exists nil. exists nil.
-    assert (Walk v a x x [] []).
-    apply W_null.
-    apply v0.
-    exists H1.
-    unfold aVar_Walk.
-    intros.
-    inversion H2.
-    rewrite <- H3.
-    apply i.
-    inversion H3.
-  + assert ({vCC v1} + {~vCC v1}).
-    apply classic.  
-    destruct H.
     
     
 
