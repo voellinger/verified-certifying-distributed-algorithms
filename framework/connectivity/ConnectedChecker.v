@@ -580,19 +580,59 @@ Proof.
   destruct same.
   destruct a0.
   assert (forall v1 v2 v a aVar (c1 : aVar_Conn_Comp aVar v a), a (A_ends v1 v2) -> (v v1 /\ v v2)).
-  intros.
-  admit.
-  destruct x.
-  specialize (H1 v0 v3).
-  assert (v1 v0 /\ v1 v3).
-  apply (H1 v1 a1 aVar c1 H).
-  assert (v2 v0 /\ v2 v3).
-  apply (H1 v2 a2 aVar c2 H0).
-  destruct H2.
-  destruct H3.
-  apply (two_CCs_same aVar _ _ _ _ c1 c2 acc1 acc2).
-  exists v0.
-  auto.
+  - intros.
+    induction c0.
+    + inversion H1.
+    + inversion H1.
+      inversion H2.
+      rewrite <- H5 in *.
+      rewrite <- H6 in *.
+      split.
+      apply In_right.
+      apply v4.
+      apply In_left.
+      apply In_single.
+      split.
+      apply In_left.
+      apply In_single.
+      rewrite <- H5 in *.
+      rewrite <- H6 in *.
+      apply In_right.
+      apply v4.
+      apply (CC_a_means_v aVar0 vCC aCC c0) in H2.
+      destruct H2.
+      split.
+      apply In_right.
+      apply H2.
+      apply In_right.
+      apply H4.
+    + inversion H1.
+      inversion H2.
+      rewrite <- H5 in *.
+      rewrite <- H6 in *.
+      split.
+      apply v6.
+      apply v7.
+      rewrite <- H5 in *.
+      rewrite <- H6 in *.
+      split ; auto.
+      apply (CC_a_means_v aVar0 vCC aCC c0) in H2.
+      destruct H2.
+      auto.
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc0 H1).
+  - destruct x.
+    specialize (H1 v0 v3).
+    assert (v1 v0 /\ v1 v3).
+    apply (H1 v1 a1 aVar c1 H).
+    assert (v2 v0 /\ v2 v3).
+    apply (H1 v2 a2 aVar c2 H0).
+    destruct H2.
+    destruct H3.
+    apply (two_CCs_same aVar _ _ _ _ c1 c2 acc1 acc2).
+    exists v0.
+    auto.
 Qed.
 
 Variable state_of : Component -> Data.
