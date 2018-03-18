@@ -53,7 +53,48 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
   end.
 
-Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+Lemma CV_list_complete : forall (v : V_set) (a : A_set) (c : Connected v a) (x : Component),
+  v x <-> In x (CV_list v a c).
+Proof.
+  intros v a c x.
+  split ; intros.
+  - induction c.
+    + simpl.
+      inversion H.
+      auto.
+    + simpl.
+      inversion H.
+      inversion H0.
+      auto.
+      right.
+      apply (IHc H0).
+    + simpl.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
+  - induction c.
+    + simpl in H.
+      destruct H.
+      rewrite H.
+      apply In_single.
+      inversion H.
+    + simpl in H.
+      destruct H.
+      rewrite <- H.
+      apply In_left.
+      apply In_single.
+      apply In_right.
+      apply (IHc H).
+    + simpl in H.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
+Qed.
+    
+
+Lemma C_non_directed : forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).
 Proof.
 intros.

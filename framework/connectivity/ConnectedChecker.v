@@ -343,7 +343,7 @@ Qed.
 Lemma W_endy_inv :
  forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
 Proof.
-        intros x y vl el w; elim w; auto.
+        intros v a x y vl el w; elim w; auto.
 Qed.
 
 Lemma W_invl_inv :
@@ -640,7 +640,12 @@ Variable state_of : Component -> Data.
 Definition aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
-Definition get_aVar_CC (c : Component) :=
+Variable get_aVar_CC : Component -> (V_set * A_set).
+Axiom get_aVar_CC_is_CC : forall (c : Component),
+  let get_aVar_CC c 
+
+v muss endlich sein
+
   
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
