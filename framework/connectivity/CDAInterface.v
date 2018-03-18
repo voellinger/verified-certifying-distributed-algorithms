@@ -74,7 +74,11 @@ Proof.
   intuition.
   reflexivity.
 Qed.
-  
+
+Variable allVar : list Var.
+
+Axiom allVar_holds_all_Vars: forall (aVar : Var),
+  In aVar allVar.
 
 
 (* These are two placeholders for actual Variables and Values *)

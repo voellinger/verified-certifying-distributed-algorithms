@@ -83,7 +83,7 @@ Definition init_Data (me: Name) :=
 
 Definition set_leaders (d : Data) (new_leaders : list Msg) := mkData (checkerknowledge d) (checkerinput d) new_leaders.
 
-Fixpoint sendlist (neighbors: list Component) (new_l: Msg): list (Name * Msg)  :=
+Fixpoint sendlist (neighbors: list Component) (new_l: Msg): list (Name * Msg) :=
   match neighbors with 
     | nil => []
     | hd :: tl => (Checker hd, new_l) :: (sendlist tl new_l)
@@ -167,7 +167,7 @@ Proof.
     assert (v0 = var \/ v0 <> var).
     apply classic.
     destruct H.
-  
+
     rewrite H.
     simpl.
     rewrite var_eq_refl.
@@ -640,10 +640,18 @@ Variable state_of : Component -> Data.
 Definition aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
-Definition is_aVar_leader_of_CC (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
-    (acc: aVar_Connected_Component aVar vCC aCC cc) (c : Component) (state : Data) : Prop :=
-  vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c).
+Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
+  exists (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC), 
+    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c)).
 
+(*   {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
+    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}}.
+ *)
+
+
+Definition all_leaders_correctly_voted : Prop :=
+  forall (aVar : Var), In aVar allVar -> 
+   (forall (v1 : Component), v v1 -> is_local_aVar_leader aVar (aVar_leader aVar v1)).
 
 
 
@@ -673,7 +681,7 @@ distance i = 0
 
 
 
-Theorem 
+ 
 
 (* 
   von Samira
