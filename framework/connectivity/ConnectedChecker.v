@@ -572,12 +572,37 @@ Proof.
     apply H0.
 Qed.
 
-Definition aVar_leader (aVar : Var) (state : Data) : Component :=
-  index (get_leader_index aVar (leaders state)).
+Lemma two_CCs_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
+  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
+    (v1 = v2 /\ a1 = a2).
+Proof.
+  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
+  destruct same.
+  destruct a0.
+  assert (forall v1 v2 v a aVar (c1 : aVar_Conn_Comp aVar v a), a (A_ends v1 v2) -> (v v1 /\ v v2)).
+  intros.
+  admit.
+  destruct x.
+  specialize (H1 v0 v3).
+  assert (v1 v0 /\ v1 v3).
+  apply (H1 v1 a1 aVar c1 H).
+  assert (v2 v0 /\ v2 v3).
+  apply (H1 v2 a2 aVar c2 H0).
+  destruct H2.
+  destruct H3.
+  apply (two_CCs_same aVar _ _ _ _ c1 c2 acc1 acc2).
+  exists v0.
+  auto.
+Qed.
+
+Variable state_of : Component -> Data.
+
+Definition aVar_leader (aVar : Var) (c : Component) : Component :=
+  index (get_leader_index aVar (leaders (state_of c))).
 
 Definition is_aVar_leader_of_CC (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
     (acc: aVar_Connected_Component aVar vCC aCC cc) (c : Component) (state : Data) : Prop :=
-  vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar state = c).
+  vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c).
 
 
 
