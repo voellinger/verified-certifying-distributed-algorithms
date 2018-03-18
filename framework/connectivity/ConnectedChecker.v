@@ -640,11 +640,13 @@ Variable state_of : Component -> Data.
 Definition aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
-Variable get_aVar_CC : Component -> (V_set * A_set).
-Axiom get_aVar_CC_is_CC : forall (c : Component),
-  let get_aVar_CC c 
+Variable get_aVar_CC : Var -> Component -> (V_set * A_set). (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren *)
+Axiom get_aVar_CC_is_CC : forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
+                                 (CC : aVar_Connected_Component aVar vCC aCC cc) (c : Component),
+  let (vCC2, aCC2) := get_aVar_CC aVar c in
+    vCC c <-> (vCC = vCC2 /\ aCC = aCC2).
 
-v muss endlich sein
+
 
   
 
