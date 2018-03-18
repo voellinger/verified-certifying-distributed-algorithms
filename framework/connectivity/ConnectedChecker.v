@@ -640,6 +640,12 @@ Variable state_of : Component -> Data.
 Definition aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
+Definition get_aVar_CC (c : Component) :=
+  
+
+Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
+  let 
+
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
   exists (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC), 
     (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c)).
@@ -652,6 +658,15 @@ Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
 Definition all_leaders_correctly_voted : Prop :=
   forall (aVar : Var), In aVar allVar -> 
    (forall (v1 : Component), v v1 -> is_local_aVar_leader aVar (aVar_leader aVar v1)).
+
+Lemma bla : forall (c: Component) (aVar : Var),
+  {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
+    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}} ->
+  {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
+    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}}.
+Proof.
+  intros.
+  destruct X.
 
 
 
