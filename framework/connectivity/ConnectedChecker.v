@@ -651,7 +651,8 @@ Axiom get_aVar_CC_is_CC : forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : 
   
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
-  let 
+  let (vCC, aCC) := get_aVar_CC aVar c in
+    
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
   exists (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC), 
