@@ -241,7 +241,32 @@ Proof.
     apply IHcc.
 Qed.
 
-Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC): Prop :=
+Definition isa_aVar_Conn_Comp (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
+  vCC <> V_empty /\
+  V_included vCC v /\ A_included aCC a /\
+  (forall (v1 : Component), vCC v1 -> isa_aVar_Component aVar v1) /\
+  (forall (v1 v2 : Component), aCC (A_ends v1 v2) -> (vCC v1 /\ vCC v2)).
+
+Lemma isa_aVar_Conn_Comp_isa_aVar_Conn_Comp : forall (aVar : Var) (vCC : V_set) (aCC : A_set),
+  isa_aVar_Conn_Comp aVar vCC aCC -> aVar_Conn_Comp aVar vCC aCC.
+Proof.
+  intros aVar vCC aCC H.
+  unfold isa_aVar_Conn_Comp in H.
+  destruct H.
+  destruct H0.
+  destruct H1.
+  destruct H2.
+  assert ({x : Component & vCC x}).
+  admit.
+  destruct H4.
+  assert (aVar_Conn_Comp aVar (V_single x) (A_empty)).
+  apply (CC_isolated aVar x).
+  apply (H2 x v0).
+  unfold V_included in H0 ; unfold Included in H0.
+  apply (H0 x v0).
+  
+
+Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
   (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2) /\
   (forall c1 c2 : Component, vCC c1 /\ vCC c2 /\ a (A_ends c1 c2) -> aCC (A_ends c1 c2)).
 
@@ -398,7 +423,7 @@ Qed.
 
 Lemma aVar_Walk_in_CC: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
                        (v1 v2: Component) (vl : V_list) (el : E_list) (w : Walk v a v1 v2 vl el),
-  aVar_Connected_Component aVar vCC aCC cc -> vCC v1 -> aVar_Walk aVar v1 v2 vl el w -> vCC v2.
+  aVar_Connected_Component aVar vCC aCC -> vCC v1 -> aVar_Walk aVar v1 v2 vl el w -> vCC v2.
 Proof.
   intros aVar vCC aCC cc v1 v2 vl el w CC vCCv1 aWalk.
   induction w ; unfold aVar_Connected_Component in CC ; destruct CC.
@@ -421,7 +446,7 @@ Qed.
 
 (* wenn sich zwei CCs in c \u00fcberschneiden, so sind \u00fcber c aVar-Walks m\u00f6glich und daher CC1 = CC2 *)
 Lemma two_CCs_same_v: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
-  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+  aVar_Connected_Component aVar v1 a1 -> aVar_Connected_Component aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (forall x : Component, v1 x -> v2 x).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -437,7 +462,7 @@ Qed.
 
 Lemma CC_all_connections: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
                        (v1 v2: Component),
-  aVar_Connected_Component aVar vCC aCC cc -> vCC v1 -> vCC v2 -> a (A_ends v1 v2) -> aCC (A_ends v1 v2).
+  aVar_Connected_Component aVar vCC aCC -> vCC v1 -> vCC v2 -> a (A_ends v1 v2) -> aCC (A_ends v1 v2).
 Proof.
   intros aVar vCC aCC cc v1 v2 CC vCCv1 vCCv2 aends.
   unfold aVar_Connected_Component in CC.
@@ -509,10 +534,10 @@ Proof.
     apply (IHcc H).
   + rewrite <- e0 in *.
     apply (IHcc acca).
-Qed.    
+Qed.
 
 Lemma two_CCs_same_a: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
-  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+  aVar_Connected_Component aVar v1 a1 -> aVar_Connected_Component aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (forall x : Arc, a1 x -> a2 x).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -533,7 +558,7 @@ Proof.
 Qed.
 
 Lemma two_CCs_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
-  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {c : Component & (v1 c /\ v2 c)} -> 
+  aVar_Connected_Component aVar v1 a1 -> aVar_Connected_Component aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (v1 = v2 /\ a1 = a2).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -573,7 +598,7 @@ Proof.
 Qed.
 
 Lemma two_CCs_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVar_Conn_Comp aVar v1 a1) (c2: aVar_Conn_Comp aVar v2 a2),
-  aVar_Connected_Component aVar v1 a1 c1 -> aVar_Connected_Component aVar v2 a2 c2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
+  aVar_Connected_Component aVar v1 a1 -> aVar_Connected_Component aVar v2 a2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
     (v1 = v2 /\ a1 = a2).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -642,17 +667,17 @@ Definition aVar_leader (aVar : Var) (c : Component) : Component :=
 
 Variable get_aVar_CC : Var -> Component -> (V_set * A_set). (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren *)
 Axiom get_aVar_CC_is_CC : forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
-                                 (CC : aVar_Connected_Component aVar vCC aCC cc) (c : Component),
+                                 (CC : aVar_Connected_Component aVar vCC aCC) (c : Component),
   let (vCC2, aCC2) := get_aVar_CC aVar c in
     vCC c <-> (vCC = vCC2 /\ aCC = aCC2).
 
+Definition is_aVar_vccacc_leader (aVar : Var) (vCC : V_set) (aCC : A_set) (c : Component) : Prop :=
+  vCC c /\ aVar_Connected_Component aVar vCC aCC.
 
 
-  
-
-Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
+Definition is_local_aVar_leader (aVar : Var) (c : Component) : Set :=
   let (vCC, aCC) := get_aVar_CC aVar c in
-    
+    is_aVar_vccacc_leader aVar vCC aCC c /\ aVar_Conn_Comp aVar vCC aCC.
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
   exists (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC), 
