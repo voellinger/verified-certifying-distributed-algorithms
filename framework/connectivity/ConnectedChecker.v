@@ -241,7 +241,7 @@ Proof.
     apply IHcc.
 Qed.
 
-Definition isa_aVar_Conn_Comp (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
+(* Definition isa_aVar_Conn_Comp (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
   vCC <> V_empty /\
   V_included vCC v /\ A_included aCC a /\
   (forall (v1 : Component), vCC v1 -> isa_aVar_Component aVar v1) /\
@@ -263,7 +263,7 @@ Proof.
   apply (CC_isolated aVar x).
   apply (H2 x v0).
   unfold V_included in H0 ; unfold Included in H0.
-  apply (H0 x v0).
+  apply (H0 x v0). *)
   
 
 Definition aVar_Connected_Component (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
@@ -662,45 +662,25 @@ Qed.
 
 Variable state_of : Component -> Data.
 
-Definition aVar_leader (aVar : Var) (c : Component) : Component :=
+Definition get_aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
 Variable get_aVar_CC : Var -> Component -> (V_set * A_set). (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren *)
-Axiom get_aVar_CC_is_CC : forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC) 
-                                 (CC : aVar_Connected_Component aVar vCC aCC) (c : Component),
-  let (vCC2, aCC2) := get_aVar_CC aVar c in
-    vCC c <-> (vCC = vCC2 /\ aCC = aCC2).
 
-Definition is_aVar_vccacc_leader (aVar : Var) (vCC : V_set) (aCC : A_set) (c : Component) : Prop :=
-  vCC c /\ aVar_Connected_Component aVar vCC aCC.
-
-
-Definition is_local_aVar_leader (aVar : Var) (c : Component) : Set :=
+Axiom get_aVar_vCCaCC_is_CC : forall (aVar : Var) (c : Component),
   let (vCC, aCC) := get_aVar_CC aVar c in
-    is_aVar_vccacc_leader aVar vCC aCC c /\ aVar_Conn_Comp aVar vCC aCC.
+  {v2 : V_set & {a2 : A_set & {_: aVar_Conn_Comp aVar v2 a2 & (vCC = v2 /\ aCC = a2 /\ v2 c /\ aVar_Connected_Component aVar v2 a2)}}}.
+
+Definition is_aVar_vcc_leader (aVar : Var) (vCC : V_set) (c : Component) : Prop :=
+  vCC c /\ forall (v : Component), vCC v -> get_aVar_leader aVar v = c.
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
-  exists (vCC : V_set) (aCC : A_set) (cc : aVar_Conn_Comp aVar vCC aCC), 
-    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c)).
-
-(*   {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
-    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}}.
- *)
-
+  let (vCC, aCC) := get_aVar_CC aVar c in
+    is_aVar_vcc_leader aVar vCC c.
 
 Definition all_leaders_correctly_voted : Prop :=
   forall (aVar : Var), In aVar allVar -> 
-   (forall (v1 : Component), v v1 -> is_local_aVar_leader aVar (aVar_leader aVar v1)).
-
-Lemma bla : forall (c: Component) (aVar : Var),
-  {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
-    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}} ->
-  {vCC : V_set & {aCC : A_set & {cc : aVar_Conn_Comp aVar vCC aCC & 
-    (aVar_Connected_Component aVar vCC aCC cc /\ vCC c /\ (forall x : Component, vCC x -> aVar_leader aVar x = c))}}}.
-Proof.
-  intros.
-  destruct X.
-
+   (forall (v1 : Component), v v1 -> is_local_aVar_leader aVar (get_aVar_leader aVar v1)).
 
 
 Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
