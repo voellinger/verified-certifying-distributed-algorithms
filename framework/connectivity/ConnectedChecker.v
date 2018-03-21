@@ -688,6 +688,7 @@ Definition all_leaders_correctly_voted : Prop :=
    (forall (v1 : Component), v v1 -> is_local_aVar_leader aVar (get_aVar_leader aVar v1)).
 
 
+
 Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
 (leader_neighbors : C_list)
 :Prop :=
