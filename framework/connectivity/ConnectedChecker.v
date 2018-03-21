@@ -665,7 +665,12 @@ Variable state_of : Component -> Data.
 Definition get_aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
 
-Variable get_aVar_CC : Var -> Component -> (V_set * A_set). (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren *)
+Variable get_aVar_CC : Var -> Component -> (V_set * A_set). 
+  (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren:
+     man \u00fcbergibt get_aVar_CC aVar c [CV-Liste] V_nil A_nil
+     in jedem Schritt wird c abgearbeitet, indem die Nachbarn untersucht werden 
+     wenn Nachbar aVar und in [CV-Liste], dann werden dessen Nachbarn untersucht,
+     Nachbar wird von [CV-Liste] gestrichen und n\u00e4chster Nachbar untersucht. *)
 
 Axiom get_aVar_vCCaCC_is_CC : forall (aVar : Var) (c : Component),
   let (vCC, aCC) := get_aVar_CC aVar c in
@@ -700,21 +705,6 @@ distance i = 0
 /\ ((forall (c:Component), In c (neighbors g i)  -> In (leader c) leader_neighbors)). 
 
 
-
-
-
-
-
-
-
-
-
- 
-
-(* 
-  von Samira
-  exists (l : Component), v l -> forall (x:Component)(prop1: v x), leader x = l.
-*)
 (* 
 
   Theorem: F\u00fcr jeden a-Teilgraph T gilt: in jeder Zusammenhangskomponente K von T gibt es genau einen Leader, der Teil von K ist.
