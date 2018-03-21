@@ -689,6 +689,9 @@ Definition all_leaders_correctly_voted : Prop :=
 
 
 
+
+TODO getaVarCC mit Typ Connected
+     isavarccleader
 Definition gamma_i (i:Component)(leader_i:Component)(distance_i:nat)(parent_i:Component)(leader_parent_i:Component)(distance_parent_i:nat)
 (leader_neighbors : C_list)
 :Prop :=
