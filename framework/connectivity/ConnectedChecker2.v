@@ -29,7 +29,7 @@ Definition Distance := nat.
   - var 
   - local leader for the var
   - distance from where it was sent (the temporary local leader)
-  - last sender, so that the receiving node can make a parent towards the temporary local leader
+  - last sender (parent), so that the receiving node can make a parent towards the temporary local leader
 *)
 Inductive Msg := leader : (Var * Component_Index * Distance * Name) -> Msg.
 
@@ -229,7 +229,7 @@ Proof.
     apply IHcc.
 Qed.
 
-Definition max_aVarTree (aVar : Var) (vT : V_set) (aT : A_set): Prop :=
+Definition max_aVarVset (aVar : Var) (vT : V_set) : Prop :=
   (forall c1 c2 : Component, (vT c1 /\ a (A_ends c1 c2) /\ isa_aVarComponent aVar c2) -> vT c2).
 
 Lemma only_aVars_inaVarTree: forall (vT : V_set) (aT : A_set) (aVar : Var) (cc : aVarTree aVar vT aT) (x : Component),
@@ -371,10 +371,10 @@ Qed.
 
 Lemma aVarWalk_in_aVarTree: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
                        (v1 v2: Component) (vl : V_list) (el : E_list) (w : Walk v a v1 v2 vl el),
-  max_aVarTree aVar vT aT -> vT v1 -> aVarWalk aVar v1 v2 vl el w -> vT v2.
+  max_aVarVset aVar vT -> vT v1 -> aVarWalk aVar v1 v2 vl el w -> vT v2.
 Proof.
   intros aVar vT aT cc v1 v2 vl el w CC vTv1 aWalk.
-  induction w ; unfold max_aVarTree in CC.
+  induction w ; unfold max_aVarVset in CC.
   + apply vTv1.
   + apply IHw.
     unfold aVarWalk in aWalk.
@@ -394,7 +394,7 @@ Qed.
 
 (* wenn sich zwei CCs in c \u00fcberschneiden, so sind \u00fcber c aVar-Walks m\u00f6glich und daher CC1 = CC2 *)
 Lemma two_aVarTrees_same_v: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
-  max_aVarTree aVar v1 a1 -> max_aVarTree aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
+  max_aVarVset aVar v1 -> max_aVarVset aVar v2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (forall x : Component, v1 x -> v2 x).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -457,7 +457,7 @@ Proof.
 Qed.
 
 Lemma two_aVarTrees_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
-  max_aVarTree aVar v1 a1 -> max_aVarTree aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
+  max_aVarVset aVar v1 -> max_aVarVset aVar v2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (v1 = v2).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -480,7 +480,7 @@ Proof.
 Qed.
 
 Lemma two_aVarTrees_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
-  max_aVarTree aVar v1 a1 -> max_aVarTree aVar v2 a2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
+  max_aVarVset aVar v1 -> max_aVarVset aVar v2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
     (v1 = v2).
 Proof.
   intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
@@ -529,10 +529,47 @@ Proof.
     auto.
 Qed.
 
+Definition root_of_aVarVset (aVar : Var) (vT : V_set) (root: Component) : Prop :=
+  (vT root /\ forall (c : Component), vT c -> component_index c <= component_index root).
+
+Lemma root_same_aVarTrees_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c: Component),
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
+  root_of_aVarVset aVar vT1 c -> root_of_aVarVset aVar vT2 c -> (vT1 = vT2).
+Proof.
+  intros aVar vT1 vT2 aT1 aT2 c aTree1 aTree2 maTree1 maTree2 rmaTree1 rmaTree2.
+  unfold root_of_aVarVset in *.
+  destruct rmaTree1. destruct rmaTree2.
+  apply (two_aVarTrees_same aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2).
+  exists c.
+  auto.
+Qed.
+
+Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
+  vT1 c1 -> vT2 c2 -> c1 <> c2 -> (V_inter vT1 vT2 = V_empty).
+Proof.
+  intros aVar vT1 vT2 aT1 aT2 c1 c2 aTree1 aTree2 maTree1 maTree2 vT1c1 vT2c2 c1_Diff_c2.
+  
+
+
+Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
+  root_of_aVarVset aVar vT1 c1 -> root_of_aVarVset aVar vT2 c2 -> c1 <> c2 -> (V_inter vT1 vT2 = V_empty).
+Proof.
+  intros aVar vT1 vT2 aT1 aT2 c1 c2 aTree1 aTree2 maTree1 maTree2 rmaTree1 rmaTree2 c1_Diff_c2.
+  
+
 Variable state_of : Component -> Data.
 
 Definition get_aVar_leader (aVar : Var) (c : Component) : Component :=
   index (get_leader_index aVar (leaders (state_of c))).
+
+
+
+
+
+
+
 
 Variable get_aVar_CC : Var -> Component -> (V_set * A_set). 
   (* v muss endlich sein, um das vllt \u00fcber CV_list zu definieren:
@@ -543,7 +580,7 @@ Variable get_aVar_CC : Var -> Component -> (V_set * A_set).
 
 Axiom get_aVar_vTaT_is_CC : forall (aVar : Var) (c : Component),
   let (vT, aT) := get_aVar_CC aVar c in
-  {v2 : V_set & {a2 : A_set & {_: aVarTree aVar v2 a2 & (vT = v2 /\ aT = a2 /\ v2 c /\ max_aVarTree aVar v2 a2)}}}.
+  {v2 : V_set & {a2 : A_set & {_: aVarTree aVar v2 a2 & (vT = v2 /\ aT = a2 /\ v2 c /\ max_aVarVset aVar v2 a2)}}}.
 
 Definition is_aVar_vcc_leader (aVar : Var) (vT : V_set) (c : Component) : Prop :=
   vT c /\ forall (v : Component), vT v -> get_aVar_leader aVar v = c.
