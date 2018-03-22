@@ -187,8 +187,6 @@ Proof.
 Qed.
 
 
-
-
 Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
   match vl with
   | nil => false
@@ -206,20 +204,20 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
           else ([], state, [])
     end.
 
-Definition isa_aVar_Component (aVar : Var) (c: Component) : Prop :=
+Definition isa_aVarComponent (aVar : Var) (c: Component) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
 Inductive aVarTree : Var -> V_set -> A_set -> Set :=
-  | CC_isolated : forall (aVar : Var) (x : Component), isa_aVar_Component aVar x -> v x -> aVarTree aVar (V_single x) A_empty
-  | CC_leaf: forall (aVar : Var) (vCC : V_set) (aCC : A_set) x y,
-      vCC x -> ~ vCC y -> v y -> a (A_ends x y) -> isa_aVar_Component aVar y -> aVarTree aVar vCC aCC -> aVarTree aVar (V_union (V_single y) vCC) (A_union (E_set x y) aCC)
-  | CC_eq: forall aVar vCC vCC' aCC aCC',
-    vCC = vCC' -> aCC = aCC' -> aVarTree aVar vCC aCC -> aVarTree aVar vCC' aCC'.
+  | CC_isolated : forall (aVar : Var) (x : Component), isa_aVarComponent aVar x -> v x -> aVarTree aVar (V_single x) A_empty
+  | CC_leaf: forall (aVar : Var) (vT : V_set) (aT : A_set) x y,
+      vT x -> ~ vT y -> v y -> a (A_ends x y) -> isa_aVarComponent aVar y -> aVarTree aVar vT aT -> aVarTree aVar (V_union (V_single y) vT) (A_union (E_set x y) aT)
+  | CC_eq: forall aVar vT vT' aT aT',
+    vT = vT' -> aT = aT' -> aVarTree aVar vT aT -> aVarTree aVar vT' aT'.
 
-Lemma aVarTree_is_Connected : forall (aVar : Var) (vCC: V_set) (aCC: A_set),
-  aVarTree aVar vCC aCC -> Connected vCC aCC.
+Lemma aVarTree_is_Connected : forall (aVar : Var) (vT: V_set) (aT: A_set),
+  aVarTree aVar vT aT -> Connected vT aT.
 Proof.
-  intros aVar vCC aCC cc.
+  intros aVar vT aT cc.
   induction cc.
   + apply C_isolated.
   + apply C_leaf.
@@ -231,29 +229,29 @@ Proof.
     apply IHcc.
 Qed.
 
-Definition max_aVarTree (aVar : Var) (vCC : V_set) (aCC : A_set): Prop :=
-  (forall c1 c2 : Component, (vCC c1 /\ a (A_ends c1 c2) /\ isa_aVar_Component aVar c2) -> vCC c2).
+Definition max_aVarTree (aVar : Var) (vT : V_set) (aT : A_set): Prop :=
+  (forall c1 c2 : Component, (vT c1 /\ a (A_ends c1 c2) /\ isa_aVarComponent aVar c2) -> vT c2).
 
-Lemma only_aVars_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVarTree aVar vCC aCC) (x : Component),
-  vCC x -> isa_aVar_Component aVar x.
+Lemma only_aVars_inaVarTree: forall (vT : V_set) (aT : A_set) (aVar : Var) (cc : aVarTree aVar vT aT) (x : Component),
+  vT x -> isa_aVarComponent aVar x.
 Proof.
-  intros vCC aCC aVar cc x vCCx.
+  intros vT aT aVar cc x vTx.
   induction cc.
-  + inversion vCCx.
+  + inversion vTx.
     rewrite H in *.
     apply i.
-  + inversion vCCx.
+  + inversion vTx.
     inversion H.
     rewrite <- H1 ; auto.
     apply (IHcc H).
-  + rewrite <- e in vCCx.
-    apply (IHcc vCCx).
+  + rewrite <- e in vTx.
+    apply (IHcc vTx).
 Qed.
 
-Lemma only_vs_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVarTree aVar vCC aCC) (x : Component),
-  vCC x -> v x.
+Lemma only_vs_inaVarTree: forall (vT : V_set) (aT : A_set) (aVar : Var) (cc : aVarTree aVar vT aT) (x : Component),
+  vT x -> v x.
 Proof.
-  intros vCC aCC aVar cc x H.
+  intros vT aT aVar cc x H.
   induction cc.
   + inversion H.
     rewrite <- H0.
@@ -268,10 +266,10 @@ Proof.
     apply (IHcc H).
 Qed.
 
-Lemma only_as_inCC: forall (vCC : V_set) (aCC : A_set) (aVar : Var) (cc : aVarTree aVar vCC aCC) (x : Arc),
-  aCC x -> a x.
+Lemma only_as_inaVarTree: forall (vT : V_set) (aT : A_set) (aVar : Var) (cc : aVarTree aVar vT aT) (x : Arc),
+  aT x -> a x.
 Proof.
-  intros vCC aCC aVar cc x H.
+  intros vT aT aVar cc x H.
   induction cc.
   + inversion H.
   + inversion H.
@@ -306,7 +304,7 @@ Proof.
 Qed.
 
 Definition aVarWalk (aVar : Var) (c1 c2 : Component) (vl : V_list) (el : E_list) (w : Walk v a c1 c2 vl el) :=
-  forall (c : Component), In c (c1 :: vl) -> isa_aVar_Component aVar c.
+  forall (c : Component), In c (c1 :: vl) -> isa_aVarComponent aVar c.
 
 
 Lemma W_endx_inv :
@@ -334,10 +332,10 @@ Proof.
         auto.
 Qed.
 
-Lemma aVarTrees_are_aVarWalks: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVarTree aVar vCC aCC),
- (forall (v1 v2 : Component), vCC v1 -> vCC v2 -> {vl : V_list & {el : E_list & {w : Walk v a v1 v2 vl el & aVarWalk aVar v1 v2 vl el w}}}).
+Lemma aVarTrees_are_aVarWalks: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT),
+ (forall (v1 v2 : Component), vT v1 -> vT v2 -> {vl : V_list & {el : E_list & {w : Walk v a v1 v2 vl el & aVarWalk aVar v1 v2 vl el w}}}).
 Proof.
-  intros aVar vCC aCC cc v1 v2 vCCv1 vCCv2.
+  intros aVar vT aT cc v1 v2 vTv1 vTv2.
   assert (cc' := cc).
   apply aVarTree_is_Connected in cc.
   apply (Connected_path) with (x := v1) (y := v2) in cc.
@@ -348,36 +346,36 @@ Proof.
   apply Path_isa_trail in p.
   apply Trail_isa_walk in p.
   assert (p' := p).
-  apply (Walk_in_bigger_conn vCC v aCC a v1 v2 x x0) in p.
+  apply (Walk_in_bigger_conn vT v aT a v1 v2 x x0) in p.
   exists p.
   unfold aVarWalk.
   intros.
   inversion H.
   rewrite <- H0.
   apply W_endx_inv in p'.
-  apply (only_aVars_inCC vCC aCC aVar cc' v1 p').
-  assert (vCC c).
-  apply (W_invl_inv vCC aCC v1 v2 x x0 p' c H0).
-  apply (only_aVars_inCC vCC aCC aVar cc' c H1).
+  apply (only_aVars_inaVarTree vT aT aVar cc' v1 p').
+  assert (vT c).
+  apply (W_invl_inv vT aT v1 v2 x x0 p' c H0).
+  apply (only_aVars_inaVarTree vT aT aVar cc' c H1).
   unfold V_included. unfold Included.
   intros.
-  apply (only_vs_inCC vCC aCC aVar cc') in H.
+  apply (only_vs_inaVarTree vT aT aVar cc') in H.
   apply H.
   unfold A_included. unfold Included.
   intros.
-  apply (only_as_inCC vCC aCC aVar cc') in H.
+  apply (only_as_inaVarTree vT aT aVar cc') in H.
   apply H.
-  apply vCCv1.
-  apply vCCv2.
+  apply vTv1.
+  apply vTv2.
 Qed.
 
-Lemma aVarWalk_in_aVarTree: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVarTree aVar vCC aCC) 
+Lemma aVarWalk_in_aVarTree: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
                        (v1 v2: Component) (vl : V_list) (el : E_list) (w : Walk v a v1 v2 vl el),
-  max_aVarTree aVar vCC aCC -> vCC v1 -> aVarWalk aVar v1 v2 vl el w -> vCC v2.
+  max_aVarTree aVar vT aT -> vT v1 -> aVarWalk aVar v1 v2 vl el w -> vT v2.
 Proof.
-  intros aVar vCC aCC cc v1 v2 vl el w CC vCCv1 aWalk.
+  intros aVar vT aT cc v1 v2 vl el w CC vTv1 aWalk.
   induction w ; unfold max_aVarTree in CC.
-  + apply vCCv1.
+  + apply vTv1.
   + apply IHw.
     unfold aVarWalk in aWalk.
     specialize (aWalk y).
@@ -410,11 +408,11 @@ Proof.
   apply H.
 Qed.
 
-Lemma aVarTree_a_means_v: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVarTree aVar vCC aCC) 
+Lemma aVarTree_a_means_v: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
                        (v1 v2: Component),
-  aCC (A_ends v1 v2) -> (vCC v1 /\ vCC v2).
+  aT (A_ends v1 v2) -> (vT v1 /\ vT v2).
 Proof.
-  intros aVar vCC aCC cc v1 v2 acca.
+  intros aVar vT aT cc v1 v2 acca.
   induction cc.
   + inversion acca.
   + inversion acca.
@@ -440,11 +438,11 @@ Proof.
     apply (IHcc acca).
 Qed.
 
-Lemma aVarTree_a_means_a: forall (aVar : Var) (vCC : V_set) (aCC : A_set) (cc : aVarTree aVar vCC aCC) 
+Lemma aVarTree_a_means_a: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
                        (ar: Arc),
-  aCC ar -> a ar.
+  aT ar -> a ar.
 Proof.
-  intros aVar vCC aCC cc ar acca.
+  intros aVar vT aT cc ar acca.
   induction cc.
   + inversion acca.
   + inversion acca.
@@ -458,7 +456,7 @@ Proof.
     apply (IHcc acca).
 Qed.
 
-Lemma two_CCs_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
+Lemma two_aVarTrees_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
   max_aVarTree aVar v1 a1 -> max_aVarTree aVar v2 a2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (v1 = v2).
 Proof.
@@ -481,7 +479,7 @@ Proof.
     apply H1.
 Qed.
 
-Lemma two_CCs_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
+Lemma two_aVarTrees_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
   max_aVarTree aVar v1 a1 -> max_aVarTree aVar v2 a2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
     (v1 = v2).
 Proof.
@@ -508,7 +506,7 @@ Proof.
       rewrite <- H6 in *.
       apply In_right.
       apply v4.
-      apply (aVarTree_a_means_v aVar0 vCC aCC c0) in H2.
+      apply (aVarTree_a_means_v aVar0 vT aT c0) in H2.
       destruct H2.
       split.
       apply In_right.
@@ -526,7 +524,7 @@ Proof.
     apply (H1 v2 a2 aVar c2 H0).
     destruct H2.
     destruct H3.
-    apply (two_CCs_same aVar _ _ _ _ c1 c2 acc1 acc2).
+    apply (two_aVarTrees_same aVar _ _ _ _ c1 c2 acc1 acc2).
     exists v0.
     auto.
 Qed.
@@ -543,16 +541,16 @@ Variable get_aVar_CC : Var -> Component -> (V_set * A_set).
      wenn Nachbar aVar und in [CV-Liste], dann werden dessen Nachbarn untersucht,
      Nachbar wird von [CV-Liste] gestrichen und n\u00e4chster Nachbar untersucht. *)
 
-Axiom get_aVar_vCCaCC_is_CC : forall (aVar : Var) (c : Component),
-  let (vCC, aCC) := get_aVar_CC aVar c in
-  {v2 : V_set & {a2 : A_set & {_: aVarTree aVar v2 a2 & (vCC = v2 /\ aCC = a2 /\ v2 c /\ max_aVarTree aVar v2 a2)}}}.
+Axiom get_aVar_vTaT_is_CC : forall (aVar : Var) (c : Component),
+  let (vT, aT) := get_aVar_CC aVar c in
+  {v2 : V_set & {a2 : A_set & {_: aVarTree aVar v2 a2 & (vT = v2 /\ aT = a2 /\ v2 c /\ max_aVarTree aVar v2 a2)}}}.
 
-Definition is_aVar_vcc_leader (aVar : Var) (vCC : V_set) (c : Component) : Prop :=
-  vCC c /\ forall (v : Component), vCC v -> get_aVar_leader aVar v = c.
+Definition is_aVar_vcc_leader (aVar : Var) (vT : V_set) (c : Component) : Prop :=
+  vT c /\ forall (v : Component), vT v -> get_aVar_leader aVar v = c.
 
 Definition is_local_aVar_leader (aVar : Var) (c : Component) : Prop :=
-  let (vCC, aCC) := get_aVar_CC aVar c in
-    is_aVar_vcc_leader aVar vCC c.
+  let (vT, aT) := get_aVar_CC aVar c in
+    is_aVar_vcc_leader aVar vT c.
 
 Definition all_leaders_correctly_voted : Prop :=
   forall (aVar : Var), In aVar allVar -> 
