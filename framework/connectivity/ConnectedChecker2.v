@@ -544,12 +544,18 @@ Proof.
   auto.
 Qed.
 
-Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
+Lemma comp_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
-  vT1 c1 -> vT2 c2 -> c1 <> c2 -> (V_inter vT1 vT2 = V_empty).
+  {c : Component & (vT1 c /\ ~ vT2 c)} -> (V_inter vT1 vT2 = V_empty).
 Proof.
-  intros aVar vT1 vT2 aT1 aT2 c1 c2 aTree1 aTree2 maTree1 maTree2 vT1c1 vT2c2 c1_Diff_c2.
+  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 c.
+  destruct c.
+  destruct a0.
+  assert (isa_aVarComponent aVar x).
+  apply (only_aVars_inaVarTree vT1 aT1 aVar aTree1 x H).
+     
   
+      
 
 
 Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
