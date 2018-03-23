@@ -619,7 +619,6 @@ Proof.
   + rewrite <- e in *.
     apply IHaTree.
 Qed.
-  
 
 Lemma aVarTrees_same_root_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
@@ -639,12 +638,32 @@ Proof.
   apply H0.
 Qed.
 
+Definition is_aVarspanning (aVar : Var) (vT : V_set) : Prop := 
+  forall c, (v c /\ isa_aVarComponent aVar c) -> vT c.
+  
+Lemma allMaxTreesSame_spanningTree : forall (aVar : Var),
+  forall vT1 vT2 aT1 aT2, aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 ->
+    vT1 = vT2 -> 
+  {vT : V_set & {aT : A_set & {aTree: aVarTree aVar vT aT & is_aVarspanning aVar vT}}}.
+Proof.
+  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 same.
+  exists vT1.
+  exists aT1.
+  exists aTree1.
+  unfold is_aVarspanning.
+  intros.
+  destruct H.
+  
+  
+  
 
 
+Lemma spanningTree_allMaxTreesSame : forall (aVar : Var),
+  {vT : V_set & {aT : A_set & aVarTree aVar vT aT}} ->
+  (forall vT1 vT2 aT1 aT2, aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 ->
+    vT1 = vT2).
 
-
-
-Lemma comp_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+(* Lemma comp_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
   {c : Component & (vT1 c /\ ~ vT2 c)} -> (V_inter vT1 vT2 = V_empty).
 Proof.
@@ -658,19 +677,15 @@ Proof.
   admit.
   intuition.
   destruct H2.
-  
-  
-     
-  
-      
+Qed. *)
 
 
-Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
+(* Lemma root_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c1 c2: Component),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
   root_of_aVarVset aVar vT1 c1 -> root_of_aVarVset aVar vT2 c2 -> c1 <> c2 -> (V_inter vT1 vT2 = V_empty).
 Proof.
   intros aVar vT1 vT2 aT1 aT2 c1 c2 aTree1 aTree2 maTree1 maTree2 rmaTree1 rmaTree2 c1_Diff_c2.
-  
+Qed. *)
 
 Variable state_of : Component -> Data.
 
