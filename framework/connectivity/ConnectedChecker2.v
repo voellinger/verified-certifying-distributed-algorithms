@@ -529,20 +529,51 @@ Proof.
     auto.
 Qed.
 
-Definition root_of_aVarVset (aVar : Var) (vT : V_set) (root: Component) : Prop :=
+Definition root_of_Vset (vT : V_set) (root: Component) : Prop :=
   (vT root /\ forall (c : Component), vT c -> component_index c <= component_index root).
 
-Lemma root_same_aVarTrees_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set) (c: Component),
-  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
-  root_of_aVarVset aVar vT1 c -> root_of_aVarVset aVar vT2 c -> (vT1 = vT2).
+Lemma root_same_aVarTrees_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
+  {c : Component & (root_of_Vset vT1 c /\ root_of_Vset vT2 c)} -> vT1 = vT2.
 Proof.
-  intros aVar vT1 vT2 aT1 aT2 c aTree1 aTree2 maTree1 maTree2 rmaTree1 rmaTree2.
-  unfold root_of_aVarVset in *.
+  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 H.
+  destruct H.
+  destruct a0 as [rmaTree1 rmaTree2].
+  unfold root_of_Vset in *.
   destruct rmaTree1. destruct rmaTree2.
   apply (two_aVarTrees_same aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2).
-  exists c.
+  exists x.
   auto.
 Qed.
+
+Lemma aVarTree_root_exists : forall (aVar : Var) (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
+  {c : Component & root_of_Vset vT c}.
+Proof.
+  intros aVar vT aT aTree.
+  
+
+Lemma aVarTrees_same_root_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
+  vT1 = vT2 -> {c : Component & (root_of_Vset vT1 c /\ root_of_Vset vT2 c)}.
+Proof.
+  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 vT1vT2.
+  apply aVarTree_root_exists in aTree1.
+  apply aVarTree_root_exists in aTree2.
+  destruct aTree1. destruct aTree2.
+  unfold root_of_Vset in *.
+  destruct r. destruct r0.
+  exists x.
+  split.
+  auto.
+  split ; rewrite <- vT1vT2 in *.
+  apply H.
+  apply H0.
+Qed.
+
+
+
+
+
 
 Lemma comp_diff_aVarTrees_diff: forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 -> 
@@ -553,6 +584,13 @@ Proof.
   destruct a0.
   assert (isa_aVarComponent aVar x).
   apply (only_aVars_inaVarTree vT1 aT1 aVar aTree1 x H).
+  unfold max_aVarVset in *.
+  assert (~exists y : Component, (vT1 y /\ vT2 y)).
+  admit.
+  intuition.
+  destruct H2.
+  
+  
      
   
       
