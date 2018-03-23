@@ -642,17 +642,21 @@ Definition is_aVarspanning (aVar : Var) (vT : V_set) : Prop :=
   forall c, (v c /\ isa_aVarComponent aVar c) -> vT c.
   
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var),
-  forall vT1 vT2 aT1 aT2, aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 ->
-    vT1 = vT2 -> 
+  (forall vT1 vT2 aT1 aT2 (aTree1 : aVarTree aVar vT1 aT1) (aTree2 : aVarTree aVar vT2 aT2),
+    (max_aVarVset aVar vT1 /\ max_aVarVset aVar vT2) ->
+    vT1 = vT2) -> 
   {vT : V_set & {aT : A_set & {aTree: aVarTree aVar vT aT & is_aVarspanning aVar vT}}}.
 Proof.
-  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 same.
-  exists vT1.
-  exists aT1.
-  exists aTree1.
-  unfold is_aVarspanning.
+  intros aVar.
   intros.
-  destruct H.
+
+  specialize (H v v a a).
+  
+
+
+
+  elim g.
+  induction g.
   
   
   
