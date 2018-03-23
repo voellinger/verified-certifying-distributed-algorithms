@@ -529,8 +529,36 @@ Proof.
     auto.
 Qed.
 
+Fixpoint root_of_aTree (aVar : Var) (vT : V_set) (aT : A_set) (aTree: aVarTree aVar vT aT) (n : nat) : Component :=
+  match aTree with
+  | CC_isolated _ x _ _  => index (max n (component_index x))
+  | CC_leaf aVar v' a' x y _ _ _ _ _ t' => root_of_aTree aVar v' a' t' (max n (component_index y))
+  | CC_eq aVar vT vT' aT aT' _ _ t' => root_of_aTree aVar vT aT t' n
+  end.
+
 Definition root_of_Vset (vT : V_set) (root: Component) : Prop :=
   (vT root /\ forall (c : Component), vT c -> component_index c <= component_index root).
+
+Lemma root_of_aTree_finds_root : forall (aVar : Var) (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
+  root_of_Vset vT (root_of_aTree aVar vT aT aTree 0).
+Proof.
+  intros aVar vT aT aTree.
+  unfold root_of_Vset.
+  induction aTree.
+  + simpl.
+    split ; intros.
+    unfold component_index.
+    destruct x.
+    apply In_single.
+    inversion H.
+    auto.
+  + simpl.
+    destruct IHaTree.
+    split ; intros.
+    admit.
+    specialize (H0 c).
+Admitted.
+    
 
 Lemma root_same_aVarTrees_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
@@ -546,10 +574,54 @@ Proof.
   auto.
 Qed.
 
+Lemma components_eq_dec : forall (c1 c2 : Component),
+  {component_index c1 <= component_index c2} +
+  {component_index c1 > component_index c2}.
+Proof.
+  intros c1.
+  destruct c1.
+  induction n.
+  + left.
+    destruct c2.
+    simpl.
+    induction n.
+    reflexivity.
+    auto.
+  + intros c2.
+    specialize (IHn c2).
+    destruct c2.
+    simpl in *.
+    destruct IHn.
+    assert ({n = n0} + {n <> n0}).
+    apply Nat.eq_dec.
+    destruct H.
+    right.
+    intuition.
+    left.
+    intuition.
+    right.
+    intuition.
+Qed.
+
 Lemma aVarTree_root_exists : forall (aVar : Var) (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
   {c : Component & root_of_Vset vT c}.
 Proof.
   intros aVar vT aT aTree.
+  induction aTree.
+  + exists x.
+    unfold root_of_Vset.
+    auto.
+    split.
+    apply In_single.
+    intros.
+    inversion H. auto.
+  + destruct IHaTree.
+    assert ({component_index x0 <= component_index  y} +
+            {component_index x0 > component_index y}).
+    apply components_eq_dec.
+    destruct H.
+    
+    
   
 
 Lemma aVarTrees_same_root_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
