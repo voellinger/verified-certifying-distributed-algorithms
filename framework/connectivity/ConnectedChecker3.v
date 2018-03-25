@@ -331,6 +331,20 @@ Proof.
         auto.
 Qed.
 
+Lemma W_iny_vl :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el -> vl <> V_nil -> In y vl.
+Proof.
+        intros v a x y vl el w; elim w; intros.
+        absurd (V_nil = V_nil); auto.
+
+        inversion w0.
+        simpl; auto.
+
+        rewrite H6; simpl; right.
+        apply H; rewrite <- H6; discriminate.
+Qed.
+
 Lemma aVarTrees_are_aVarWalks: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT),
  (forall (v1 v2 : Component), vT v1 -> vT v2 -> {vl : V_list & {el : E_list & {w : Walk v a v1 v2 vl el & aVarWalk aVar v1 v2 vl el w}}}).
 Proof.
@@ -712,15 +726,62 @@ Proof.
     apply IHatree.
 Qed.
 
+Lemma cdr_simpl : forall (vl : V_list) (c : Component),
+  In c (cdr (rev vl)) -> In c vl.
+Proof.
+Admitted.
+
 Lemma aVarwalk_reverse: forall (aVar : Var) (vl : V_list) (el : E_list) (x y : Component)
   (w : Walk v a x y vl el) (aw : aVarWalk aVar x y vl el w),
   {vl : V_list & {el : E_list & {ww: Walk v a y x vl el & aVarWalk aVar y x vl el ww}}}.
 Proof.
   intros aVar vl el x y w aw.
   induction w.
-  + 
-  
-  
+  + exists V_nil.
+    exists E_nil.
+    exists (W_null v a x v0).
+    apply aw.
+  + assert (Walk v a x z (y :: vl) (E_ends x y :: el)).
+    apply W_step ; auto.
+    assert (Graph v a).
+    apply Connected_Isa_Graph.
+    apply g.
+    apply (Walk_reverse v a H0 x z (y :: vl) (E_ends x y :: el)) in H.
+    exists (cdr (rev (x :: y :: vl))).
+    exists (E_reverse (E_ends x y :: el)).
+    exists H.
+    unfold aVarWalk in aw.
+    unfold aVarWalk.
+    intros.
+    destruct vl.
+    inversion H1.
+    rewrite <- H2 in *.
+    inversion w.
+    rewrite <- H5 in *.
+    apply (aw y).
+    simpl.
+    right. left. auto.
+    simpl in H2.
+    destruct H2.
+    rewrite <- H2.
+    apply (aw x).
+    simpl.
+    auto.
+    inversion H2.
+    inversion H1.
+    rewrite <- H2 in *.
+    assert (w' := w).
+    apply (W_iny_vl v a y z (v1 :: vl) el) in w'.
+    apply (aw z).
+    simpl.
+    destruct w'.
+    right. right. left. auto.
+    right. right. right. auto.
+    intuition.
+    inversion H3.
+    apply cdr_simpl in H2.
+    apply (aw c H2).
+Qed.
 
 Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   is_aVarspanning aVar vT1 -> aVarTree aVar vT1 aT1 -> 
