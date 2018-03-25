@@ -650,6 +650,7 @@ Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   (vT c /\ max_aVarVset aVar vT)}}}.
 Proof.
   intros aVar c vc isac.
+  induction g.
 Admitted.
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
