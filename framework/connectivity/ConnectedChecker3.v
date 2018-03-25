@@ -695,7 +695,22 @@ Proof.
   apply (G_ina_inv2 v a H2 c1 c2 H0).
   apply (isspanning c2).
   auto.
-Qed.  
+Qed.
+
+Lemma aVarTree_means_component : forall (aVar : Var) (vT : V_set) (aT : A_set),
+  aVarTree aVar vT aT -> {x : Component & vT x}.
+Proof.
+  intros aVar vT aT atree.
+  induction atree.
+  + exists x.
+    apply In_single.
+  + destruct IHatree.
+    exists x.
+    apply In_right.
+    apply v0.
+  + rewrite <- e in *.
+    apply IHatree.
+Qed.
 
 Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   is_aVarspanning aVar vT1 -> aVarTree aVar vT1 aT1 -> 
@@ -703,11 +718,26 @@ Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : 
 Proof.
   intros aVar vt1 vt2 at1 at2 isspanning spantree atree maxtree.
   apply U_set_eq.
-  intros.
-  aVarTree besteht aus mindestens einer Komponente
-  das ist eine aVar-Komponente
-  diese ist in spantree enthalten
-  x 
+  split ; intros.
+  + assert (atree' := atree).
+    apply (aVarTree_means_component aVar vt2 at2) in atree'.
+    destruct atree'.
+    assert (v0' := v0).
+    assert (v0'' := v0).
+    apply (only_aVars_inaVarTree vt2 at2 aVar atree) in v0.
+    apply (only_vs_inaVarTree vt2 at2 aVar atree) in v0'.
+    unfold is_aVarspanning in isspanning.
+    assert (vt1 x0).
+    apply (isspanning x0) ; auto.
+    (* es gibt einen weg von x nach x0 in spantree
+    f\u00fcr jeden teilweg gibt es einen weg in maxtree
+    also gibt es einen weg von x nach x0 in maxtree
+    also ist x in maxtree *)
+  + assert (H' := H).
+    apply (only_aVars_inaVarTree vt2 at2 aVar atree) in H.
+    unfold is_aVarspanning in isspanning.
+    apply (only_vs_inaVarTree vt2 at2 aVar atree) in H'.
+    apply (isspanning x) ; auto.
 Admitted.
 
 Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (vT : V_set) (aT : A_set),
