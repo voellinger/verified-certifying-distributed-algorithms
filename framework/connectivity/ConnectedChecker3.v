@@ -679,6 +679,36 @@ Proof.
   apply H0.
 Qed.
 
+Lemma spanningTree_aTree_max : forall (aVar : Var) (vT : V_set) (aT : A_set),
+  is_aVarspanning aVar vT -> aVarTree aVar vT aT ->
+  max_aVarVset aVar vT.
+Proof.
+  intros aVar vT aT isspanning spanningtree.
+  unfold max_aVarVset ; intros.
+  destruct H.
+  destruct H0.
+  unfold is_aVarspanning in isspanning.
+  assert (v c2).
+  assert (Graph v a).
+  apply Connected_Isa_Graph.
+  apply g.
+  apply (G_ina_inv2 v a H2 c1 c2 H0).
+  apply (isspanning c2).
+  auto.
+Qed.  
+
+Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  is_aVarspanning aVar vT1 -> aVarTree aVar vT1 aT1 -> 
+  aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT2 -> vT1 = vT2.
+Proof.
+  intros aVar vt1 vt2 at1 at2 isspanning spantree atree maxtree.
+  apply U_set_eq.
+  aVarTree besteht aus mindestens einer Komponente
+  das ist eine aVar-Komponente
+  diese ist in spantree enthalten
+  
+Admitted.
+
 Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (vT : V_set) (aT : A_set),
   is_aVarspanning aVar vT -> aVarTree aVar vT aT -> 
   all_maxaVarTreesSame aVar.
@@ -688,10 +718,16 @@ Proof.
   intros.
   destruct H.
   unfold is_aVarspanning in isspanning.
-  apply U_set_eq.
-  unfold max_aVarVset in *.
-  intros ; split.
-  + 
+  assert (vT = vT1).
+  apply (spanningTree_aTree_max aVar vT vT1 aT aT1) ; auto.
+  assert (vT = vT2).
+  apply (spanningTree_aTree_max aVar vT vT2 aT aT2) ; auto.
+  rewrite <- H1.
+  auto.
+Qed.
+    
+    
+    
   
   
 
