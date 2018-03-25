@@ -679,7 +679,7 @@ Proof.
   apply H0.
 Qed.
 
-Lemma spanningTree_aTree_max : forall (aVar : Var) (vT : V_set) (aT : A_set),
+Lemma spanningTree_max : forall (aVar : Var) (vT : V_set) (aT : A_set),
   is_aVarspanning aVar vT -> aVarTree aVar vT aT ->
   max_aVarVset aVar vT.
 Proof.
@@ -703,10 +703,11 @@ Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : 
 Proof.
   intros aVar vt1 vt2 at1 at2 isspanning spantree atree maxtree.
   apply U_set_eq.
+  intros.
   aVarTree besteht aus mindestens einer Komponente
   das ist eine aVar-Komponente
   diese ist in spantree enthalten
-  
+  x 
 Admitted.
 
 Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (vT : V_set) (aT : A_set),
