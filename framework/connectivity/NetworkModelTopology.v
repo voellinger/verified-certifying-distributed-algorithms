@@ -91,8 +91,7 @@ Proof.
     + rewrite <- e in *.
       rewrite <- e0 in *.
       apply (IHc H).
-Qed.
-    
+Qed.  
 
 Lemma C_non_directed : forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).

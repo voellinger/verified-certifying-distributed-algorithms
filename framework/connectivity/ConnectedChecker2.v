@@ -229,7 +229,7 @@ Proof.
     apply IHcc.
 Qed.
 
-Definition max_aVarVset (aVar : Var) (vT : V_set) : Prop :=
+Definition max_aVarVset {a : A_set} (aVar : Var) (vT : V_set) : Prop :=
   (forall c1 c2 : Component, (vT c1 /\ a (A_ends c1 c2) /\ isa_aVarComponent aVar c2) -> vT c2).
 
 Lemma only_aVars_inaVarTree: forall (vT : V_set) (aT : A_set) (aVar : Var) (cc : aVarTree aVar vT aT) (x : Component),
@@ -371,7 +371,7 @@ Qed.
 
 Lemma aVarWalk_in_aVarTree: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
                        (v1 v2: Component) (vl : V_list) (el : E_list) (w : Walk v a v1 v2 vl el),
-  max_aVarVset aVar vT -> vT v1 -> aVarWalk aVar v1 v2 vl el w -> vT v2.
+  max_aVarVset a aVar vT -> vT v1 -> aVarWalk aVar v1 v2 vl el w -> vT v2.
 Proof.
   intros aVar vT aT cc v1 v2 vl el w CC vTv1 aWalk.
   induction w ; unfold max_aVarVset in CC.
@@ -621,7 +621,7 @@ Proof.
 Qed.
 
 Lemma aVarTrees_same_root_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
-  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
+  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset a aVar vT1 -> max_aVarVset aVar vT2 ->
   vT1 = vT2 -> {c : Component & (root_of_Vset vT1 c /\ root_of_Vset vT2 c)}.
 Proof.
   intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 vT1vT2.
@@ -646,18 +646,66 @@ Definition all_aVarTreesSame (aVar : Var) : Prop :=
     (max_aVarVset aVar vT1 /\ max_aVarVset aVar vT2) ->
     vT1 = vT2).
 
+Lemma aVarTree_maxTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
+  aVarTree aVar vT aT -> 
+  {vT2 : V_set & {aT2 : A_set & {maTree : aVarTree aVar vT2 aT2 & 
+    (max_aVarVset aVar vT2 /\ V_included vT vT2 /\ A_included aT aT2)}}}.
+Proof.
+  intros.
+Admitted.
+
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
    all_aVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
   is_aVarspanning aVar vT.
 Proof.
   intros aVar vT aT allSame aTree maTree.
-  induction g ; unfold is_aVarspanning in * ; unfold all_aVarTreesSame in * ; intros.
-  + assert (aVarTree aVar (V_single c) A_empty).
+(*   assert ({v0 : V_set & {a0 : A_set & Connected v0 a0}}).
+  exists v.
+  exists a.
+  apply g.
+  destruct X.
+  destruct s.
+ *)  induction g. unfold is_aVarspanning in * ; unfold all_aVarTreesSame in * ; intros.
+  + clear x.
+    assert (aVarTree aVar (V_single c) A_empty).
     destruct H.
     apply CC_isolated.
     auto.
     auto.
-    specialize (allSame vT (V_single c) aT A_empty aTree H0).
+(*     (* *)apply (aVarTree_maxTree) in H0.
+    destruct H0.
+    destruct s.
+    destruct s.
+    destruct a0.
+    destruct H1.
+    specialize (allSame vT x aT x0 aTree x1).
+    assert (vT = x).
+    auto.
+    unfold V_included in H1.
+    unfold Included in H1.
+    rewrite H3.
+    apply (H1 c).
+    apply In_single.    *) 
+(* *)specialize (allSame vT (V_single c) aT A_empty aTree H0).
+    assert (vT = V_single c).
+    apply allSame.
+    split.
+    auto.
+    unfold max_aVarVset.
+    intros.
+    destruct H1.
+    destruct H2.
+    assert (a = A_empty).
+    admit.
+    rewrite H4 in *.
+    inversion H2.
+    assert (vT = V_single c).
+    apply allSame.
+    auto.
+    rewrite H2.
+    apply In_single.
+
+(* (* *)specialize (allSame vT (V_single c) aT A_empty aTree H0).
     assert (max_aVarVset aVar (V_single c)).
     unfold max_aVarVset.
     intros.
@@ -672,7 +720,13 @@ Proof.
     auto.
     rewrite H2.
     apply In_single.
-  + 
+ *)  + apply (IHc c0).
+    apply H.
+  + apply (IHc c0).
+    apply H.
+  + apply (IHc c0).
+    apply H.
+Qed.
 
   
 
