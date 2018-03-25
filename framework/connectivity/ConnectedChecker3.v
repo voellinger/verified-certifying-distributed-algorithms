@@ -712,6 +712,16 @@ Proof.
     apply IHatree.
 Qed.
 
+Lemma aVarwalk_reverse: forall (aVar : Var) (vl : V_list) (el : E_list) (x y : Component)
+  (w : Walk v a x y vl el) (aw : aVarWalk aVar x y vl el w),
+  {vl : V_list & {el : E_list & {ww: Walk v a y x vl el & aVarWalk aVar y x vl el ww}}}.
+Proof.
+  intros aVar vl el x y w aw.
+  induction w.
+  + 
+  
+  
+
 Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
   is_aVarspanning aVar vT1 -> aVarTree aVar vT1 aT1 -> 
   aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT2 -> vT1 = vT2.
@@ -729,10 +739,19 @@ Proof.
     unfold is_aVarspanning in isspanning.
     assert (vt1 x0).
     apply (isspanning x0) ; auto.
-    (* es gibt einen weg von x nach x0 in spantree
-    f\u00fcr jeden teilweg gibt es einen weg in maxtree
-    also gibt es einen weg von x nach x0 in maxtree
-    also ist x in maxtree *)
+    assert (H0' := H0).
+    apply (aVarTrees_are_aVarWalks aVar vt1 at1 spantree x x0) in H0'.
+    destruct H0'.
+    destruct s.
+    destruct s.
+    assert (Graph v a).
+    apply Connected_Isa_Graph.
+    apply g.
+    assert (x3' := x3).
+    apply (Walk_reverse v a H1 x x0 x1 x2) in x3'.
+    apply (aVarWalk_in_aVarTree aVar vt2 at2 atree x0 x (cdr (rev (x :: x1))) (E_reverse x2) x3') ; auto.
+    admit.
+    apply H.
   + assert (H' := H).
     apply (only_aVars_inaVarTree vt2 at2 aVar atree) in H.
     unfold is_aVarspanning in isspanning.
