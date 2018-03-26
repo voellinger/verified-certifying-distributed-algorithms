@@ -860,15 +860,28 @@ Proof.
     apply (Walk_reverse v a H1 x x0 x1 x2) in x3'.
     apply (aVarWalk_in_aVarTree aVar vt2 at2 atree x0 x (cdr (rev (x :: x1))) (E_reverse x2) x3') ; auto.
     apply (aVarwalk_reverse aVar x1 x2 x x0 x3) in a0.
-    
-    admit.
+    destruct a0.
+    destruct s.
+    destruct s.
+    destruct a0.
+    destruct H3.
+    unfold aVarWalk in *.
+    intros.
+    apply (H2 c).
+    simpl in H5.
+    destruct H5.
+    rewrite H5.
+    simpl. left. auto.
+    rewrite H3.
+    simpl.
+    right. apply H5.
     apply H.
   + assert (H' := H).
     apply (only_aVars_inaVarTree vt2 at2 aVar atree) in H.
     unfold is_aVarspanning in isspanning.
     apply (only_vs_inaVarTree vt2 at2 aVar atree) in H'.
     apply (isspanning x) ; auto.
-Admitted.
+Qed.
 
 Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (vT : V_set) (aT : A_set),
   is_aVarspanning aVar vT -> aVarTree aVar vT aT -> 
