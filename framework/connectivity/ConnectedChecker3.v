@@ -726,21 +726,67 @@ Proof.
     apply IHatree.
 Qed.
 
-Lemma cdr_simpl : forall (vl : V_list) (c : Component),
-  In c (cdr (rev vl)) -> In c vl.
+Lemma cdr_app :
+ forall vl vl' : V_list, vl <> nil -> cdr (vl ++ vl') = cdr vl ++ vl'.
 Proof.
-Admitted.
+        simple induction vl; simpl; intros.
+        absurd (V_nil = V_nil); auto.
+
+        trivial.
+Qed.
+
+Lemma neq_symm: forall (X : Type) {p q: X}, p <> q -> q <> p.
+Proof.
+  intros X p q pq.
+  unfold not.
+  intros.
+  apply pq.
+  symmetry.
+  apply H.
+Qed.
+
+Lemma cdr_rev: forall (x: Component) (vl: V_list),
+  In x (cdr (rev vl)) -> In x vl.
+Proof.
+  intros x vl i.
+  induction vl.
+  simpl in i.
+  inversion i.
+  unfold In.
+  simpl in i.
+  destruct vl.
+  simpl in i.
+  inversion i.
+  rewrite cdr_app in i.
+  apply in_app_or in i.
+  destruct i.
+  right.
+  apply IHvl.
+  apply H.
+  left.
+  inversion H.
+  apply H0.
+  inversion H0.
+  apply neq_symm.
+  apply app_cons_not_nil.
+Qed.
 
 Lemma aVarwalk_reverse: forall (aVar : Var) (vl : V_list) (el : E_list) (x y : Component)
   (w : Walk v a x y vl el) (aw : aVarWalk aVar x y vl el w),
-  {vl : V_list & {el : E_list & {ww: Walk v a y x vl el & aVarWalk aVar y x vl el ww}}}.
+  {vl0 : V_list & {el0 : E_list & {ww: Walk v a y x vl0 el0 & aVarWalk aVar y x vl0 el0 ww
+                                /\ vl0 = (cdr (rev (x :: vl))) 
+                                /\ el0 = (E_reverse el)}}}.
 Proof.
   intros aVar vl el x y w aw.
   induction w.
   + exists V_nil.
     exists E_nil.
     exists (W_null v a x v0).
+    split.
     apply aw.
+    split.
+    auto.
+    auto.
   + assert (Walk v a x z (y :: vl) (E_ends x y :: el)).
     apply W_step ; auto.
     assert (Graph v a).
@@ -750,6 +796,7 @@ Proof.
     exists (cdr (rev (x :: y :: vl))).
     exists (E_reverse (E_ends x y :: el)).
     exists H.
+    split.
     unfold aVarWalk in aw.
     unfold aVarWalk.
     intros.
@@ -779,8 +826,9 @@ Proof.
     right. right. right. auto.
     intuition.
     inversion H3.
-    apply cdr_simpl in H2.
+    apply cdr_rev in H2.
     apply (aw c H2).
+    split ; auto.
 Qed.
 
 Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
@@ -811,6 +859,8 @@ Proof.
     assert (x3' := x3).
     apply (Walk_reverse v a H1 x x0 x1 x2) in x3'.
     apply (aVarWalk_in_aVarTree aVar vt2 at2 atree x0 x (cdr (rev (x :: x1))) (E_reverse x2) x3') ; auto.
+    apply (aVarwalk_reverse aVar x1 x2 x x0 x3) in a0.
+    
     admit.
     apply H.
   + assert (H' := H).
