@@ -735,7 +735,7 @@ Proof.
   intros aVar c vc isac.
   assert (aVarTree aVar (V_single c) A_empty).
   apply CC_isolated ; auto.
-  unfold max_aVarVset.  induction g.
+  unfold max_aVarVset. induction g.
   + exists (V_single c).
     exists (A_empty).
     exists H.
@@ -749,7 +749,41 @@ Proof.
   + assert (isa_aVarComponent aVar y \/ ~ isa_aVarComponent aVar y).
     apply classic.
     destruct H0. (* ist die neue Komponente eine aVar? j/n*)
-    - admit.
+    - assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
+      apply classic.
+      destruct H1.
+      { admit.
+      }
+      { destruct vc.
+        inversion H2.
+        rewrite <- H3 in *.
+        exists (V_single y).
+        exists (A_empty).
+        exists H.
+        split.
+        auto.
+        intros.
+        destruct H4.
+        inversion H4.
+        rewrite <- H6 in *.
+        destruct H5.
+        inversion H5.
+        admit.
+        
+        apply IHc0 in H2.
+        destruct H2.
+        destruct H2.
+        destruct H2.
+        destruct H2.
+        exists x1.
+        exists x2.
+        exists x3.
+        split.
+        auto.
+        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c0 x y x3).
+        intuition.
+        intuition.
+      }
     - destruct vc. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
       { inversion H1.
         rewrite <- H2 in *.
@@ -769,19 +803,9 @@ Proof.
         exists x3.
         split.
         auto.
-        intros.
-        destruct H3.
-        destruct H4.
-        inversion H4. (* ist die Kante zur neuen Komponente? j/n *)
-        inversion H6.
-        rewrite <- H10 in *.
+        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c0 x y x3).
         intuition.
-        rewrite <- H9 in *.
-        rewrite <- H10 in *.
-        clear H isac H1 x0 H10 H9 H7 x4 H6 H4 c1 c2.
-        admit.
-(*         clear . *)
-        apply (H2 c1 c2) ; auto.
+        intuition.
       }
   + apply IHc0 in vc.
     clear IHc0.
