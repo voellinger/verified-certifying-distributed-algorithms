@@ -682,39 +682,37 @@ Proof.
   intros.
   destruct H.
   destruct H0.
-  destruct H1.
   assert (~ isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar y).
-  intuition.
-  intros.
   assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
   apply classic.
   assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
   apply classic.
   destruct H2.
   destruct H3.
-  apply H1 in H2.
-  inversion H2.
-  apply H3.
-  right.
-  apply H3.
-  left.
-  apply H2.
+  assert ((isa_aVarComponent aVar x /\ isa_aVarComponent aVar y)).
+  auto.
+  intuition.
+  right ; auto.
+  left ; auto.
   clear onenot.
-  assert (v c1).
-  apply (only_vs_inaVarTree vT aT aVar aTree c1 H).
-  induction g.
-  + inversion H0.
-    inversion H2.
-    - rewrite <- H5 in *.
-      destruct H1.
-      apply (aVarTree_no_notaVars aVar vT aT aTree) in H1.
-      intuition.
-      rewrite <- H6 in *.
-      apply (matree x y).
-    
-    inversion H2.
-    
-Admitted.
+  inversion H0.
+  + inversion H3.
+    rewrite <- H6 in *.
+    rewrite <- H7 in *.
+    clear H7 H6 H4 H3 x0 H0 c1 c2.
+    destruct H2.
+    apply (aVarTree_no_notaVars aVar vT aT aTree x) in H0.
+    intuition.
+    intuition.
+    rewrite <- H6 in *.
+    rewrite <- H7 in *.
+    clear H7 H6 H4 H3 x0 H0 c1 c2.
+    destruct H2.
+    intuition.
+    apply (aVarTree_no_notaVars aVar vT aT aTree y) in H0.
+    intuition.
+  + apply (matree c1 c2) ; auto.
+Qed.
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
@@ -787,7 +785,7 @@ Proof.
         destruct H2.
         exists x0. exists x1. exists x2.
         split. auto.
-        apply (maxaVarTree_remains aVar v0 x0 a0 x1 x y x2).
+        apply (maxaVarTree_remains aVar v0 x0 a0 x1 c0 x y x2).
         intuition.
         apply H3.
       }
@@ -797,7 +795,7 @@ Proof.
       destruct H1.
       exists x0. exists x1. exists x2.
       split. auto.
-      apply (maxaVarTree_remains aVar v0 x0 a0 x1 x y x2).
+      apply (maxaVarTree_remains aVar v0 x0 a0 x1 c0 x y x2).
       intuition.
       apply H2.
   + rewrite <- e0 in *.
