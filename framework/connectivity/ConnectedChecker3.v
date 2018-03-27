@@ -659,8 +659,14 @@ Definition all_maxaVarTreesSame (aVar : Var) : Prop :=
     (max_aVarVset aVar vT1 /\ max_aVarVset aVar vT2) ->
     vT1 = vT2).
 
+Lemma aVarTree_no_notaVars : forall (aVar : Var) (vT : V_set) (aT : A_set) 
+  (aTree : aVarTree aVar vT aT) (c : Component),
+  ~ isa_aVarComponent aVar c -> ~ vT c.
+Proof.
+Admitted.
+
 Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
-  (x y : Component) (aTree : aVarTree aVar vT aT),
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar vT aT),
   ~(isa_aVarComponent aVar x /\ isa_aVarComponent aVar y) ->
   (forall c1 c2 : Component,
  vT c1 /\
@@ -672,8 +678,43 @@ Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set)
  (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
  vT c2).
 Proof.
+  intros aVar v0 vT a0 aT g x y aTree onenot matree.
+  intros.
+  destruct H.
+  destruct H0.
+  destruct H1.
+  assert (~ isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar y).
+  intuition.
+  intros.
+  assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
+  apply classic.
+  assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
+  apply classic.
+  destruct H2.
+  destruct H3.
+  apply H1 in H2.
+  inversion H2.
+  apply H3.
+  right.
+  apply H3.
+  left.
+  apply H2.
+  clear onenot.
+  assert (v c1).
+  apply (only_vs_inaVarTree vT aT aVar aTree c1 H).
+  induction g.
+  + inversion H0.
+    inversion H2.
+    - rewrite <- H5 in *.
+      destruct H1.
+      apply (aVarTree_no_notaVars aVar vT aT aTree) in H1.
+      intuition.
+      rewrite <- H6 in *.
+      apply (matree x y).
+    
+    inversion H2.
+    
 Admitted.
-  
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
