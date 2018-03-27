@@ -768,8 +768,14 @@ Proof.
         rewrite <- H6 in *.
         destruct H5.
         inversion H5.
-        admit.
-        
+        inversion H8.
+        rewrite <- H11 in n.
+        intuition.
+        rewrite <- H11 in *.
+        intuition.
+        apply Connected_Isa_Graph in c0.
+        apply (G_ina_inv1 v0 a0 c0 y c2) in H8.
+        intuition.
         apply IHc0 in H2.
         destruct H2.
         destruct H2.
