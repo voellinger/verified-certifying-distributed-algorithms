@@ -659,6 +659,22 @@ Definition all_maxaVarTreesSame (aVar : Var) : Prop :=
     (max_aVarVset aVar vT1 /\ max_aVarVset aVar vT2) ->
     vT1 = vT2).
 
+Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
+  (x y : Component) (aTree : aVarTree aVar vT aT),
+  ~(isa_aVarComponent aVar x /\ isa_aVarComponent aVar y) ->
+  (forall c1 c2 : Component,
+ vT c1 /\
+ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
+ vT c2) -> 
+
+ (forall c1 c2 : Component,
+ vT c1 /\
+ (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
+ vT c2).
+Proof.
+Admitted.
+  
+
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
   (vT c /\ max_aVarVset aVar vT).
@@ -709,50 +725,44 @@ Proof.
         intuition.
         rewrite <- H9 in *.
         rewrite <- H10 in *.
+        clear H isac H1 x0 H10 H9 H7 x4 H6 H4 c1 c2.
         admit.
-(*         clear H10 H9 H7 x4 H6 H4 c1 c2. *)
+(*         clear . *)
         apply (H2 c1 c2) ; auto.
       }
   + apply IHc0 in vc.
     clear IHc0.
-    destruct vc.
+    assert (isa_aVarComponent aVar x \/ ~isa_aVarComponent aVar x).
+    apply classic.
     destruct H0.
-    destruct H0.
-    destruct H0.
-    exists x0.
-    exists x1.
-    exists x2.
-    split.
-    auto.
-    intros.
-    destruct H2.
-    destruct H3.
-    inversion H3.
-    inversion H5.
-    rewrite <- H8 in *.
-    rewrite <- H9 in *.
-    apply (H1 x y).
-    split.
-    auto.
-    split.
-    admit.
-    auto.
-    admit.
-    apply (H1 c1 c2) ; auto.
+    - assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
+      apply classic.
+      destruct H1.
+      { admit.
+      }
+      { destruct vc.
+        destruct H2.
+        destruct H2.
+        destruct H2.
+        exists x0. exists x1. exists x2.
+        split. auto.
+        apply (maxaVarTree_remains aVar v0 x0 a0 x1 x y x2).
+        intuition.
+        apply H3.
+      }
+    - destruct vc.
+      destruct H1.
+      destruct H1.
+      destruct H1.
+      exists x0. exists x1. exists x2.
+      split. auto.
+      apply (maxaVarTree_remains aVar v0 x0 a0 x1 x y x2).
+      intuition.
+      apply H2.
   + rewrite <- e0 in *.
     rewrite <- e in *.
     apply (IHc0 vc).
 Admitted.
-
-(* (* Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
-  v c -> isa_aVarComponent aVar c -> {vT : V_set & {aT : A_set & {aTree : aVarTree aVar vT aT &
-  (vT c /\ max_aVarVset aVar vT)}}}.
-Proof.
-  intros aVar c vc isac.
-  assert (aVarTree aVar (V_single c) A_empty).
-  apply CC_isolated ; auto.
-  induction g.
-Admitted. *) *)
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
   all_maxaVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
