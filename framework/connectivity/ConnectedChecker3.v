@@ -663,7 +663,21 @@ Lemma aVarTree_no_notaVars : forall (aVar : Var) (vT : V_set) (aT : A_set)
   (aTree : aVarTree aVar vT aT) (c : Component),
   ~ isa_aVarComponent aVar c -> ~ vT c.
 Proof.
-Admitted.
+  intros aVar vT aT atree c not.
+  induction atree.
+  + intuition.
+    inversion H.
+    rewrite <- H0 in not.
+    intuition.
+  + intuition.
+    inversion H.
+    inversion H1.
+    rewrite <- H3 in *.
+    intuition.
+    intuition.
+  + rewrite <- e.
+    apply (IHatree not).
+Qed.
 
 Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
   (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar vT aT),
