@@ -664,18 +664,52 @@ Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   (vT c /\ max_aVarVset aVar vT).
 Proof.
   intros aVar c vc isac.
-  remember vc.
-  induction g.
+  assert (aVarTree aVar (V_single c) A_empty).
+  apply CC_isolated ; auto.
+  unfold max_aVarVset.  induction g.
   + exists (V_single c).
     exists (A_empty).
-    inversion vc.
-    assert (aVarTree aVar (V_single c) A_empty).
-    apply CC_isolated ; auto.
-    inversion vc.
-    
+    exists H.
+    split.
+    apply In_single.
+    unfold max_aVarVset.
+    intros.
+    destruct H0.
+    destruct H1.
+    inversion H1.
+  + assert (isa_aVarComponent aVar y \/ ~ isa_aVarComponent aVar y).
+    apply classic.
+    destruct H0. (* ist die neue Komponente eine aVar? j/n*)
+    - admit.
+    - destruct vc. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
+      { admit.
+      }
+      { apply IHc0 in H1.
+        clear IHc0.
+        destruct H1.
+        destruct H1.
+        destruct H1.
+        destruct H1.
+        exists x1.
+        exists x2.
+        exists x3.
+        split.
+        auto.
+        intros.
+        destruct H3.
+        destruct H4.
+        inversion H4. (* ist die Kante zur neuen Komponente? j/n *)
+        inversion H6.
+        rewrite <- H10 in *.
+        intuition.
+        rewrite <- H9 in *.
+        rewrite <- H10 in *.
+        admit.
+(*         clear H10 H9 H7 x4 H6 H4 c1 c2. *)
+        apply (H2 c1 c2) ; auto.
 Admitted.
 
-(* Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
+(* (* Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> {vT : V_set & {aT : A_set & {aTree : aVarTree aVar vT aT &
   (vT c /\ max_aVarVset aVar vT)}}}.
 Proof.
@@ -683,7 +717,7 @@ Proof.
   assert (aVarTree aVar (V_single c) A_empty).
   apply CC_isolated ; auto.
   induction g.
-Admitted. *)
+Admitted. *) *)
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
   all_maxaVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
