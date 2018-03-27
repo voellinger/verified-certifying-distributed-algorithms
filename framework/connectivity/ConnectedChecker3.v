@@ -712,6 +712,36 @@ Proof.
         admit.
 (*         clear H10 H9 H7 x4 H6 H4 c1 c2. *)
         apply (H2 c1 c2) ; auto.
+      }
+  + apply IHc0 in vc.
+    clear IHc0.
+    destruct vc.
+    destruct H0.
+    destruct H0.
+    destruct H0.
+    exists x0.
+    exists x1.
+    exists x2.
+    split.
+    auto.
+    intros.
+    destruct H2.
+    destruct H3.
+    inversion H3.
+    inversion H5.
+    rewrite <- H8 in *.
+    rewrite <- H9 in *.
+    apply (H1 x y).
+    split.
+    auto.
+    split.
+    admit.
+    auto.
+    admit.
+    apply (H1 c1 c2) ; auto.
+  + rewrite <- e0 in *.
+    rewrite <- e in *.
+    apply (IHc0 vc).
 Admitted.
 
 (* (* Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
