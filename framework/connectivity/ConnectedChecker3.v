@@ -660,16 +660,33 @@ Definition all_maxaVarTreesSame (aVar : Var) : Prop :=
     vT1 = vT2).
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
+  v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
+  (vT c /\ max_aVarVset aVar vT).
+Proof.
+  intros aVar c vc isac.
+  remember vc.
+  induction g.
+  + exists (V_single c).
+    exists (A_empty).
+    inversion vc.
+    assert (aVarTree aVar (V_single c) A_empty).
+    apply CC_isolated ; auto.
+    inversion vc.
+    
+Admitted.
+
+(* Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> {vT : V_set & {aT : A_set & {aTree : aVarTree aVar vT aT &
   (vT c /\ max_aVarVset aVar vT)}}}.
 Proof.
   intros aVar c vc isac.
   assert (aVarTree aVar (V_single c) A_empty).
   apply CC_isolated ; auto.
-Admitted.
+  induction g.
+Admitted. *)
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
-   all_maxaVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
+  all_maxaVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
   is_aVarspanning aVar vT.
 Proof.
   intros aVar vT aT allSame aTree maTree.
@@ -678,9 +695,9 @@ Proof.
   destruct H.
   apply (exists_maxaVarTree aVar) in H.
   destruct H.
-  destruct s.
-  destruct s.
-  destruct a0.
+  destruct H.
+  destruct H.
+  destruct H.
   unfold all_maxaVarTreesSame in allSame.
   specialize (allSame vT x aT x0).
   assert (vT = x).
