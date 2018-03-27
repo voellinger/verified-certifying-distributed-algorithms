@@ -207,7 +207,7 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
 Definition isa_aVarComponent (aVar : Var) (c : Component) : Prop :=
   varList_has_var (init_var_l (component_name c)) aVar.
 
-Inductive aVarTree : Var  -> V_set -> A_set -> Set :=
+Inductive aVarTree : Var -> V_set -> A_set -> Set :=
   | CC_isolated : forall (aVar : Var) (x : Component), isa_aVarComponent aVar x -> v x -> aVarTree aVar (V_single x) A_empty
   | CC_leaf: forall (aVar : Var) (vT : V_set) (aT : A_set) x y,
       vT x -> ~ vT y -> v y -> a (A_ends x y) -> isa_aVarComponent aVar y -> aVarTree aVar vT aT -> aVarTree aVar (V_union (V_single y) vT) (A_union (E_set x y) aT)
@@ -734,10 +734,16 @@ Lemma aVarTree_no_novs : forall (aVar : Var) (vT v0: V_set) (aT a0: A_set) (c : 
 Proof.
 Admitted.
 
-Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
+Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
   (vT c /\ max_aVarVset aVar vT).
 Proof.
+(*   intros aVar c vc isac.
+  induction g.
+  + admit.
+  + admit.
+  + admit. *)
+
   intros aVar c vc isac.
   assert (aVarTree aVar (V_single c) A_empty).
   apply CC_isolated ; auto.
