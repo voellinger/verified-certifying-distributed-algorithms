@@ -682,7 +682,12 @@ Proof.
     destruct H0. (* ist die neue Komponente eine aVar? j/n*)
     - admit.
     - destruct vc. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
-      { admit.
+      { inversion H1.
+        rewrite <- H2 in *.
+        assert (V_single y y).
+        apply In_single.
+        apply (only_aVars_inaVarTree (V_single y) A_empty aVar H) in H3.
+        intuition.
       }
       { apply IHc0 in H1.
         clear IHc0.
