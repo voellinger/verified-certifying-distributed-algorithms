@@ -728,6 +728,12 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
+Lemma aVarTree_no_novs : forall (aVar : Var) (vT v0: V_set) (aT a0: A_set) (c : Connected v0 a0)
+  (aTree : aVarTree aVar vT aT) (c : Component),
+  ~ v0 c -> ~ vT c.
+Proof.
+Admitted.
+
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
   (vT c /\ max_aVarVset aVar vT).
@@ -752,7 +758,31 @@ Proof.
     - assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
       apply classic.
       destruct H1.
-      { admit.
+      { assert (x = c \/ x <> c).
+        apply classic.
+        destruct H2.
+        rewrite <- H2 in *.
+        apply IHc0 in v1.
+        clear IHc0 H2.
+        destruct v1.
+        destruct H2.
+        destruct H2.
+        destruct H2.
+        exists (V_union (V_single y) x0).
+        exists (A_union (E_set x y) x1).
+        
+        assert (aVarTree aVar (V_union (V_single y) x0) (A_union (E_set x y) x1)).
+        apply CC_leaf ; auto.
+        apply (aVarTree_no_novs aVar x0 v0 x1 a0 c0 x2 y) in n.
+        apply n.
+        admit.
+        admit.
+        exists H4.
+        split.
+        admit.
+        intros.
+        admit.
+        admit.
       }
       { destruct vc.
         inversion H2.
@@ -813,9 +843,7 @@ Proof.
         intuition.
         intuition.
       }
-  + apply IHc0 in vc.
-    clear IHc0.
-    assert (isa_aVarComponent aVar x \/ ~isa_aVarComponent aVar x).
+  + assert (isa_aVarComponent aVar x \/ ~isa_aVarComponent aVar x).
     apply classic.
     destruct H0.
     - assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
@@ -823,7 +851,9 @@ Proof.
       destruct H1.
       { admit.
       }
-      { destruct vc.
+      { apply IHc0 in vc.
+        clear IHc0.
+        destruct vc.
         destruct H2.
         destruct H2.
         destruct H2.
@@ -833,7 +863,9 @@ Proof.
         intuition.
         apply H3.
       }
-    - destruct vc.
+    - apply IHc0 in vc.
+      clear IHc0.
+      destruct vc.
       destruct H1.
       destruct H1.
       destruct H1.
