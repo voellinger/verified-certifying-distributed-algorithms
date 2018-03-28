@@ -741,7 +741,17 @@ Lemma maxaVarTree_remains' : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set)
  (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
  vT c2).
 Proof.
-Admitted.
+  intros aVar v0 vT a0 aT g x y aTree both matree.
+  intros.
+  destruct both as [vtx vty].
+  destruct H.
+  destruct H0.
+  inversion H0.
+  + inversion H2.
+    rewrite <- H6 ; auto.
+    rewrite <- H6 ; auto.
+  + apply (matree c1 c2) ; auto.
+Qed.
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
@@ -925,7 +935,15 @@ Proof.
             split.
             auto.
             assert (vD x /\ vD y).
+            assert (vX = vY).
+            apply (two_aVarTrees_same aVar vX vY aX aY xTree yTree).
+            unfold max_aVarVset. (* apply maxX. *)
+            admit. admit. admit.
+            assert (vD = vX).
             admit.
+            split.
+            rewrite H4 ; auto.
+            rewrite H4 ; rewrite H3 ; auto.
             apply (maxaVarTree_remains' aVar v0 vD a0 aD c x y dTree H3 maxD).
           - admit.
         + exists vD.
