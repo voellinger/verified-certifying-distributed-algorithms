@@ -738,12 +738,6 @@ Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component),
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
   (vT c /\ max_aVarVset aVar vT).
 Proof.
-(*   intros aVar c vc isac.
-  induction g.
-  + admit.
-  + admit.
-  + admit. *)
-
   intros aVar. 
   assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar (V_single c) A_empty).
   intros.
