@@ -728,9 +728,18 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
-Lemma aVarTree_no_novs : forall (aVar : Var) (vT v0: V_set) (aT a0: A_set) (c : Connected v0 a0)
-  (aTree : aVarTree aVar vT aT) (c : Component),
-  ~ v0 c -> ~ vT c.
+Lemma maxaVarTree_remains' : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar vT aT),
+  (vT x /\ vT y) ->
+  (forall c1 c2 : Component,
+ vT c1 /\
+ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
+ vT c2) -> 
+
+ (forall c1 c2 : Component,
+ vT c1 /\
+ (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
+ vT c2).
 Proof.
 Admitted.
 
@@ -872,7 +881,76 @@ Proof.
     - assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
       apply classic.
       destruct H1.
-      { admit.
+      { assert (forall c : Component,
+      v0 c ->
+      isa_aVarComponent aVar c ->
+      exists (vT : V_set) (aT : A_set) (_ : aVarTree aVar vT aT),
+        vT c /\
+        (forall c1 c2 : Component,
+         vT c1 /\ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 -> vT c2)).
+        apply (IHc H).
+        clear IHc H.
+        assert (Hx := H2 x v1 H0).
+        assert (Hy := H2 y v2 H1).
+        assert (Hd := H2 d vd isad).
+        clear H2.
+        destruct Hx as [vX Hx].
+        destruct Hx as [aX Hx].
+        destruct Hx as [xTree Hx].
+        destruct Hx as [vXx maxX].
+        destruct Hy as [vY Hy].
+        destruct Hy as [aY Hy].
+        destruct Hy as [yTree Hy].
+        destruct Hy as [vYy maxY].
+        destruct Hd as [vD Hd].
+        destruct Hd as [aD Hd].
+        destruct Hd as [dTree Hd].
+        destruct Hd as [vDd maxD].
+        (* 
+           Zwei F\u00e4lle: d liegt in (vTx oder vTy) oder nicht 
+             ja: zwei F\u00e4lle: (vTx und vTy haben gemeinsame Knoten) oder nicht
+                ja : nehme vTd (alle drei sind die gleichen Knotenmengen)
+                nein : nehme Union vTx vTy
+             nein: nehme vTd und trivial
+        *)
+        assert ((vD x \/ vD y) \/ ~(vD x \/ vD y)).
+        apply classic.
+        destruct H.
+        + assert (vX y \/ ~ vX y).
+          apply classic.
+          destruct H2.
+          - exists vD.
+            exists aD.
+            exists dTree.
+            split.
+            auto.
+            assert (vD x /\ vD y).
+            admit.
+            apply (maxaVarTree_remains' aVar v0 vD a0 aD c x y dTree H3 maxD).
+          - admit.
+        + exists vD.
+          exists aD.
+          exists dTree.
+          split.
+          auto.
+          intros.
+          apply (maxD c1 c2).
+          destruct H2.
+          destruct H3.
+          split. auto.
+          split.
+          inversion H3.
+          inversion H5.
+          rewrite <- H8 in H2.
+          assert (False).
+          apply H ; auto.
+          intuition.
+          rewrite <- H8 in H2.
+          assert (False).
+          apply H ; auto.
+          intuition.
+          auto.
+          auto.
       }
       { apply IHc in vd.
         clear IHc.
