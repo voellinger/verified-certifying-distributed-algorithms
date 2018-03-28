@@ -744,13 +744,17 @@ Proof.
   + admit.
   + admit. *)
 
-  intros aVar c vc isac.
-  assert (aVarTree aVar (V_single c) A_empty).
+  intros aVar. 
+  assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar (V_single c) A_empty).
+  intros.
   apply CC_isolated ; auto.
-  unfold max_aVarVset. induction g.
-  + exists (V_single c).
+  unfold max_aVarVset. induction g ; intros d vd isad.
+  + exists (V_single d).
     exists (A_empty).
-    exists H.
+    assert (aVarTree aVar (V_single d) A_empty).
+    apply (H d vd isad).
+    exists H0.
+    clear H0.
     split.
     apply In_single.
     unfold max_aVarVset.
@@ -764,7 +768,8 @@ Proof.
     - assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
       apply classic.
       destruct H1.
-      { assert (x = c \/ x <> c).
+      { admit.
+      (* assert (x = d \/ x <> d).
         apply classic.
         destruct H2.
         rewrite <- H2 in *.
@@ -788,31 +793,36 @@ Proof.
         admit.
         intros.
         admit.
-        admit.
+        admit. *)
       }
-      { destruct vc.
+      { destruct vd.
         inversion H2.
         rewrite <- H3 in *.
         exists (V_single y).
         exists (A_empty).
-        exists H.
+        assert (aVarTree aVar (V_single y) A_empty).
+        apply (H y).
+        apply In_left.
+        apply In_single.
+        auto.
+        exists H4.
         split.
         auto.
         intros.
-        destruct H4.
-        inversion H4.
-        rewrite <- H6 in *.
         destruct H5.
         inversion H5.
-        inversion H8.
-        rewrite <- H11 in n.
+        rewrite <- H7 in *.
+        destruct H6.
+        inversion H6.
+        inversion H9.
+        rewrite <- H12 in n.
         intuition.
-        rewrite <- H11 in *.
+        rewrite <- H12 in *.
         intuition.
-        apply Connected_Isa_Graph in c0.
-        apply (G_ina_inv1 v0 a0 c0 y c2) in H8.
+        apply Connected_Isa_Graph in c.
+        apply (G_ina_inv1 v0 a0 c y c2) in H9.
         intuition.
-        apply IHc0 in H2.
+        apply IHc in H2.
         destruct H2.
         destruct H2.
         destruct H2.
@@ -822,20 +832,29 @@ Proof.
         exists x3.
         split.
         auto.
-        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c0 x y x3).
+        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c x y x3).
         intuition.
         intuition.
+        intros.
+        apply (H c0).
+        apply In_right.
+        auto. auto. auto.
       }
-    - destruct vc. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
+    - destruct vd. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
       { inversion H1.
         rewrite <- H2 in *.
         assert (V_single y y).
         apply In_single.
-        apply (only_aVars_inaVarTree (V_single y) A_empty aVar H) in H3.
+        assert (aVarTree aVar (V_single y) A_empty).
+        apply (H y).
+        apply In_left.
+        apply In_single.
+        auto.
+        apply (only_aVars_inaVarTree (V_single y) A_empty aVar H4) in H3.
         intuition.
       }
-      { apply IHc0 in H1.
-        clear IHc0.
+      { apply IHc in H1.
+        clear IHc.
         destruct H1.
         destruct H1.
         destruct H1.
@@ -845,9 +864,13 @@ Proof.
         exists x3.
         split.
         auto.
-        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c0 x y x3).
+        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c x y x3).
         intuition.
         intuition.
+        intros.
+        apply (H c0).
+        apply In_right. 
+        auto. auto. auto.
       }
   + assert (isa_aVarComponent aVar x \/ ~isa_aVarComponent aVar x).
     apply classic.
@@ -857,32 +880,38 @@ Proof.
       destruct H1.
       { admit.
       }
-      { apply IHc0 in vc.
-        clear IHc0.
-        destruct vc.
+      { apply IHc in vd.
+        clear IHc.
+        destruct vd.
         destruct H2.
         destruct H2.
         destruct H2.
         exists x0. exists x1. exists x2.
         split. auto.
-        apply (maxaVarTree_remains aVar v0 x0 a0 x1 c0 x y x2).
+        apply (maxaVarTree_remains aVar v0 x0 a0 x1 c x y x2).
         intuition.
         apply H3.
+        intros.
+        apply (H c0). 
+        auto. auto. auto.
       }
-    - apply IHc0 in vc.
-      clear IHc0.
-      destruct vc.
+    - apply IHc in vd.
+      clear IHc.
+      destruct vd.
       destruct H1.
       destruct H1.
       destruct H1.
       exists x0. exists x1. exists x2.
       split. auto.
-      apply (maxaVarTree_remains aVar v0 x0 a0 x1 c0 x y x2).
+      apply (maxaVarTree_remains aVar v0 x0 a0 x1 c x y x2).
       intuition.
       apply H2.
+      intros.
+      apply (H c0).
+      auto. auto. auto.
   + rewrite <- e0 in *.
     rewrite <- e in *.
-    apply (IHc0 vc).
+    apply (IHc H d vd isad).
 Admitted.
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
