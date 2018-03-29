@@ -422,11 +422,11 @@ Proof.
   apply H.
 Qed.
 
-Lemma aVarTree_a_means_v: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
+Lemma aVarTree_a_means_v: forall (aVar : Var) (v : V_set) (a : A_set) (vT : V_set) (aT : A_set) (cc : aVarTree aVar v a vT aT) 
                        (v1 v2: Component),
   aT (A_ends v1 v2) -> (vT v1 /\ vT v2).
 Proof.
-  intros aVar vT aT cc v1 v2 acca.
+  intros aVar v a vT aT cc v1 v2 acca.
   induction cc.
   + inversion acca.
   + inversion acca.
@@ -434,14 +434,14 @@ Proof.
       rewrite <- H2 in *.
       rewrite <- H3 in *.
       split.
-      apply In_right. apply v0.
+      apply In_right. apply v3.
       apply In_left.
       apply In_single.
       split.
       apply In_left ; apply In_single.
       rewrite <- H2 in *.
       rewrite <- H3 in *.
-      apply In_right. apply v0.
+      apply In_right. apply v3.
     - apply IHcc in H.
       destruct H.
       split ; apply In_right.
@@ -452,32 +452,32 @@ Proof.
     apply (IHcc acca).
 Qed.
 
-Lemma aVarTree_a_means_a: forall (aVar : Var) (vT : V_set) (aT : A_set) (cc : aVarTree aVar vT aT) 
+Lemma aVarTree_a_means_a: forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (vT : V_set) (aT : A_set) (cc : aVarTree aVar v a vT aT) 
                        (ar: Arc),
   aT ar -> a ar.
 Proof.
-  intros aVar vT aT cc ar acca.
+  intros aVar v a c0 vT aT cc ar acca.
   induction cc.
   + inversion acca.
   + inversion acca.
     inversion H.
-    apply a0.
-    assert (Graph v a).
-    apply (Connected_Isa_Graph v a g).
-    apply (G_non_directed v a H2 x y a0).
-    apply (IHcc H).
+    apply a1.
+    assert (Graph v0 a0).
+    apply (Connected_Isa_Graph v0 a0 c0).
+    apply (G_non_directed v0 a0 H2 x y a1).
+    apply (IHcc c0 H).
   + rewrite <- e0 in *.
-    apply (IHcc acca).
+    apply (IHcc c0 acca).
 Qed.
 
-Lemma two_aVarTrees_same: forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
-  max_aVarVset aVar v1 -> max_aVarVset aVar v2 -> {c : Component & (v1 c /\ v2 c)} -> 
+Lemma two_aVarTrees_same: forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v a v1 a1) (c2: aVarTree aVar v a v2 a2),
+  max_aVarVset aVar a v1 -> max_aVarVset aVar a v2 -> {c : Component & (v1 c /\ v2 c)} -> 
     (v1 = v2).
 Proof.
-  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
+  intros aVar v a c0 v1 v2 a1 a2 c1 c2 acc1 acc2 same.
   + assert (forall x : Component, v1 x -> v2 x).
     intros.
-    apply (two_aVarTrees_same_v aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same x) in H.
+    apply (two_aVarTrees_same_v aVar v a c0 v1 v2 a1 a2 c1 c2 acc1 acc2 same x) in H.
     apply H.
     assert ({c : Component & v2 c /\ v1 c}).
     destruct same.
@@ -485,7 +485,7 @@ Proof.
     exists x. auto.
     assert (forall x : Component, v2 x -> v1 x).
     intros.
-    apply (two_aVarTrees_same_v aVar v2 v1 a2 a1 c2 c1 acc2 acc1 H0 x) in H1.
+    apply (two_aVarTrees_same_v aVar v a c0 v2 v1 a2 a1 c2 c1 acc2 acc1 H0 x) in H1.
     apply H1.
     apply U_set_eq.
     split.
@@ -493,16 +493,16 @@ Proof.
     apply H1.
 Qed.
 
-Lemma two_aVarTrees_same': forall (aVar : Var) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v1 a1) (c2: aVarTree aVar v2 a2),
-  max_aVarVset aVar v1 -> max_aVarVset aVar v2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
+Lemma two_aVarTrees_same': forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (v1 v2: V_set) (a1 a2: A_set) (c1 : aVarTree aVar v a v1 a1) (c2: aVarTree aVar v a v2 a2),
+  max_aVarVset aVar a v1 -> max_aVarVset aVar a v2 -> {ar : Arc & (a1 ar /\ a2 ar)} -> 
     (v1 = v2).
 Proof.
-  intros aVar v1 v2 a1 a2 c1 c2 acc1 acc2 same.
+  intros aVar v a c0 v1 v2 a1 a2 c1 c2 acc1 acc2 same.
   destruct same.
   destruct a0.
-  assert (forall v1 v2 v a aVar (c1 : aVarTree aVar v a), a (A_ends v1 v2) -> (v v1 /\ v v2)).
+  assert (forall v1 v2 v0 a0 aVar (c1 : aVarTree aVar v a v0 a0), a0 (A_ends v1 v2) -> (v0 v1 /\ v0 v2)).
   - intros.
-    induction c0.
+    induction c3.
     + inversion H1.
     + inversion H1.
       inversion H2.
@@ -510,7 +510,7 @@ Proof.
       rewrite <- H6 in *.
       split.
       apply In_right.
-      apply v4.
+      apply v5.
       apply In_left.
       apply In_single.
       split.
@@ -519,8 +519,8 @@ Proof.
       rewrite <- H5 in *.
       rewrite <- H6 in *.
       apply In_right.
-      apply v4.
-      apply (aVarTree_a_means_v aVar0 vT aT c0) in H2.
+      apply v5.
+      apply (aVarTree_a_means_v aVar0 v4 a0 vT aT c3) in H2.
       destruct H2.
       split.
       apply In_right.
@@ -529,7 +529,7 @@ Proof.
       apply H4.
     + rewrite <- e in *.
       rewrite <- e0 in *.
-      apply (IHc0 H1).
+      apply (IHc3 c0) ; auto.
   - destruct x.
     specialize (H1 v0 v3).
     assert (v1 v0 /\ v1 v3).
@@ -538,7 +538,7 @@ Proof.
     apply (H1 v2 a2 aVar c2 H0).
     destruct H2.
     destruct H3.
-    apply (two_aVarTrees_same aVar _ _ _ _ c1 c2 acc1 acc2).
+    apply (two_aVarTrees_same aVar v a c0 _ _ _ _ c1 c2 acc1 acc2).
     exists v0.
     auto.
 Qed.
@@ -546,16 +546,16 @@ Qed.
 Definition root_of_Vset (vT : V_set) (root: Component) : Prop :=
   (vT root /\ forall (c : Component), vT c -> component_index c <= component_index root).
 
-Lemma root_same_aVarTrees_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
-  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
+Lemma root_same_aVarTrees_same : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  aVarTree aVar v a vT1 aT1 -> aVarTree aVar v a vT2 aT2 -> max_aVarVset aVar a vT1 -> max_aVarVset aVar a vT2 ->
   {c : Component & (root_of_Vset vT1 c /\ root_of_Vset vT2 c)} -> vT1 = vT2.
 Proof.
-  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 H.
+  intros aVar v a c0 vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 H.
   destruct H.
   destruct a0 as [rmaTree1 rmaTree2].
   unfold root_of_Vset in *.
   destruct rmaTree1. destruct rmaTree2.
-  apply (two_aVarTrees_same aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2).
+  apply (two_aVarTrees_same aVar v a c0 vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2).
   exists x.
   auto.
 Qed.
@@ -589,10 +589,10 @@ Proof.
     intuition.
 Qed.
 
-Lemma aVarTree_root_exists : forall (aVar : Var) (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
+Lemma aVarTree_root_exists : forall (aVar : Var) (v : V_set) (a : A_set) (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
   {c : Component & root_of_Vset vT c}.
 Proof.
-  intros aVar vT aT aTree.
+  intros aVar v a vT aT aTree.
   induction aTree.
   + exists x.
     unfold root_of_Vset.
@@ -634,11 +634,11 @@ Proof.
     apply IHaTree.
 Qed.
 
-Lemma aVarTrees_same_root_same : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
-  aVarTree aVar vT1 aT1 -> aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT1 -> max_aVarVset aVar vT2 ->
+Lemma aVarTrees_same_root_same : forall (aVar : Var) (v : V_set) (a : A_set) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  aVarTree aVar v a vT1 aT1 -> aVarTree aVar v a vT2 aT2 -> max_aVarVset aVar a vT1 -> max_aVarVset aVar a vT2 ->
   vT1 = vT2 -> {c : Component & (root_of_Vset vT1 c /\ root_of_Vset vT2 c)}.
 Proof.
-  intros aVar vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 vT1vT2.
+  intros aVar v a vT1 vT2 aT1 aT2 aTree1 aTree2 maTree1 maTree2 vT1vT2.
   apply aVarTree_root_exists in aTree1.
   apply aVarTree_root_exists in aTree2.
   destruct aTree1. destruct aTree2.
@@ -652,19 +652,19 @@ Proof.
   apply H0.
 Qed.
 
-Definition is_aVarspanning (aVar : Var) (vT : V_set) : Prop := 
+Definition is_aVarspanning (aVar : Var) (v : V_set) (vT : V_set) : Prop := 
   forall c, (v c /\ isa_aVarComponent aVar c) -> vT c.
 
-Definition all_maxaVarTreesSame (aVar : Var) : Prop :=
-(forall vT1 vT2 aT1 aT2 (aTree1 : aVarTree aVar vT1 aT1) (aTree2 : aVarTree aVar vT2 aT2),
-    (max_aVarVset aVar vT1 /\ max_aVarVset aVar vT2) ->
+Definition all_maxaVarTreesSame (aVar : Var) (v : V_set) (a : A_set) : Prop :=
+(forall vT1 vT2 aT1 aT2 (aTree1 : aVarTree aVar v a vT1 aT1) (aTree2 : aVarTree aVar v a vT2 aT2),
+    (max_aVarVset aVar a vT1 /\ max_aVarVset aVar a vT2) ->
     vT1 = vT2).
 
-Lemma aVarTree_no_notaVars : forall (aVar : Var) (vT : V_set) (aT : A_set) 
-  (aTree : aVarTree aVar vT aT) (c : Component),
+Lemma aVarTree_no_notaVars : forall (aVar : Var) (v : V_set) (a : A_set) (vT : V_set) (aT : A_set) 
+  (aTree : aVarTree aVar v a vT aT) (c : Component),
   ~ isa_aVarComponent aVar c -> ~ vT c.
 Proof.
-  intros aVar vT aT atree c not.
+  intros aVar v a vT aT atree c not.
   induction atree.
   + intuition.
     inversion H.
@@ -681,20 +681,12 @@ Proof.
 Qed.
 
 Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
-  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar vT aT),
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar v0 a0 vT aT),
   ~(isa_aVarComponent aVar x /\ isa_aVarComponent aVar y) ->
-  (forall c1 c2 : Component,
- vT c1 /\
- a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
- vT c2) -> 
-
- (forall c1 c2 : Component,
- vT c1 /\
- (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
- vT c2).
+  max_aVarVset aVar a0 vT -> max_aVarVset aVar (A_union (E_set x y) a0) vT.
 Proof.
   intros aVar v0 vT a0 aT g x y aTree onenot matree.
-  intros.
+  unfold max_aVarVset in *. intros.
   destruct H.
   destruct H0.
   assert (~ isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar y).
@@ -716,7 +708,7 @@ Proof.
     rewrite <- H7 in *.
     clear H7 H6 H4 H3 x0 H0 c1 c2.
     destruct H2.
-    apply (aVarTree_no_notaVars aVar vT aT aTree x) in H0.
+    apply (aVarTree_no_notaVars aVar v0 a0 vT aT aTree x) in H0.
     intuition.
     intuition.
     rewrite <- H6 in *.
@@ -724,25 +716,18 @@ Proof.
     clear H7 H6 H4 H3 x0 H0 c1 c2.
     destruct H2.
     intuition.
-    apply (aVarTree_no_notaVars aVar vT aT aTree y) in H0.
+    apply (aVarTree_no_notaVars aVar v0 a0 vT aT aTree y) in H0.
     intuition.
   + apply (matree c1 c2) ; auto.
 Qed.
 
 Lemma maxaVarTree_remains' : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
-  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar vT aT),
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar v0 a0 vT aT),
   (vT x /\ vT y) ->
-  (forall c1 c2 : Component,
- vT c1 /\
- a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
- vT c2) -> 
-
- (forall c1 c2 : Component,
- vT c1 /\
- (A_union (E_set x y) a0) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
- vT c2).
+  max_aVarVset aVar a0 vT -> max_aVarVset aVar (A_union (E_set x y) a0) vT.
 Proof.
   intros aVar v0 vT a0 aT g x y aTree both matree.
+  unfold max_aVarVset in *.
   intros.
   destruct both as [vtx vty].
   destruct H.
@@ -754,22 +739,12 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
-Axiom dontuse1 : forall (c : Component),
-  v c.
 
-Axiom dontuse2 : forall (ar : Arc),
-  a ar.
-
-Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar vX aX)
-    (yTree : aVarTree aVar vY aY) (x y : Component) (c0 : Connected v0 a0),
+Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
+    (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
   vX x -> vY y -> ~ vX y ->  
-  (forall c1 c2 : Component,
-       vX c1 /\ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
-       vX c2) ->
-  (forall c1 c2 : Component,
-       vY c1 /\ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
-       vY c2) ->
-  aVarTree aVar (V_union vX vY) (A_union (A_union (E_set x y) aX) aY) (* /\
+  max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
+  aVarTree aVar v0 a0 (V_union vX vY) (A_union (A_union (E_set x y) aX) aY) (* /\
   forall c1 c2 : Component,
        (V_union vX vY) c1 /\ (A_union (A_union (E_set x y) aX) aY) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
        (V_union vX vY) c2 . *).
@@ -779,24 +754,23 @@ Proof.
   + 
 Admitted.
 
-Lemma exists_maxaVarTree : forall (aVar : Var) (c : Component), 
-  v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar vT aT),
-  (vT c /\ max_aVarVset aVar vT).
+Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (c : Component), 
+  v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
+  (vT c /\ max_aVarVset aVar a vT).
 Proof.
-  intros aVar. 
-  assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar (V_single c) A_empty).
+  intros aVar v a c0. 
+  assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar v a (V_single c) A_empty).
   intros.
   apply CC_isolated ; auto.
-  unfold max_aVarVset. induction g ; intros d vd isad.
+  unfold max_aVarVset. induction c0 ; intros d vd isad.
   + exists (V_single d).
     exists (A_empty).
-    assert (aVarTree aVar (V_single d) A_empty).
+    assert (aVarTree aVar (V_single x) A_empty (V_single d) A_empty).
     apply (H d vd isad).
     exists H0.
     clear H0.
     split.
     apply In_single.
-    unfold max_aVarVset.
     intros.
     destruct H0.
     destruct H1.
