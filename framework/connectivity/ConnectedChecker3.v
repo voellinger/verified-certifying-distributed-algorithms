@@ -781,32 +781,9 @@ Proof.
     - assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
       apply classic.
       destruct H1.
-      { admit.
-      (* assert (x = d \/ x <> d).
-        apply classic.
-        destruct H2.
-        rewrite <- H2 in *.
-        apply IHc0 in v1.
-        clear IHc0 H2.
-        destruct v1.
-        destruct H2.
-        destruct H2.
-        destruct H2.
-        exists (V_union (V_single y) x0).
-        exists (A_union (E_set x y) x1).
-        
-        assert (aVarTree aVar (V_union (V_single y) x0) (A_union (E_set x y) x1)).
-        apply CC_leaf ; auto.
-        apply (aVarTree_no_novs aVar x0 v0 x1 a0 c0 x2 y) in n.
-        apply n.
-        admit.
-        admit.
-        exists H4.
-        split.
-        admit.
-        intros.
-        admit.
-        admit. *)
+      { destruct vd.
+        + admit.
+        + admit.
       }
       { destruct vd.
         inversion H2.
@@ -945,7 +922,12 @@ Proof.
             rewrite H4 ; auto.
             rewrite H4 ; rewrite H3 ; auto.
             apply (maxaVarTree_remains' aVar v0 vD a0 aD c x y dTree H3 maxD).
-          - admit.
+          - exists (V_union vX vY).
+            exists (A_union (A_union (E_set x y) aX) aY).
+            assert (aVarTree aVar (V_union vX vY) (A_union (A_union (E_set x y) aX) aY)).
+            admit.
+(*             beweise, dass zwei bisher getrennte maxTrees vereint ein neuer maxtree sind *)
+            admit.
         + exists vD.
           exists aD.
           exists dTree.
