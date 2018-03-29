@@ -742,7 +742,7 @@ Qed.
 
 Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
     (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
-  vX x -> vY y -> ~ vX y ->  
+  vX x -> vY y -> ~ vX y ->  a0 (A_ends x y) -> 
   max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
   aVarTree aVar v0 a0 (V_union vX vY) (A_union (A_union (E_set x y) aX) aY) (* /\
   forall c1 c2 : Component,
@@ -762,7 +762,7 @@ Proof.
   assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar v a (V_single c) A_empty).
   intros.
   apply CC_isolated ; auto.
-  unfold max_aVarVset. induction c0 ; intros d vd isad.
+  induction c0 ; intros d vd isad.
   + exists (V_single d).
     exists (A_empty).
     assert (aVarTree aVar (V_single x) A_empty (V_single d) A_empty).
@@ -772,6 +772,7 @@ Proof.
     split.
     apply In_single.
     intros.
+    unfold max_aVarVset ; intros.
     destruct H0.
     destruct H1.
     inversion H1.
@@ -791,7 +792,7 @@ Proof.
         rewrite <- H3 in *.
         exists (V_single y).
         exists (A_empty).
-        assert (aVarTree aVar (V_single y) A_empty).
+        assert (aVarTree aVar (V_union (V_single y) v0)(A_union (E_set x y) a0) (V_single y) A_empty).
         apply (H y).
         apply In_left.
         apply In_single.
@@ -799,7 +800,7 @@ Proof.
         exists H4.
         split.
         auto.
-        intros.
+        unfold max_aVarVset ; intros.
         destruct H5.
         inversion H5.
         rewrite <- H7 in *.
@@ -810,17 +811,26 @@ Proof.
         intuition.
         rewrite <- H12 in *.
         intuition.
-        apply Connected_Isa_Graph in c.
-        apply (G_ina_inv1 v0 a0 c y c2) in H9.
+        apply Connected_Isa_Graph in c0.
+        apply (G_ina_inv1 v0 a0 c0 y c2) in H9.
         intuition.
-        apply IHc in H2.
+        apply IHc0 in H2.
         destruct H2.
         destruct H2.
         destruct H2.
         destruct H2.
         exists x1.
         exists x2.
-        exists x3.
+        admit. admit. admit.
+(*         assert (aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) x1 x2).
+        assert (Connected v0 (A_union (E_set x y) a0)).
+        admit.
+        apply (combine_aTrees aVar v0 x1 a0 x2 H4 x y x3).
+        apply (H y).
+        apply In_left.
+        apply In_single.
+        auto.
+        exists H4.
         split.
         auto.
         apply (maxaVarTree_remains aVar v0 x1 a0 x2 c x y x3).
@@ -829,39 +839,33 @@ Proof.
         intros.
         apply (H c0).
         apply In_right.
-        auto. auto. auto.
+        auto. auto. auto. *)
       }
     - destruct vd. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
       { inversion H1.
         rewrite <- H2 in *.
         assert (V_single y y).
         apply In_single.
-        assert (aVarTree aVar (V_single y) A_empty).
+        assert (aVarTree aVar (V_union (V_single y) v0)(A_union (E_set x y) a0) (V_single y) A_empty).
         apply (H y).
         apply In_left.
         apply In_single.
         auto.
-        apply (only_aVars_inaVarTree (V_single y) A_empty aVar H4) in H3.
-        intuition.
-      }
-      { apply IHc in H1.
-        clear IHc.
-        destruct H1.
-        destruct H1.
-        destruct H1.
-        destruct H1.
-        exists x1.
-        exists x2.
-        exists x3.
+        exists (V_single y).
+        exists (A_empty).
+        exists H4.
         split.
         auto.
-        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c x y x3).
+        apply (only_aVars_inaVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) (V_single y) A_empty H4) in H3.
         intuition.
-        intuition.
-        intros.
-        apply (H c0).
-        apply In_right. 
-        auto. auto. auto.
+      }
+      { apply IHc0 in H1.
+        clear IHc0.
+        destruct H1.
+        destruct H1.
+        destruct H1.
+        destruct H1.
+        admit. admit. admit.
       }
   + assert (isa_aVarComponent aVar x \/ ~isa_aVarComponent aVar x).
     apply classic.
