@@ -787,6 +787,24 @@ Proof.
   intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
 Admitted.
 
+Lemma combine_aTrees'' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set)(c0 : Connected v0 a0)
+    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
+  vX x -> ~ v0 y ->
+  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
+  aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) (V_union (V_single y) vX) (A_union (E_set x y) aX).
+Proof.
+  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
+Admitted.
+
+Lemma combine_aTrees''' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set) (c0 : Connected v0 a0)
+    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
+  vX x -> ~ v0 y ->
+  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
+  max_aVarVset aVar (A_union (E_set x y) a0) (V_union (V_single y) vX).
+Proof.
+  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
+Admitted.
+
 Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
   (vT c /\ max_aVarVset aVar a vT).
@@ -815,10 +833,20 @@ Proof.
     - assert (isa_aVarComponent aVar x \/ ~ isa_aVarComponent aVar x).
       apply classic.
       destruct H1.
-      { admit.
-     (* destruct vd.
+      { inversion vd.
         + admit.
-        + admit. *)
+        + assert (forall c : Component,
+        v0 c ->
+        isa_aVarComponent aVar c ->
+        aVarTree aVar v0 a0
+          (V_single c) A_empty).
+          intros.
+          apply CC_isolated ; auto.
+          assert (v1' := v1).
+          apply (IHc0 H4 x) in v1 ; auto.
+          clear H4.
+          clear H3 vd.
+          admit.
       }
       { destruct vd.
         inversion H2.
