@@ -769,32 +769,23 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
-
 Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
     (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
-  vX x -> vY y -> ~ vX y ->  a0 (A_ends x y) -> 
+  vX x -> vY y -> ~ vY x ->  ~ a0 (A_ends x y) -> 
   max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
-  aVarTree aVar v0 a0 (V_union vX vY) (A_union (A_union (E_set x y) aX) aY) (* /\
-  forall c1 c2 : Component,
-       (V_union vX vY) c1 /\ (A_union (A_union (E_set x y) aX) aY) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
-       (V_union vX vY) c2 . *).
+  aVarTree aVar v0 a0 (V_union vX vY) (A_union (A_union (E_set x y) aX) aY).
 Proof.
   intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
-  induction xTree.
-  + 
-  induction c0.
-  + inversion axy.
-  + apply (CC_leaf aVar v0 a0 (V_union vX vY)
-    (A_union (A_union (E_set x y) aX) aY)).
 Admitted.
 
-| CC_isolated : forall (aVar : Var) (v : V_set)(a : A_set) (x : Component), isa_aVarComponent aVar x -> v x -> aVarTree aVar v a (V_single x) A_empty
-  | CC_leaf: forall (aVar : Var) (v : V_set) (a : A_set) (vT : V_set) (aT : A_set) x y,
-      vT x -> ~ vT y -> v y -> a (A_ends x y) -> isa_aVarComponent aVar y -> aVarTree aVar v a vT aT -> aVarTree aVar v a (V_union (V_single y) vT) (A_union (E_set x y) aT)
-  | CC_eq: forall aVar (v : V_set) (a : A_set) vT vT' aT aT',
-    vT = vT' -> aT = aT' -> aVarTree aVar v a vT aT -> aVarTree aVar v a vT' aT'.
-
-
+Lemma combine_aTrees' : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
+    (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
+  vX x -> vY y -> ~ vY x ->  ~ a0 (A_ends x y) -> 
+  max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
+  max_aVarVset aVar (A_union (E_set x y) a0) (V_union vX vY).
+Proof.
+  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
+Admitted.
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
@@ -863,25 +854,17 @@ Proof.
         destruct H2.
         exists x1.
         exists x2.
-        admit. admit. admit.
-(*         assert (aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) x1 x2).
-        assert (Connected v0 (A_union (E_set x y) a0)).
-        admit.
-        apply (combine_aTrees aVar v0 x1 a0 x2 H4 x y x3).
-        apply (H y).
-        apply In_left.
-        apply In_single.
-        auto.
+        assert (aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) x1 x2).
+        apply (aVarTree_remains ) ; auto.
         exists H4.
         split.
         auto.
-        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c x y x3).
+        apply (maxaVarTree_remains aVar v0 x1 a0 x2 c0 x y x3).
         intuition.
         intuition.
         intros.
-        apply (H c0).
-        apply In_right.
-        auto. auto. auto. *)
+        apply CC_isolated ; auto.
+        auto.
       }
     - destruct vd. (* ist die Komponente f\u00fcr die wir zeigen sollen, dass sie drin ist die neue Komponente? j/n*)
       { inversion H1.
