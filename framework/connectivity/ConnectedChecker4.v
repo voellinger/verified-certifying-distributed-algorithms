@@ -856,7 +856,7 @@ Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Con
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
   (vT c /\ max_aVarVset aVar a vT).
 Proof.
-  intros aVar v a c0. 
+  (* intros aVar v a c0. 
   assert (forall c : Component, v c -> isa_aVarComponent aVar c -> aVarTree aVar v a (V_single c) A_empty).
   intros.
   apply CC_isolated ; auto.
@@ -1089,18 +1089,18 @@ Proof.
       auto. auto. auto. *)
   + rewrite <- e0 in *.
     rewrite <- e in *.
-    apply (IHc0 H d vd isad).
+    apply (IHc0 H d vd isad). *)
 Admitted.
 
-Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
-  all_maxaVarTreesSame aVar -> aVarTree aVar vT aT -> max_aVarVset aVar vT -> 
-  is_aVarspanning aVar vT.
+Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a) (vT : V_set) (aT : A_set),
+  all_maxaVarTreesSame aVar v a -> aVarTree aVar v a vT aT -> max_aVarVset aVar a vT -> 
+  is_aVarspanning aVar v vT.
 Proof.
-  intros aVar vT aT allSame aTree maTree.
+  intros aVar v a c vT aT allSame aTree maTree.
   unfold is_aVarspanning.
   intros.
   destruct H.
-  apply (exists_maxaVarTree aVar) in H.
+  apply (exists_maxaVarTree aVar v a) in H.
   destruct H.
   destruct H.
   destruct H.
@@ -1114,14 +1114,15 @@ Proof.
   split ; auto.
   rewrite H2.
   apply H.
+  apply c.
   apply H0.
 Qed.
 
-Lemma spanningTree_max : forall (aVar : Var) (vT : V_set) (aT : A_set),
-  is_aVarspanning aVar vT -> aVarTree aVar vT aT ->
-  max_aVarVset aVar vT.
+Lemma spanningTree_max : forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a) (vT : V_set) (aT : A_set),
+  is_aVarspanning aVar v vT -> aVarTree aVar v a vT aT ->
+  max_aVarVset aVar a vT.
 Proof.
-  intros aVar vT aT isspanning spanningtree.
+  intros aVar v a c vT aT isspanning spanningtree.
   unfold max_aVarVset ; intros.
   destruct H.
   destruct H0.
@@ -1129,23 +1130,24 @@ Proof.
   assert (v c2).
   assert (Graph v a).
   apply Connected_Isa_Graph.
-  apply g.
+  apply c.
   apply (G_ina_inv2 v a H2 c1 c2 H0).
   apply (isspanning c2).
   auto.
 Qed.
 
-Lemma aVarTree_means_component : forall (aVar : Var) (vT : V_set) (aT : A_set),
-  aVarTree aVar vT aT -> {x : Component & vT x}.
+Lemma aVarTree_means_component : forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a) (vT : V_set) (aT : A_set),
+  aVarTree aVar v a vT aT -> {x : Component & vT x}.
 Proof.
-  intros aVar vT aT atree.
+  intros aVar v a c vT aT atree.
   induction atree.
   + exists x.
     apply In_single.
   + destruct IHatree.
+    apply c.
     exists x.
     apply In_right.
-    apply v0.
+    apply v1.
   + rewrite <- e in *.
     apply IHatree.
 Qed.
@@ -1195,13 +1197,13 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
-Lemma aVarwalk_reverse: forall (aVar : Var) (vl : V_list) (el : E_list) (x y : Component)
-  (w : Walk v a x y vl el) (aw : aVarWalk aVar x y vl el w),
-  {vl0 : V_list & {el0 : E_list & {ww: Walk v a y x vl0 el0 & aVarWalk aVar y x vl0 el0 ww
+Lemma aVarwalk_reverse: forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a) (vl : V_list) (el : E_list) (x y : Component)
+  (w : Walk v a x y vl el) (aw : aVarWalk aVar v a x y vl el w),
+  {vl0 : V_list & {el0 : E_list & {ww: Walk v a y x vl0 el0 & aVarWalk aVar v a y x vl0 el0 ww
                                 /\ vl0 = (cdr (rev (x :: vl))) 
                                 /\ el0 = (E_reverse el)}}}.
 Proof.
-  intros aVar vl el x y w aw.
+  intros aVar v a c vl el x y w aw.
   induction w.
   + exists V_nil.
     exists E_nil.
@@ -1215,7 +1217,7 @@ Proof.
     apply W_step ; auto.
     assert (Graph v a).
     apply Connected_Isa_Graph.
-    apply g.
+    apply c.
     apply (Walk_reverse v a H0 x z (y :: vl) (E_ends x y :: el)) in H.
     exists (cdr (rev (x :: y :: vl))).
     exists (E_reverse (E_ends x y :: el)).
@@ -1251,39 +1253,39 @@ Proof.
     intuition.
     inversion H3.
     apply cdr_rev in H2.
-    apply (aw c H2).
+    apply (aw c0 H2).
     split ; auto.
 Qed.
 
-Lemma spanningTree_aTree_max : forall (aVar : Var) (vT1 vT2 : V_set) (aT1 aT2 : A_set),
-  is_aVarspanning aVar vT1 -> aVarTree aVar vT1 aT1 -> 
-  aVarTree aVar vT2 aT2 -> max_aVarVset aVar vT2 -> vT1 = vT2.
+Lemma spanningTree_aTree_max : forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a)(vT1 vT2 : V_set) (aT1 aT2 : A_set),
+  is_aVarspanning aVar v vT1 -> aVarTree aVar v a vT1 aT1 -> 
+  aVarTree aVar v a vT2 aT2 -> max_aVarVset aVar a vT2 -> vT1 = vT2.
 Proof.
-  intros aVar vt1 vt2 at1 at2 isspanning spantree atree maxtree.
+  intros aVar v a c vt1 vt2 at1 at2 isspanning spantree atree maxtree.
   apply U_set_eq.
   split ; intros.
   + assert (atree' := atree).
-    apply (aVarTree_means_component aVar vt2 at2) in atree'.
+    apply (aVarTree_means_component aVar v a c vt2 at2) in atree'.
     destruct atree'.
     assert (v0' := v0).
     assert (v0'' := v0).
-    apply (only_aVars_inaVarTree vt2 at2 aVar atree) in v0.
-    apply (only_vs_inaVarTree vt2 at2 aVar atree) in v0'.
+    apply (only_aVars_inaVarTree aVar v a vt2 at2 atree) in v0.
+    apply (only_vs_inaVarTree aVar v a vt2 at2 atree) in v0'.
     unfold is_aVarspanning in isspanning.
     assert (vt1 x0).
     apply (isspanning x0) ; auto.
     assert (H0' := H0).
-    apply (aVarTrees_are_aVarWalks aVar vt1 at1 spantree x x0) in H0'.
+    apply (aVarTrees_are_aVarWalks aVar v a c vt1 at1 spantree x x0) in H0'.
     destruct H0'.
     destruct s.
     destruct s.
     assert (Graph v a).
     apply Connected_Isa_Graph.
-    apply g.
+    apply c.
     assert (x3' := x3).
     apply (Walk_reverse v a H1 x x0 x1 x2) in x3'.
-    apply (aVarWalk_in_aVarTree aVar vt2 at2 atree x0 x (cdr (rev (x :: x1))) (E_reverse x2) x3') ; auto.
-    apply (aVarwalk_reverse aVar x1 x2 x x0 x3) in a0.
+    apply (aVarWalk_in_aVarTree aVar v a vt2 at2 atree x0 x (cdr (rev (x :: x1))) (E_reverse x2) x3') ; auto.
+    apply (aVarwalk_reverse aVar v a c x1 x2 x x0 x3) in a0.
     destruct a0.
     destruct s.
     destruct s.
@@ -1291,7 +1293,7 @@ Proof.
     destruct H3.
     unfold aVarWalk in *.
     intros.
-    apply (H2 c).
+    apply (H2 c0).
     simpl in H5.
     destruct H5.
     rewrite H5.
@@ -1301,25 +1303,25 @@ Proof.
     right. apply H5.
     apply H.
   + assert (H' := H).
-    apply (only_aVars_inaVarTree vt2 at2 aVar atree) in H.
+    apply (only_aVars_inaVarTree aVar v a vt2 at2 atree) in H.
     unfold is_aVarspanning in isspanning.
-    apply (only_vs_inaVarTree vt2 at2 aVar atree) in H'.
+    apply (only_vs_inaVarTree aVar v a vt2 at2 atree) in H'.
     apply (isspanning x) ; auto.
 Qed.
 
-Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (vT : V_set) (aT : A_set),
-  is_aVarspanning aVar vT -> aVarTree aVar vT aT -> 
-  all_maxaVarTreesSame aVar.
+Lemma spanningTree_allMaxTreesSame : forall (aVar : Var) (v : V_set) (a : A_set) (c : Connected v a)(vT : V_set) (aT : A_set),
+  is_aVarspanning aVar v vT -> aVarTree aVar v a vT aT -> 
+  all_maxaVarTreesSame aVar v a.
 Proof.
-  intros aVar vT aT isspanning atree.
+  intros aVar v a c vT aT isspanning atree.
   unfold all_maxaVarTreesSame.
   intros.
   destruct H.
   unfold is_aVarspanning in isspanning.
   assert (vT = vT1).
-  apply (spanningTree_aTree_max aVar vT vT1 aT aT1) ; auto.
+  apply (spanningTree_aTree_max aVar v a c vT vT1 aT aT1) ; auto.
   assert (vT = vT2).
-  apply (spanningTree_aTree_max aVar vT vT2 aT aT2) ; auto.
+  apply (spanningTree_aTree_max aVar v a c vT vT2 aT aT2) ; auto.
   rewrite <- H1.
   auto.
 Qed.
