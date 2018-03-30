@@ -769,10 +769,10 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
-Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
-    (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
-  vX x -> vY y -> ~ vX y ->  ~ a0 (A_ends x y) -> 
-  aVarTree aVar v0 (A_union (E_set x y) a0) (V_union vX vY) (A_union (E_set x y) (A_union aX aY)).
+Lemma combine_aTrees : forall (aVar : Var) (vX vY v: V_set) (aX aY a: A_set) (xTree : aVarTree aVar v a vX aX)
+    (yTree : aVarTree aVar v a vY aY) (x y : Component) (c0 : Connected v a),
+  vX x -> vY y -> ~ vX y ->  ~ a (A_ends x y) -> 
+  aVarTree aVar v (A_union (E_set x y) a) (V_union vX vY) (A_union (E_set x y) (A_union aX aY)).
 Proof.
   intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy.
   apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
@@ -780,6 +780,10 @@ Proof.
   assert ((A_union (E_set x y) a0) (A_ends x y)) as H5.
   apply In_left.
   apply E_right.
+  (* assert (Connected v0 (A_union (E_set x y) a0)) as H7.
+  admit.
+  assert (A_included a0 (A_union (E_set x y) a0)) as H8.
+  admit. *)
   induction yTree.
   + inversion vy.
     rewrite H in *.
@@ -800,7 +804,7 @@ Proof.
     assert ((A_union (E_set x y) (A_union aX (A_union (E_set x0 y0) aT))) = (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aX aT)))).
     admit.
     rewrite H0.
-    apply (CC_leaf aVar v0 a1 ) ; auto.
+    apply (CC_leaf aVar v0 a1 (V_union vX vT) (A_union (E_set x y) (A_union aX aT)) x0 y0) ; auto.
     apply In_right ; auto.
     unfold not ; intros.
     inversion H1.
@@ -810,6 +814,7 @@ Proof.
     intuition.
     rewrite <- H3 in *.
     rewrite <- H6 in *.
+    apply (only_as_inaVarTree aVar v0 a1 H7 vT aT yTree (A_ends x x2)) in H5.
     admit.
     intuition.
     apply IHyTree ; auto.
