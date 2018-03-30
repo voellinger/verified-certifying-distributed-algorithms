@@ -680,6 +680,36 @@ Proof.
     apply (IHatree not).
 Qed.
 
+Lemma aVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar v0 a0 vT aT),
+  aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) vT aT.
+Proof.
+  intros aVar v0 vT a0 aT g x y aTree.
+  induction aTree.
+  + apply CC_isolated ; auto.
+    apply In_right ; auto.
+  + apply CC_leaf ; auto.
+    apply In_right ; auto.
+    apply In_right ; auto.
+  + rewrite <- e0 in *.
+    rewrite <- e in *.
+    apply IHaTree ; auto.
+Qed.
+
+Lemma aVarTree_remains' : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
+  (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar v0 a0 vT aT),
+  aVarTree aVar v0 (A_union (E_set x y) a0) vT aT.
+Proof.
+  intros aVar v0 vT a0 aT g x y aTree.
+  induction aTree.
+  + apply CC_isolated ; auto.
+  + apply CC_leaf ; auto.
+    apply In_right ; auto.
+  + rewrite <- e0 in *.
+    rewrite <- e in *.
+    apply IHaTree ; auto.
+Qed.
+
 Lemma maxaVarTree_remains : forall (aVar : Var) (v0 vT: V_set) (a0 aT: A_set) 
   (g : Connected v0 a0) (x y : Component) (aTree : aVarTree aVar v0 a0 vT aT),
   ~(isa_aVarComponent aVar x /\ isa_aVarComponent aVar y) ->
@@ -749,10 +779,22 @@ Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (
        (V_union vX vY) c1 /\ (A_union (A_union (E_set x y) aX) aY) (A_ends c1 c2) /\ isa_aVarComponent aVar c2 ->
        (V_union vX vY) c2 . *).
 Proof.
-  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy maxX maxY.
-  induction c0.
+  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
+  induction xTree.
   + 
+  induction c0.
+  + inversion axy.
+  + apply (CC_leaf aVar v0 a0 (V_union vX vY)
+    (A_union (A_union (E_set x y) aX) aY)).
 Admitted.
+
+| CC_isolated : forall (aVar : Var) (v : V_set)(a : A_set) (x : Component), isa_aVarComponent aVar x -> v x -> aVarTree aVar v a (V_single x) A_empty
+  | CC_leaf: forall (aVar : Var) (v : V_set) (a : A_set) (vT : V_set) (aT : A_set) x y,
+      vT x -> ~ vT y -> v y -> a (A_ends x y) -> isa_aVarComponent aVar y -> aVarTree aVar v a vT aT -> aVarTree aVar v a (V_union (V_single y) vT) (A_union (E_set x y) aT)
+  | CC_eq: forall aVar (v : V_set) (a : A_set) vT vT' aT aT',
+    vT = vT' -> aT = aT' -> aVarTree aVar v a vT aT -> aVarTree aVar v a vT' aT'.
+
+
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
@@ -873,14 +915,14 @@ Proof.
     - assert (isa_aVarComponent aVar y \/ ~isa_aVarComponent aVar y).
       apply classic.
       destruct H1.
-      { assert (forall c : Component,
+      { admit.
+        (* assert (forall c : Component,
       v0 c ->
       isa_aVarComponent aVar c ->
-      exists (vT : V_set) (aT : A_set) (_ : aVarTree aVar vT aT),
-        vT c /\
-        (forall c1 c2 : Component,
-         vT c1 /\ a0 (A_ends c1 c2) /\ isa_aVarComponent aVar c2 -> vT c2)).
-        apply (IHc H).
+      exists (vT : V_set) (aT : A_set) (_ : aVarTree aVar v0
+      (A_union (E_set x y) a0) vT aT),
+        vT c /\ max_aVarVset aVar (A_union (E_set x y) a0) vT).
+        apply (IHc0).
         clear IHc H.
         assert (Hx := H2 x v1 H0).
         assert (Hy := H2 y v2 H1).
@@ -956,40 +998,40 @@ Proof.
           apply H ; auto.
           intuition.
           auto.
-          auto.
+          auto. *)
       }
-      { apply IHc in vd.
-        clear IHc.
+      { apply IHc0 in vd.
+        clear IHc0.
         destruct vd.
         destruct H2.
         destruct H2.
         destruct H2.
-        exists x0. exists x1. exists x2.
+        exists x0. exists x1. admit. (* exists x2.
         split. auto.
         apply (maxaVarTree_remains aVar v0 x0 a0 x1 c x y x2).
         intuition.
         apply H3.
         intros.
         apply (H c0). 
-        auto. auto. auto.
+        auto. auto. auto. *)
       }
-    - apply IHc in vd.
-      clear IHc.
+    - apply IHc0 in vd.
+      clear IHc0.
       destruct vd.
       destruct H1.
       destruct H1.
       destruct H1.
-      exists x0. exists x1. exists x2.
+      exists x0. exists x1. admit. admit. admit. (*  exists x2.
       split. auto.
       apply (maxaVarTree_remains aVar v0 x0 a0 x1 c x y x2).
       intuition.
       apply H2.
       intros.
       apply (H c0).
-      auto. auto. auto.
+      auto. auto. auto. *)
   + rewrite <- e0 in *.
     rewrite <- e in *.
-    apply (IHc H d vd isad).
+    apply (IHc0 H d vd isad).
 Admitted.
 
 Lemma allMaxTreesSame_spanningTree : forall (aVar : Var) (vT : V_set) (aT : A_set),
