@@ -771,11 +771,57 @@ Qed.
 
 Lemma combine_aTrees : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
     (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
-  vX x -> vY y -> ~ vY x ->  ~ a0 (A_ends x y) -> 
-  max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
-  aVarTree aVar v0 (A_union (E_set x y) a0) (V_union vX vY) (A_union (A_union (E_set x y) aX) aY).
+  vX x -> vY y -> ~ vX y ->  ~ a0 (A_ends x y) -> 
+  aVarTree aVar v0 (A_union (E_set x y) a0) (V_union vX vY) (A_union (E_set x y) (A_union aX aY)).
 Proof.
-  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
+  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy.
+  apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
+  apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree ; auto.
+  assert ((A_union (E_set x y) a0) (A_ends x y)) as H5.
+  apply In_left.
+  apply E_right.
+  induction yTree.
+  + inversion vy.
+    rewrite H in *.
+    assert ((V_union vX (V_single y)) = (V_union (V_single y) vX)).
+    rewrite (V_union_commut).
+    unfold V_union.
+    reflexivity.
+    rewrite H0.
+    assert ((A_union aX A_empty) = aX).
+    rewrite (A_union_commut).
+    rewrite A_union_neutral.
+    reflexivity.
+    rewrite H1.
+    apply (CC_leaf aVar v0 a1 vX aX x y) ; auto.
+  + assert ((V_union vX (V_union (V_single y0) vT)) = (V_union (V_single y0) (V_union vX vT))).
+    admit.
+    rewrite H.
+    assert ((A_union (E_set x y) (A_union aX (A_union (E_set x0 y0) aT))) = (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aX aT)))).
+    admit.
+    rewrite H0.
+    apply (CC_leaf aVar v0 a1 ) ; auto.
+    apply In_right ; auto.
+    unfold not ; intros.
+    inversion H1.
+    inversion vy.
+    inversion H4.
+    rewrite H4 in *.
+    intuition.
+    rewrite <- H3 in *.
+    rewrite <- H6 in *.
+    admit.
+    intuition.
+    apply IHyTree ; auto.
+    inversion vy.
+    inversion H1.
+    rewrite H3 in *.
+    auto.
+    admit.
+    auto.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    apply IHyTree ; auto. 
 Admitted.
 
 Lemma combine_aTrees' : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
