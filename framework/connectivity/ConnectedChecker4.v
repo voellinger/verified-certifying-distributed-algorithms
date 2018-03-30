@@ -785,7 +785,30 @@ Lemma combine_aTrees' : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) 
   max_aVarVset aVar (A_union (E_set x y) a0) (V_union vX vY).
 Proof.
   intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
-Admitted.
+  unfold max_aVarVset in * ; intros.
+  destruct H.
+  destruct H0.
+  inversion H.
+  + rewrite <- H3 in *.
+    inversion H0.
+    - inversion H4.
+        rewrite <- H7 in *.
+        rewrite <- H8 in *.
+        apply In_right ; auto.
+        rewrite H8 in *.
+        apply In_left ; auto.
+    - apply In_left.
+      apply (maxX x0 c2) ; auto.
+  + rewrite <- H3 in *.
+    inversion H0.
+    - inversion H4.
+      rewrite H8 in *.
+      apply In_right ; auto.
+      rewrite H8 in *.
+      apply In_left ; auto.
+    - apply In_right.
+      apply (maxY x0 c2) ; auto.
+Qed.
 
 Lemma combine_aTrees'' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set)(c0 : Connected v0 a0)
     (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
@@ -1325,8 +1348,6 @@ Proof.
   rewrite <- H1.
   auto.
 Qed.
-    
-    
     
   
   
