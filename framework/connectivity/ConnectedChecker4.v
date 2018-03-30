@@ -817,19 +817,9 @@ Proof.
       rewrite <- H7 in *.
       rewrite <- H8 in *.
       apply In_right ; auto.
-    - 
-
-  + destruct H.
-    destruct H0.
-    inversion H0.
-    inversion H2.
-    apply In_left. apply In_single.
-    rewrite H5 in *.
-    rewrite H6 in *.
-    apply 
-    inversion.
-    inversion H2.
-Admitted.
+    - apply In_right.
+      apply (maxX c1 c2) ; auto.
+Qed.
 
 Lemma combine_aTrees''' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set)(c0 : Connected v0 a0)
     (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
