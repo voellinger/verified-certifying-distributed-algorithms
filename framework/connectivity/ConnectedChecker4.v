@@ -769,13 +769,152 @@ Proof.
   + apply (matree c1 c2) ; auto.
 Qed.
 
+Lemma combine_aTrees'' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set)(c0 : Connected v0 a0)
+    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
+  vX x -> ~ v0 y ->
+  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
+  aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) (V_union (V_single y) vX) (A_union (E_set x y) aX).
+Proof.
+  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
+  assert (aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) vX aX).
+  apply (aVarTree_remains aVar v0 vX a0 aX c0 x y xTree).
+  apply (CC_leaf) ; auto.
+  - induction xTree.
+    + intuition.
+      inversion H0.
+      rewrite H1 in *.
+      intuition.
+    + unfold not ; intros.
+      inversion H0.
+      inversion H1.
+      rewrite H3 in *.
+      apply (Connected_Isa_Graph) in c0.
+      apply (G_ina_inv2 v0 a0) in a1 ; auto.
+      apply (only_vs_inaVarTree aVar v0 a0 vT aT) in H1 ; auto.
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply IHxTree ; auto.
+  - apply In_left.
+    apply In_single.
+  - apply In_left.
+    apply E_right.
+Qed.
+
+Lemma combine_aTrees''' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set) (c0 : Connected v0 a0)
+    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
+  vX x -> ~ v0 y ->
+  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
+  max_aVarVset aVar (A_union (E_set x y) a0) (V_union (V_single y) vX).
+Proof.
+  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
+  unfold max_aVarVset in * ; intros.
+  destruct H.
+  destruct H0.
+  inversion H.
+  + inversion H2.
+    rewrite <- H4 in *.
+    inversion H0.
+    - inversion H5.
+      rewrite H8 in *.
+      apply (only_vs_inaVarTree aVar v0 a0 vX aX) in vx.
+      intuition.
+      apply xTree.
+      rewrite <- H8 in *.
+      apply In_right ; auto.
+    - apply (Connected_Isa_Graph) in c0.
+      apply (G_ina_inv1 v0 a0) in H5 ; auto.
+      intuition.
+  + inversion H0.
+    - inversion H4.
+      apply In_left. apply In_single.
+      rewrite <- H7 in *.
+      rewrite <- H8 in *.
+      apply In_right ; auto.
+    - apply In_right.
+      apply (maxX c1 c2) ; auto.
+Qed.
+
+Lemma combine_aTrees' : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
+    (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
+  vX x -> vY y -> ~ vY x ->  ~ a0 (A_ends x y) -> 
+  max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
+  max_aVarVset aVar (A_union (E_set x y) a0) (V_union vX vY).
+Proof.
+  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
+  unfold max_aVarVset in * ; intros.
+  destruct H.
+  destruct H0.
+  inversion H.
+  + rewrite <- H3 in *.
+    inversion H0.
+    - inversion H4.
+        rewrite <- H7 in *.
+        rewrite <- H8 in *.
+        apply In_right ; auto.
+        rewrite H8 in *.
+        apply In_left ; auto.
+    - apply In_left.
+      apply (maxX x0 c2) ; auto.
+  + rewrite <- H3 in *.
+    inversion H0.
+    - inversion H4.
+      rewrite H8 in *.
+      apply In_right ; auto.
+      rewrite H8 in *.
+      apply In_left ; auto.
+    - apply In_right.
+      apply (maxY x0 c2) ; auto.
+Qed.
+
 Lemma combine_aTrees : forall (aVar : Var) (vX vY v: V_set) (aX aY a : A_set) (x y : Component) (c0 : Connected v a),
-  vX x -> vY y -> ~ vX y ->  ~ a (A_ends x y) -> A_included a (A_union (E_set x y) a) ->
-  aVarTree aVar v a vY aY -> 
+  vX x -> vY y -> (V_inter vX vY = V_empty) ->  ~ a (A_ends x y) ->
   aVarTree aVar v a vX aX ->
+  aVarTree aVar v a vY aY ->
   aVarTree aVar v (A_union (E_set x y) a) (V_union vX vY) (A_union (E_set x y) (A_union aX aY)).
 Proof.
-(*   intros aVar vX vY v0 aX aY a0 x y c0 vx vy notvxy axy xTree.
+  intros aVar vX vY v0 aX aY a0 x y c0 vx vy interempty axy xTree.
+  assert (xTree' := xTree).
+  apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
+  assert (Connected v0 (A_union (E_set x y) a0)) as H7.
+  apply C_edge ; admit.
+  assert ((A_union (E_set x y) a0) (A_ends x y)) as axy2.
+  admit.
+  assert ((A_union (E_set x y) a0) (A_ends y x)) as axy3.
+  admit.
+  assert (A_included a0 (A_union (E_set x y) a0)) as ainc.
+  admit.
+  induction xTree ; intros yTree.
+  + inversion vx.
+    rewrite H in *.
+    clear H ; clear x0.
+    assert (yTree' := yTree).
+    apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree' ; auto.
+    assert ((A_union A_empty aY) = aY).
+    rewrite A_union_neutral.
+    reflexivity.
+    rewrite H.
+    rewrite E_set_eq.
+    apply (CC_leaf aVar v0 a1 vY aY y x) ; auto.
+    unfold V_inter in interempty.
+    unfold not ; intros.
+    assert ((Inter Vertex (V_single x) vY) x).
+    apply In_inter ; auto.
+    rewrite interempty in H1.
+    inversion H1.
+    admit.
+  + assert (aVarTree aVar v0 a1 (V_union (V_single y0) (V_union  vT vY))
+  (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aT aY)))).
+    apply (CC_leaf aVar v0 a1 (V_union  vT vY) (A_union (E_set x y) (A_union aT aY)) x0 y0) ; auto.
+    apply In_left ; auto.
+    admit. (* left is clear, right ?? *)
+    apply IHxTree ; auto.
+    inversion vx ; auto.
+    inversion H.
+    rewrite H1 in *.
+    induction yTree.
+    - 
+    
+(* (*   intros aVar vX vY v0 aX aY a0 x y c0 vx vy notvxy axy xTree.
   apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
   assert ((A_union (E_set x y) a0) (A_ends x y)) as H5.
   apply In_left.
@@ -851,105 +990,10 @@ Proof.
 
   + rewrite <- e in *.
     rewrite <- e0 in *.
-    apply IHyTree ; auto. 
+    apply IHyTree ; auto.  *)
 Admitted.
 
-Lemma combine_aTrees' : forall (aVar : Var) (vX vY v0: V_set) (aX aY a0: A_set) (xTree : aVarTree aVar v0 a0 vX aX)
-    (yTree : aVarTree aVar v0 a0 vY aY) (x y : Component) (c0 : Connected v0 a0),
-  vX x -> vY y -> ~ vY x ->  ~ a0 (A_ends x y) -> 
-  max_aVarVset aVar a0 vX -> max_aVarVset aVar a0 vY ->
-  max_aVarVset aVar (A_union (E_set x y) a0) (V_union vX vY).
-Proof.
-  intros aVar vX vY v0 aX aY a0 xTree yTree x y c0 vx vy notvxy axy maxX maxY.
-  unfold max_aVarVset in * ; intros.
-  destruct H.
-  destruct H0.
-  inversion H.
-  + rewrite <- H3 in *.
-    inversion H0.
-    - inversion H4.
-        rewrite <- H7 in *.
-        rewrite <- H8 in *.
-        apply In_right ; auto.
-        rewrite H8 in *.
-        apply In_left ; auto.
-    - apply In_left.
-      apply (maxX x0 c2) ; auto.
-  + rewrite <- H3 in *.
-    inversion H0.
-    - inversion H4.
-      rewrite H8 in *.
-      apply In_right ; auto.
-      rewrite H8 in *.
-      apply In_left ; auto.
-    - apply In_right.
-      apply (maxY x0 c2) ; auto.
-Qed.
 
-Lemma combine_aTrees'' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set)(c0 : Connected v0 a0)
-    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
-  vX x -> ~ v0 y ->
-  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
-  aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) (V_union (V_single y) vX) (A_union (E_set x y) aX).
-Proof.
-  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
-  assert (aVarTree aVar (V_union (V_single y) v0) (A_union (E_set x y) a0) vX aX).
-  apply (aVarTree_remains aVar v0 vX a0 aX c0 x y xTree).
-  apply (CC_leaf) ; auto.
-  - induction xTree.
-    + intuition.
-      inversion H0.
-      rewrite H1 in *.
-      intuition.
-    + unfold not ; intros.
-      inversion H0.
-      inversion H1.
-      rewrite H3 in *.
-      apply (Connected_Isa_Graph) in c0.
-      apply (G_ina_inv2 v0 a0) in a1 ; auto.
-      apply (only_vs_inaVarTree aVar v0 a0 vT aT) in H1 ; auto.
-    + rewrite <- e in *.
-      rewrite <- e0 in *.
-      apply IHxTree ; auto.
-  - apply In_left.
-    apply In_single.
-  - apply In_left.
-    apply E_right.
-Qed.
-
-Lemma combine_aTrees''' : forall (aVar : Var) (vX v0: V_set) (aX a0: A_set) (c0 : Connected v0 a0)
-    (x y : Component) (xTree : aVarTree aVar v0 a0 vX aX),
-  vX x -> ~ v0 y ->
-  max_aVarVset aVar a0 vX -> isa_aVarComponent aVar y ->
-  max_aVarVset aVar (A_union (E_set x y) a0) (V_union (V_single y) vX).
-Proof.
-  intros aVar vX v0 aX a0 c0 x y xTree vx nvy maxX isay.
-  unfold max_aVarVset in * ; intros.
-  destruct H.
-  destruct H0.
-  inversion H.
-  + inversion H2.
-    rewrite <- H4 in *.
-    inversion H0.
-    - inversion H5.
-      rewrite H8 in *.
-      apply (only_vs_inaVarTree aVar v0 a0 vX aX) in vx.
-      intuition.
-      apply xTree.
-      rewrite <- H8 in *.
-      apply In_right ; auto.
-    - apply (Connected_Isa_Graph) in c0.
-      apply (G_ina_inv1 v0 a0) in H5 ; auto.
-      intuition.
-  + inversion H0.
-    - inversion H4.
-      apply In_left. apply In_single.
-      rewrite <- H7 in *.
-      rewrite <- H8 in *.
-      apply In_right ; auto.
-    - apply In_right.
-      apply (maxX c1 c2) ; auto.
-Qed.
 
 Lemma exists_maxaVarTree : forall (aVar : Var) (v : V_set) (a : A_set) (c0 : Connected v a) (c : Component), 
   v c -> isa_aVarComponent aVar c -> exists (vT : V_set) (aT : A_set) (aTree : aVarTree aVar v a vT aT),
