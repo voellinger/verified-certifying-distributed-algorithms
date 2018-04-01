@@ -866,6 +866,11 @@ Proof.
       apply (maxY x0 c2) ; auto.
 Qed.
 
+Definition aVarTree' (aVar : Var) (vT v : V_set) (aT a : A_set) :=
+  (forall (c : Component), v c -> isa_aVarComponent aVar c) /\
+  V_included vT v /\ A_included aT a /\
+  forall (c1 c2 : Component), v c1 -> v c2 -> exists (vl : V_list) (el : E_list) (p : Path vT aT c1 c2 vl el), 1 = 1.
+
 Lemma combine_aTrees : forall (aVar : Var) (vX vY v: V_set) (aX aY a : A_set) (x y : Component) (c0 : Connected v a),
   vX x -> vY y -> (V_inter vX vY = V_empty) ->  ~ a (A_ends x y) ->
   aVarTree aVar v a vX aX ->
@@ -902,15 +907,26 @@ Proof.
     rewrite interempty in H1.
     inversion H1.
     admit.
-  + assert (aVarTree aVar v0 a1 (V_union (V_single y0) (V_union  vT vY))
+  + assert (aVarTree aVar v0 a1 (V_union (V_single y0) (V_union vT vY))
   (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aT aY)))).
-    apply (CC_leaf aVar v0 a1 (V_union  vT vY) (A_union (E_set x y) (A_union aT aY)) x0 y0) ; auto.
+    apply (CC_leaf aVar v0 a1 (V_union vT vY) (A_union (E_set x y) (A_union aT aY)) x0 y0) ; auto.
     apply In_left ; auto.
-    admit. (* left is clear, right ?? *)
+    unfold not ; intros.
+    inversion H ; auto.
+    inversion vx ; auto.
+    inversion H2.
+    rewrite H4 in *.
+    assert ((V_inter (V_union (V_single x) vT) vY) x).
+    apply In_inter ; auto.
+    rewrite interempty in H5.
+    inversion H5.
+    (* entweder x0=x und y0=y oder es gibt einen kreis *)
     apply IHxTree ; auto.
     inversion vx ; auto.
     inversion H.
     rewrite H1 in *.
+    admit.
+    admit.
     induction yTree.
     - 
     
