@@ -804,8 +804,27 @@ Proof.
   apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree ; auto.
   assert (Connected v0 (A_union (E_set x y) a0)) as H7.
   apply C_edge ; admit.
+  assert ((A_union (E_set x y) a0) (A_ends x y)) as axy2.
+  admit.
+  assert ((A_union (E_set x y) a0) (A_ends y x)) as axy3.
+  admit.
   induction yTree ; intros xTree.
-  + apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
+  + assert (xTree' := xTree).
+    apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree' ; auto.
+    inversion vy.
+    rewrite H in *.
+    induction xTree.
+    - assert (A_union (E_set x y) (A_union A_empty A_empty) = A_union (E_set x y) A_empty).
+      rewrite A_union_neutral.
+      reflexivity.
+      rewrite H0.
+      inversion vx.
+      rewrite H1 in *.
+      rewrite V_union_commut.
+      apply (CC_leaf aVar v0 a1 (V_single x) A_empty x y) ; auto.
+      admit.
+    - 
+      
     inversion vy.
     rewrite H in *.
     assert ((V_union vX (V_single y)) = (V_union (V_single y) vX)).
