@@ -7,8 +7,10 @@ Require Import Coq.Logic.Classical_Prop.
 
 Section Help.
 
+(* Our terminology for members of a network (graph). *)
 Definition Component := Vertex.
 
+(* Unequalness is symmetric. *)
 Lemma neq_symm: forall (X : Type) {p q: X}, p <> q -> q <> p.
 Proof.
   intros X p q pq.
@@ -19,6 +21,7 @@ Proof.
   apply H.
 Qed.
 
+(* A natural number can't be even and odd at the same time. *)
 Lemma not_even_and_odd: forall (n : nat),
   Nat.even n = Nat.odd n -> False.
 Proof.
@@ -34,6 +37,7 @@ Proof.
   apply H.
 Qed.
 
+(* A natural number is either odd or even. *)
 Lemma even_or_odd: forall(n : nat),
   Nat.even n = true \/ Nat.odd n = true.
 Proof.
@@ -50,6 +54,7 @@ Proof.
   apply H.
 Qed.
 
+(* The definition of Connected doesn't allow loops (edges from some vertex to itself). *)
 Lemma Connected_no_loops: forall (v: V_set) (a: A_set) (c : Connected v a) (x y : Vertex),
   a (A_ends x y) -> x <> y.
 Proof.

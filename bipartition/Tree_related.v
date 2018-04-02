@@ -4,6 +4,8 @@ Require Import GraphBasics.Trees.
 Load "Path_Walk_related".
 
 
+
+
 Section Tree_related.
 
 (* All components of a tree have a connecting walk in between them. *)

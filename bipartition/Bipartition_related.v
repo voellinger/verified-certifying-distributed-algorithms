@@ -7,6 +7,7 @@ Load "Spanning_Tree_related".
 
 
 
+
 (* INTUITION OF THIS FILE
   -  neighbors in a bipartite graph are different colored
   -> every node of a walk alternates colors

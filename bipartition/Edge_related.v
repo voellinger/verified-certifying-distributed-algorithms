@@ -3,6 +3,7 @@ Require Import GraphBasics.Paths.
 
 
 
+
 Section Edge_related.
 
 (* Two edges/arcs are the same in reverse order, as the graph is not directional. *)

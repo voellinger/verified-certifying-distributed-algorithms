@@ -2,14 +2,20 @@ Require Import Coq.Logic.Classical_Prop.
 
 Load "Help_Lemmata".
 
+
+
+
 Section List_related.
 
+(* Same definition as in graphbasics, but for all types: 
+   Remove the first element of the list*)
 Definition cdr (X: Type) (vl : list X) : list X :=
   match vl with
   | nil => nil
   | x :: vl' => vl'
   end.
 
+(* A sublist is right at the start of another list -- or not. *)
 Fixpoint sub_starts_in_list (X : Type) (sublist superlist : list X) : Prop :=
   match sublist with
   |nil => True
@@ -19,6 +25,7 @@ Fixpoint sub_starts_in_list (X : Type) (sublist superlist : list X) : Prop :=
     end
   end.
 
+(* A sublist is somewhere in another list -- or not. *)
 Fixpoint sub_in_list (X: Type) (sublist superlist : list X) : Set :=
   match sublist with
   |nil => True
@@ -28,8 +35,7 @@ Fixpoint sub_in_list (X: Type) (sublist superlist : list X) : Set :=
     end
   end.
 
-
-
+(* A list is only empty, iff the reversed list is empty. *)
 Lemma rev_nil: forall (X: Type) (l : list X),
   rev l = nil <-> l = nil.
 Proof.
@@ -50,6 +56,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* You can just remove the first element of the first list, if the first list isn't empty. *)
 Lemma cdr_app : forall (X: Type),
  forall vl vl' : list X, vl <> nil -> cdr X (vl ++ vl') = cdr X vl ++ vl'.
 Proof.
@@ -59,6 +66,7 @@ Proof.
         trivial.
 Qed.
 
+(* If some element is in the list without its last element, it definitely is in the list itself. *)
 Lemma cdr_rev: forall (X: Type) (x:X) (vl:list X),
   In x (cdr X (rev vl)) -> In x vl.
 Proof.
@@ -85,6 +93,7 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
+(* Like "cdr_rev": some element is in the list, it definitely is in the list with an added element. *)
 Lemma cdr_rev2: forall (X: Type) (vl : list X) (x y : X),
   In x (cdr X (rev vl)) -> In x (cdr X (rev (y :: vl))).
 Proof.
@@ -105,6 +114,8 @@ Proof.
   apply H0.
 Qed.
 
+(* If you add an element y to a list with no x, and y is different from x,
+   x won't be part of it now. *)
 Lemma cdr_rev3: forall (X: Type) (vl : list X) (x y : X),
   ~ In x (cdr X (rev vl)) -> x <> y -> ~ In x (cdr X (rev (y::vl))).
 Proof.
@@ -142,7 +153,7 @@ Proof.
   inversion H1.
 Qed.
 
-
+(* An element is harder to find in a shorter list. *)
 Lemma cdr_rev4: forall (X: Type) (vl : list X) (x y : X),
   ~ In x (cdr X (rev (y::vl))) -> ~ In x (cdr X (rev vl)).
 Proof.
@@ -152,6 +163,7 @@ Proof.
   intuition.
 Qed.
 
+(* Can't be explained easier than with symbols in the next line. *)
 Lemma cdr_rev5: forall (X: Type) (vl : list X) (x : X),
   cdr X (rev vl ++ x :: nil) = nil -> vl = nil.
 Proof.
@@ -165,6 +177,7 @@ Proof.
   inversion H0.
 Qed.
 
+(* A sublist is still sublist when the superlist is appended. *)
 Lemma sub_one_more: forall (X: Type) (sub super : list X) (a : X),
   sub_in_list X sub super -> sub_in_list X sub (a::super).
 Proof.
@@ -176,6 +189,7 @@ Proof.
   apply sinl.
 Qed.
 
+(* If a sublist starts right away (subs) in a superlist, it's a sublist indeed. *)
 Lemma subs_means_sub : forall (X: Type) (sub super : list X),
   sub_starts_in_list X sub super -> sub_in_list X sub super.
 Proof.
@@ -191,6 +205,7 @@ Proof.
   apply H0.
 Qed.
 
+(* A shorter sublist is still sublist. *)
 Lemma sub_one_less: forall (X: Type) (sub super : list X) (a : X),
   sub_in_list X (a :: sub) super -> sub_in_list X sub super.
 Proof.
@@ -208,6 +223,7 @@ Proof.
   apply s.
 Qed.
 
+(* The empty list is always sublist. *)
 Lemma sub_nil_super: forall (X: Type) (superlist : list X),
   sub_in_list X nil superlist.
 Proof.
@@ -217,6 +233,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* Sublists of empty superlist must be empty themselves. *)
 Lemma sub_sub_nil: forall (X: Type) (sublist : list X),
   sub_in_list X sublist nil -> sublist = nil.
 Proof.
@@ -227,6 +244,7 @@ Proof.
   inversion sinl.
 Qed.
 
+(* Sublists starting at the "beginning" of empty superlist must be empty themselves. *)
 Lemma subs_sub_nil: forall (X: Type) (sublist : list X),
   sub_starts_in_list X sublist nil -> sublist = nil.
 Proof.
@@ -237,6 +255,8 @@ Proof.
   inversion sinl.
 Qed.
 
+(* If x is in list l, there exist some pre-list and post-list, that together with x they form l
+   and vice versa. *)
 Lemma in_means_embedded : forall (X: Type)  (l : list X) (x : X),
   In x l <-> (exists (l1 l2 : list X), l = l1 ++ (x :: l2)).
 Proof.
@@ -263,6 +283,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* A sublist starts at itself appended by other lists. *)
 Lemma subs_app3: forall (X: Type) (sub super : list X),
   sub_starts_in_list X sub (sub ++ super).
 Proof.
@@ -275,6 +296,7 @@ Proof.
   apply IHsub.
 Qed.
 
+(* Cut the first n elements off of a list. *)
 Fixpoint cut (X: Type) (n : nat) (l : list X) : list X :=
   match n with
   |0 => l
@@ -284,6 +306,7 @@ Fixpoint cut (X: Type) (n : nat) (l : list X) : list X :=
     end
   end.
 
+(* If you cut (length of list) elements off of a list, it becomes empty. *)
 Lemma cut_1 : forall (X: Type) (sub : list X),
   cut X (length sub) sub = nil.
 Proof.
@@ -294,6 +317,7 @@ Proof.
   apply IHsub.
 Qed.
 
+(* If you cut the first (length sub) elements of (sub ++ super), the list becomes only super *)
 Lemma cut_3 : forall (X: Type) (sub super : list X),
   cut X (length sub) (sub ++ super) = super.
 Proof.
@@ -303,6 +327,7 @@ Proof.
   simpl. apply IHsub.
 Qed.
 
+(* If you cut any amount of elements off of an empty list, it remains empty. *)
 Lemma cut_nil : forall (X: Type) (k :nat),
   cut X k nil = nil.
 Proof.
@@ -312,16 +337,16 @@ Proof.
   simpl. reflexivity.
 Qed.
 
-
-Lemma cut_7 : forall (X: Type) (super rest fest : list X) (k : nat),
-  k <= length super -> (cut X k (super ++ rest) = cut X k super ++ rest) -> (cut X k (super ++ fest) = cut X k super ++ fest).
+(* If you cut less than some sublist, you can cut only from the sublist and "cut+append" becomes distributive. *)
+Lemma cut_7 : forall (X: Type) (super rest rest2 : list X) (k : nat),
+  k <= length super -> (cut X k (super ++ rest) = cut X k super ++ rest) -> (cut X k (super ++ rest2) = cut X k super ++ rest2).
 Proof.
   intros X super.
   induction super.
-  intros rest fest k kls cutk.
+  intros rest rest2 k kls cutk.
   inversion kls.
   reflexivity.
-  intros rest fest k kls cutk.
+  intros rest rest2 k kls cutk.
   induction k.
   reflexivity.
   simpl in cutk.
@@ -329,13 +354,13 @@ Proof.
   assert (k <= length super).
   intuition.
   clear kls.
-  apply (IHsuper rest fest) in H.
+  apply (IHsuper rest rest2) in H.
   simpl.
   apply H.
   apply cutk.
 Qed.
 
-
+(* If you cut less than some sublist, you can cut only from the sublist and "cut+append" becomes distributive. *)
 Lemma cut_4 : forall (X: Type) (k : nat) (super rest : list X),
   k <= length super -> cut X k (super ++ rest) = cut X k super ++ rest.
 Proof.
@@ -356,7 +381,8 @@ Proof.
   apply lek.
 Qed.
 
-Lemma aux : forall (X: Type) (sub super rest : list X),
+(* A superlist is longer than any starting sublist. *)
+Lemma super_longer : forall (X: Type) (sub super rest : list X),
   super = sub ++ rest -> length sub <= length super.
 Proof.
   intros X sub super rest ssr.
@@ -365,7 +391,8 @@ Proof.
   intuition.
 Qed.
 
-Lemma aux2 : forall (X: Type) (super sub :list X) (r : X),
+(* A starting sublist is either the complete list or starting in the list without its last element. *)
+Lemma subs_cons : forall (X: Type) (super sub :list X) (r : X),
   sub_starts_in_list X sub (super ++ r :: nil) -> (sub = super ++ r :: nil \/ sub_starts_in_list X sub super).
 Proof.
   intros X super.
@@ -390,6 +417,7 @@ Proof.
   split. reflexivity. apply H0.
 Qed.
 
+(* There is always an ending sublist after the starting sublist, so that both sublists form the superlist. *)
 Lemma subs_app : forall (X: Type) (sub super : list X),
   sub_starts_in_list X sub super -> {super2 : list X & super = sub ++ super2}.
 Proof.
@@ -399,14 +427,14 @@ Proof.
   induction super using rev_ind.
   apply subs_sub_nil in sinl. rewrite sinl.
   reflexivity.
-  apply aux2 in sinl.
+  apply subs_cons in sinl.
   destruct sinl.
   rewrite <- H.
   rewrite cut_1.
   rewrite app_nil_r. reflexivity.
   apply IHsuper in H.
   assert (H' := H).
-  apply aux in H'.
+  apply super_longer in H'.
   rewrite cut_4.
   rewrite app_assoc.
   rewrite <- H.
@@ -414,8 +442,7 @@ Proof.
   apply H'.
 Qed.
 
-
-
+(* For all parts of a starting sublist, there is an ending list, so that both sublists form the superlist together. *)
 Lemma subs_app2 : forall (X: Type) (sub1 sub2 super : list X),
   sub_starts_in_list X (sub1 ++ sub2) super -> {super2 : list X & super = sub1 ++ super2}.
 Proof.
@@ -425,7 +452,7 @@ Proof.
   exists (s2 ++ x). rewrite <- app_assoc in e. apply e.
 Qed.
 
-
+(* If some sublist has the length of the superlist, they are the same. *)
 Lemma subs_lengths_eq: forall (X: Type) (superlist sublist : list X),
   length sublist = length superlist -> sub_starts_in_list X sublist superlist -> sublist = superlist.
 Proof.
@@ -452,7 +479,8 @@ Proof.
   intuition.
 Qed.
 
-
+(* If you append a starting sublist and superlist at the beginning, 
+   the newly formed lists are still starting sublist and superlists and vice versa. *)
 Lemma subs_minus : forall (X: Type) (s1 s2 s3 : list X),
   sub_starts_in_list X s2 s3 <-> sub_starts_in_list X (s1 ++ s2) (s1 ++ s3).
 Proof.
@@ -476,8 +504,7 @@ Proof.
   apply H0.
 Qed.
 
-
-
+(* Elements of sublists are in the superlist as well. *)
 Lemma subs_for_all : forall (X: Type) (sub super : list X),
   sub_starts_in_list X sub super -> (forall x : X, In x sub -> In x super).
 Proof.
@@ -501,7 +528,8 @@ Proof.
   apply H0.
 Qed.
 
-Lemma sub_means_exists_subs : forall (X: Type) (sub super : list X),
+(* Somewhere in the superlist, the sublist must actually start. *)
+Theorem sub_means_exists_subs : forall (X: Type) (sub super : list X),
   sub_in_list X sub super -> (exists (s1 s2 : list X), super = s1 ++ s2 /\ sub_starts_in_list X sub s2).
 Proof.
   intros X sub super sinl.
@@ -524,7 +552,7 @@ Proof.
   exists (a :: x0). exists x1. destruct H. split. rewrite H. reflexivity. apply H0.
 Qed.
 
-
+(* Elements of sublists are in the superlist as well. *)
 Lemma sub_for_all : forall (X: Type) (sub super : list X),
   sub_in_list X sub super -> (forall x : X, In x sub -> In x super).
 Proof.
@@ -540,6 +568,7 @@ Proof.
   apply i.
 Qed.
 
+(* If there is one element in a sublist, that is not in the superlist, it cannot be a sublist. *)
 Lemma sub_exists_one : forall (X: Type) (sub super : list X),
   (exists x : X, In x sub /\ ~ In x super) -> sub_in_list X sub super -> False.
 Proof.
@@ -553,6 +582,7 @@ Proof.
   inversion H.
 Qed.
 
+(* Either the sublist starts right away or it is in there somewhere later. *)
 Lemma sub_starts_or_in_rest : forall (X: Type) (sublist superlist : list X) (a : X),
   sub_in_list X sublist (a :: superlist) -> (sub_starts_in_list X sublist (a :: superlist)) + sub_in_list X sublist superlist.
 Proof.
@@ -572,6 +602,7 @@ Proof.
   apply s.
 Qed.
 
+(* Main Lemma: there must be a sublist preceding and a sublist following the actual sublist in the superlist. *)
 Lemma sub_exists_embedding: forall (X: Type) (sublist superlist : list X),
   sub_in_list X sublist superlist -> (exists (l1 l3 : list X), superlist = l1 ++ sublist ++ l3).
 Proof.
@@ -591,6 +622,8 @@ Proof.
   rewrite H. exists (a :: x). exists x0. reflexivity.
 Qed.
 
+(* As the function "last" gets a dummy return for empty lists - if the list is not empty
+   the dummy doesnt matter. *)
 Lemma last_is_last: forall (T: Type) (l : list T) (x y : T),
   l <> nil -> last (l) x = last (l) y.
 Proof.
