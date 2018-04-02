@@ -878,8 +878,6 @@ Lemma combine_aTrees : forall (aVar : Var) (vX v: V_set) (aX a : A_set) (x y : C
   aVarTree aVar v (A_union (E_set x y) a) (V_union vX vY) (A_union (E_set x y) (A_union aX aY)).
 Proof.
   intros aVar vX v0 aX a0 x y c0 vx xTree.
-  assert (xTree' := xTree).
-  apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree' ; auto.
   induction xTree ; intros vY aY vy interempty axy yTree.
   + inversion vx.
     rewrite H in *.
@@ -904,8 +902,6 @@ Proof.
     apply In_left ; apply E_left.
   + assert (aVarTree aVar v0 (A_union (E_set x y) a0) (V_union (V_single y0) (V_union vT vY))
   (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aT aY)))).
-    assert (yTree' := yTree).
-    apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree' ; auto.
     - induction yTree.
       {
         inversion vy.
@@ -934,87 +930,60 @@ Proof.
         apply In_single.
         rewrite interempty in H2 ; inversion H2.
         apply In_left ; apply E_right.
+        apply (CC_leaf aVar v0 (A_union (E_set x y) a0) vT aT x0 y0) ; auto.
+        apply In_right ; auto.
+        apply (aVarTree_remains') ; auto.
       }
       {
-      }
-    
-(* (*   intros aVar vX vY v0 aX aY a0 x y c0 vx vy notvxy axy xTree.
-  apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree ; auto.
-  assert ((A_union (E_set x y) a0) (A_ends x y)) as H5.
-  apply In_left.
-  apply E_right.
-  assert (Connected v0 (A_union (E_set x y) a0)) as H7.
-  admit.
-  assert (A_included a0 (A_union (E_set x y) a0)) as H8.
-  admit.
-  induction xTree ; intros yTree.
-  + (* apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree ; auto. *)
-    inversion vx.
-    rewrite H in *.
-    assert ((A_union A_empty aY) = aY).
-    rewrite A_union_neutral.
-    reflexivity.
-    rewrite H0.
-    rewrite E_set_eq.
-    apply (CC_leaf aVar v0 a1 vY aY y x) ; auto.
-    admit.
-    admit.
-  + induction yTree.
-    - simpl in *.
-      admit.
-    -  *)
-  intros aVar vX vY v0 aX aY a0 x y c0 vx vy notvxy axy ainc yTree.
-  apply (aVarTree_remains' aVar v0 vY a0 aY c0 x y) in yTree ; auto.
-  assert (Connected v0 (A_union (E_set x y) a0)) as H7.
-  apply C_edge ; admit.
-  assert ((A_union (E_set x y) a0) (A_ends x y)) as axy2.
-  admit.
-  assert ((A_union (E_set x y) a0) (A_ends y x)) as axy3.
-  admit.
-  induction yTree ; intros xTree.
-  + assert (xTree' := xTree).
-    apply (aVarTree_remains' aVar v0 vX a0 aX c0 x y) in xTree' ; auto.
-    inversion vy.
-    rewrite H in *.
-    induction xTree.
-    - assert (A_union (E_set x y) (A_union A_empty A_empty) = A_union (E_set x y) A_empty).
-      rewrite A_union_neutral.
-      reflexivity.
-      rewrite H0.
-      inversion vx.
-      rewrite H1 in *.
-      rewrite V_union_commut.
-      apply (CC_leaf aVar v0 a1 (V_single x) A_empty x y) ; auto.
-      admit.
-    - 
-      
-    inversion vy.
-    rewrite H in *.
-    assert ((V_union vX (V_single y)) = (V_union (V_single y) vX)).
-    rewrite (V_union_commut).
-    unfold V_union.
-    reflexivity.
-    rewrite H0.
-    assert ((A_union aX A_empty) = aX).
-    rewrite (A_union_commut).
-    rewrite A_union_neutral.
-    reflexivity.
-    rewrite H1.
-    apply (CC_leaf aVar v0 a1 vX aX x y) ; auto.
-    
-  + assert ((V_union vX (V_union (V_single y0) vT)) = (V_union (V_single y0) (V_union vX vT))).
-    admit.
-    rewrite H.
-    assert ((A_union (E_set x y) (A_union aX (A_union (E_set x0 y0) aT))) = (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aX aT)))).
-    admit.
-    rewrite H0.
-    assert (aVarTree aVar v0 a1 (V_union vX vT)
-            (A_union (E_set x y) (A_union aX aT))).
-    apply IHyTree ; auto.
+        assert (~ vT0 y0).
+        unfold not ; intros.
+        assert ((V_inter (V_union (V_single y0) vT) (V_union (V_single y1) vT0)) y0).
+        apply In_inter ; auto.
+        apply In_left ; apply In_single.
+        apply In_right ; auto.
+        rewrite interempty in H0 ; inversion H0.
+        assert (~ vT y1).
+        unfold not ; intros.
+        assert ((V_inter (V_union (V_single y0) vT) (V_union (V_single y1) vT0)) y1).
+        apply In_inter ; auto.
+        apply In_right ; auto.
+        apply In_left ; apply In_single.
+        rewrite interempty in H1 ; inversion H1.
 
-  + rewrite <- e in *.
-    rewrite <- e0 in *.
-    apply IHyTree ; auto.  *)
+        assert ((V_union (V_single y0) (V_union vT (V_union (V_single y1) vT0))) = (V_union (V_single y1) (V_union (V_single y0) (V_union vT vT0)))).
+        admit.
+        rewrite H1 ; clear H1.
+        assert ((A_union (E_set x0 y0) (A_union (E_set x y) (A_union aT (A_union (E_set x1 y1) aT0)))) = A_union (E_set x1 y1) (A_union (E_set x0 y0) (A_union (E_set x y) (A_union aT aT0)))).
+        admit.
+        rewrite H1 ; clear H1.
+        apply (CC_leaf ) ; auto.
+        apply In_right ; apply In_right ; auto.
+        unfold not ; intros.
+        inversion H1.
+        inversion H2.
+        rewrite H4 in *.
+        assert ((V_inter (V_union (V_single y1) vT) (V_union (V_single y1) vT0)) y1).
+        apply In_inter ; apply In_left ; apply In_single.
+        rewrite interempty in H5 ; inversion H5.
+        inversion H2 ; intuition.
+        apply In_right ; auto.
+        assert ({y1 = y} + {y1 <> y}).
+        apply V_eq_dec.
+        destruct H1.
+        + apply (CC_leaf) ; auto.
+          apply In_left ; auto.
+          unfold not ; intros.
+          inversion H1 ; intuition.
+          apply In_right ; auto.
+          apply (IHxTree) ; auto.
+          admit. admit. admit.
+        + apply (IHyTree) ; auto.
+          inversion vy.
+          inversion H1.
+          intuition.
+          intuition.
+          admit.
+      }
 Admitted.
 
 
@@ -1492,9 +1461,6 @@ Proof.
   rewrite <- H1.
   auto.
 Qed.
-    
-  
-  
 
 Variable state_of : Component -> Data.
 
