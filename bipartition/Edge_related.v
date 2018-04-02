@@ -5,6 +5,7 @@ Require Import GraphBasics.Paths.
 
 Section Edge_related.
 
+(* Two edges/arcs are the same in reverse order, as the graph is not directional. *)
 Lemma E_eq2 : forall (e1 e2 : Edge),
   E_eq e1 e2 -> E_eq e2 e1.
 Proof.
@@ -14,6 +15,7 @@ Proof.
   apply E_rev.
 Qed.
 
+(* In a reversed list, the first element is now the last. *)
 Lemma E_rev_cons: forall(u:Edge)(el:E_list),
   E_reverse (u :: el) = (E_reverse el) ++ (E_reverse (u :: nil)).
 Proof.
@@ -27,6 +29,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* An edge in a list is still in the reversed list. *)
 Lemma E_rev_in2: forall (x y : Vertex) (el : E_list),
   In (E_ends x y) (E_reverse el) -> In (E_ends y x) el.
 Proof.
@@ -51,6 +54,7 @@ Proof.
   inversion H.
 Qed.
 
+(* An edge that is not in a list, also is not in the reversed list. *)
 Lemma E_rev_in: forall (u: Edge) (x y : Vertex) (el : E_list),
 (forall v:Edge, In v el -> ~ E_eq v (E_ends x y)) -> In u (E_reverse el) -> ~ E_eq u (E_ends y x).
 Proof.
@@ -75,6 +79,7 @@ Proof.
   inversion H0.
 Qed.
 
+(* Lenghts of lists don't change by reversing. *)
 Lemma E_rev_len: forall(el:E_list),
   length (E_reverse el) = length el.
 Proof.
@@ -88,6 +93,5 @@ Proof.
   rewrite IHel.
   apply plus_comm.
 Qed.
-
 
 End Edge_related.

@@ -5,121 +5,69 @@ Require Import Coq.Logic.Classical_Pred_Type.
 Load "Tree_related".
 Load "Spanning_Tree_related".
 
+
+
+(* INTUITION OF THIS FILE
+  -  neighbors in a bipartite graph are different colored
+  -> every node of a walk alternates colors
+  -> same color in even length walks for start and finish /
+     diff color in odd  length walks for start and finish
+  -  odd_closed_walk has odd length
+  -> odd_closed_walk has different color for start/finish
+  -> odd_closed_walk is not bipartite
+  -  if subgraph is not bipartite -> the graph is not bipartite
+  -> odd_closed_walk makes graph not bipartite
+
+  -  neighbors_with_same_color makes odd_closed_walk
+  -> neighbors_with_same_color makes graph not bipartite
+*)
+
 Section Bipartion_related.
 
+(* a special component of a tree - its own parent, see next function *)
+Variable root: Component.
 
+(* a function that points towards the root of a tree *)
 Variable parent : Component -> Component.
+(* a function that holds the distance of the parent-path from this component to the root of a tree *)
 Variable distance : Component -> nat.
+(* a function that colors a component in one of two colors: true or false *)
 Variable color : Component -> bool.
 
 
 
-Variable root: Component.
 
 
 
 
+(* alle neighbors are colored diferently -- as there are only two colors this is enough *)
 Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
+(* a walk of odd length *)
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
+(* two neighboring components with both even or both odd length to the root *)
 Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
+(* a tree, that spans all components of the graph *)
 Definition Gamma_1 := spanning_tree.
+(* some component has a neighboring component, which has the evenness or oddity of length towards the root *)
 Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
+(* there exist some neighboring components, which both have the same evenness or oddity of the path to root *)
 Definition Gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
  {v1 : Component & gamma_2 v a c t v1}.
+(* there exists a walk of odd length in the graph *)
 Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
+(* the graph is not bipartite *)
 Definition Psi a := ~bipartite a.
 
 
 
 
 
-
-Lemma gamma_2_no_parents: forall (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component),
-  neighbors_with_same_color v a c t v1 v2 -> (~parent v1 = v2 /\ ~ parent v2 = v1).
-Proof.
-  intros v a c t v1 v2 neighbors.
-  unfold neighbors_with_same_color in neighbors.
-  unfold spanning_tree in t.
-  destruct t.
-  assert (H1 := H0).
-  rename H0 into H2.
-  specialize (H1 v1).
-  destruct H1.
-  destruct neighbors.
-  apply H0.
-  specialize (H2 v2).
-  destruct H2.
-  destruct neighbors.
-  destruct H3.
-  apply H3.
-  unfold distance_prop in H0.
-  destruct neighbors.
-  destruct H5.
-  destruct H6.
-  unfold distance_prop in H2.
-
-  split.
-  unfold not.
-  intros.
-  rewrite H8 in H0.
-  destruct H0.
-  destruct H0.
-  rewrite H9 in H7.
-  rewrite plus_comm in H7.
-  simpl in H7.
-  rewrite Nat.odd_succ in H7.
-  apply not_even_and_odd in H7.
-  inversion H7.
-
-  destruct H0.
-  rewrite H9 in H7.
-  
-  apply (Connected_no_loops v a c) in H6.
-  unfold parent_prop in H1.
-  destruct H1.
-  destruct H1.
-  intuition.
-  destruct H1.
-  rewrite H8 in H10.
-  intuition.
-
-
-
-  unfold not.
-  intros.
-  rewrite H8 in H2.
-  destruct H2.
-  destruct H2.
-  rewrite H9 in H7.
-  rewrite plus_comm in H7.
-  simpl in H7.
-  rewrite Nat.odd_succ in H7.
-  symmetry in H7.
-  apply not_even_and_odd in H7.
-  inversion H7.
-
-  destruct H2.
-  rewrite H9 in H7.
-  
-  apply (Connected_no_loops v a c) in H6.
-  unfold parent_prop in H3.
-  destruct H3.
-  destruct H3.
-  intuition.
-  destruct H3.
-  rewrite H8 in H10.
-  intuition.
-Qed.
-
-
-
-
 (* 
-  In a bipartite graph every vertex pair that is connected in the graph, must be of different color. Otherwise the very edge between the vertices is 
+  In a bipartite graph every component pair that is connected in the graph, must be of different color. Otherwise the very edge between the components is 
   in conflict with the definition of bipartiteness.
 *)
 Lemma neighbors_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
@@ -136,7 +84,7 @@ Proof.
 Qed.
 
 (* 
-  In a bipartite graph, if a walk is of even length its start (x) and its end (y) have the same color. If the walk is of odd length x and y are of different
+  In a bipartite graph, if a walk is of even length its start (x) and its end (y) have the same color. If the walk is of odd length, x and y are of different
   color. 
   IStart: A walk of length 0 has x == y and therefore x and y are colored similarly.
   IStep : A walk of length n (w') has its end at y'. A walk of length n + 1 (w) uses (wlog) y'-y as its final edge. Therefore, using neighbors_different, 
@@ -234,8 +182,7 @@ Proof.
   apply H.
 Qed.
 
-
-(* odd_closed_walk is an odd cycle, meaning it ends at the same component, it startet at and of odd length. Suppose the graph containing the closed_walk is bipartite.
+(* odd_closed_walk is an odd cycle, meaning it ends at the same component, it started at and of odd length. Suppose the graph containing the closed_walk is bipartite.
 Call the first and last component of the odd_closed_walk x. As it is a walk of odd length, we know by walk_colored_ends, that the first and last component 
 must have different colors. As both first and last components are the same, we have a contradiction and the graph cannot be bipartite after all. *)
 Lemma odd_closed_walk_no_bipartitition: forall (v : V_set) (a : A_set) (vl : V_list) (el: E_list) (x : Component) (c : Connected v a) (w: Walk v a x x vl el),
@@ -254,7 +201,6 @@ Proof.
   apply w.
 Qed.
 
-(* is there a better subgraph function for this, maybe? *)
 (* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbors, 
 with the same color still exists in the smaller graph. Each arc added in fact can only possibly add new conflicts or be neutral at best. *)
 Lemma graph_not_bi_graph_plus_not_bi: forall (v v' : V_set) (a a' : A_set) (c : Connected v a) (d : Connected (V_union v v') (A_union a a')),
@@ -287,9 +233,7 @@ Proof.
   intuition.
 Qed.
 
-
-
-(* Here we show that if there are two vertices in a tree, with both odd or both even distance to the root and they share an edge,
+(* Here we show that if there are two components in a tree, with both odd or both even distance to the root and they share an edge,
   (together they are gamma_2) that there must be an odd_closed_walk in the graph.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
@@ -431,6 +375,8 @@ Proof.
   apply temp''.
 Qed.
 
+(* If there is a correct spanning tree (Gamma 1) and we have two components with both even or both odd length to root in this tree (Gamma 2), there exists
+a closed walk of odd length (Gamma). *)
 Theorem Gamma_1_Gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c),
   Gamma_2 v a c G1 -> Gamma v a.
 Proof.
@@ -451,7 +397,7 @@ Proof.
   apply o.
 Qed.
 
-
+(* If there exists a closed walk of odd length in the graph (Gamma), the graph itself is not bipartite (Psi). *)
 Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set)(c: Connected v a),
   Gamma v a -> Psi a.
 Proof.
@@ -464,20 +410,4 @@ Proof.
   apply o.
 Qed.
 
-
 End Bipartion_related.
-
-(* INTUITION OF THIS FILE
-  - neighbors in bipartite graph different
-  - walk every node alternates
-  - same color in even length walks for start and finish /
-    diff color in odd  length walks for start and finish
-  - odd_closed_walk has odd length
-  - odd_closed_walk has different color for start/finish
-  - odd_closed_walk is not bipartite
-  - if graph not bipartite -> graph+x not bipartite
-  - odd_closed_walk makes graph not bipartite
-
-  - special edge makes odd closed
-  - special edge makes graph not bipartite
-*)
