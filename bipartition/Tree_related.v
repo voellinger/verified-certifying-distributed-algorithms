@@ -1,7 +1,7 @@
 Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Path_Walk_related".
+Load "Path_Walk_related".
 
 
 Section Tree_related.

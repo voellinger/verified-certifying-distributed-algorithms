@@ -1,8 +1,8 @@
 Require Import GraphBasics.Graphs.
 Require Import FunInd.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Edge_related".
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/List_related".
+Load "Edge_related".
+Load "List_related".
 
 
 Section Path_Walk_related.

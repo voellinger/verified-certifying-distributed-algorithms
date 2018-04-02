@@ -2,8 +2,8 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Pred_Type.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Tree_related".
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Spanning_Tree_related".
+Load "Tree_related".
+Load "Spanning_Tree_related".
 
 Section Bipartion_related.
 

@@ -1,6 +1,6 @@
 Require Import Coq.Logic.Classical_Prop.
 
-Load "/home/lanpirot/Uni/COQ/verified-certifying-distributed-algorithms/bipartition/Help_Lemmata".
+Load "Help_Lemmata".
 
 Section List_related.
 
