@@ -1,7 +1,7 @@
 Require Import Coq.Logic.ClassicalUniqueChoice.
 Require Import Coq.Logic.Epsilon.
 
-Add LoadPath "/home/dash/Documents/diplom/coq/".
+
 Load graph.
 Load minimal_existence.
 

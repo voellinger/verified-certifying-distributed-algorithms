@@ -4,6 +4,7 @@ Require Import Coq.Logic.Classical_Prop.
 
 Load composition_witness_prop_leader_election.
 Require Export Coq.Bool.BoolEq.
+Require Extraction.
 Extraction Language Haskell. 
 
 
@@ -108,8 +109,6 @@ Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
 
 Axiom forallb_forall_ : forall (l:C_list) (c:Component) (x:Component), 
 (forallb_neighbors l c = true) <-> (In x l ->  x = c).
-
-
 
 Definition checker (l: local_input) (c : checker_input) : bool :=
 (((negb (beq c.(leader_i) l.(i))) && beq c.(leader_i) c.(leader_parent_i))
