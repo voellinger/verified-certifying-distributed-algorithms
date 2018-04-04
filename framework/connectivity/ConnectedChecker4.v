@@ -201,7 +201,7 @@ Definition NetHandler (me : Name) (src: Name) (le : Msg) (state: Data) :
     match le with
       | leader (var, n, d, p)  => if (varList_has_varb (var_l (checkerknowledge state)) var) && Nat.ltb (get_leader_index var (leaders state)) n
         then ([], set_leaders state (set_leader var n d p (leaders state)), sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))
-          else ([], state, [])
+          else ([], state, []) (* ([], state, sendlist (neighbor_l (checkerknowledge state)) (leader (var, n, d+1, me)))    damit alle im CC von allen die infos bekommen *)
     end.
 
 Definition isa_aVarComponent (aVar : Var) (c : Component) : Prop :=

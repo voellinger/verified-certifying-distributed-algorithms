@@ -12,6 +12,11 @@ Load NetworkModelTopology.
 
 Section Communication.
 
+(* We assume a fixed connected graph g=(v,a). *)
+Variable a : A_set.
+Variable v : C_set.
+Variable g : Connected v a.
+
 Inductive Name := Checker : Component  -> Name.
 
 Definition Name_eq_dec : forall x y : Name, {x = y} + {x <> y}.
@@ -34,14 +39,13 @@ match c with
   | x => Checker x
 end.
 
-
-Definition Nodes (v: V_set) (a: A_set) (g: Connected v a): list Name := (map Checker (CV_list v a g)).
+Definition Nodes : list Name := (map Checker (CV_list v a g)).
 
 (* all components that exist are actually part of our graph *)
 Axiom Component_prop_1: forall (v: V_set) (a: A_set) (g: Connected v a)(c: Component),
 v c.
 
-Lemma Component_prop_2: forall (v: V_set) (a: A_set) (g: Connected v a)(c: Component),
+Lemma Component_prop_2: forall (c: Component),
 In c (CV_list v a g).
 Proof.
   intros.
@@ -55,21 +59,21 @@ Proof.
     inversion H.
     inversion H0.
     auto.
-    right. apply (IHg H0).
+    right. apply (IHc0 c0 H0).
    -simpl.
-    apply (IHg H).
+    apply (IHc0 c0 H).
    -simpl.
     rewrite <- e in H.
-    apply (IHg H).
+    apply (IHc0 c0 H).
 Qed.
 
 (* this needs the Axiom Component_prop_1: but is it really necessary? What does this actually mean? *)
-Lemma all_Names_Nodes (v: V_set) (a: A_set) (g: Connected v a): forall n: Name, In n (Nodes v a g).
+Lemma all_Names_Nodes : forall n: Name, In n Nodes.
 Proof.
   unfold Nodes.
   intros.
   destruct n.
-  assert (H:= Component_prop_2 v a g).
+  assert (H:= Component_prop_2).
   destruct (CV_list v a g).
   unfold map.
   apply H. trivial.
@@ -108,7 +112,7 @@ Proof.
   apply IHc. rewrite e. apply H.
 Qed.
 
-Lemma NoDup_Nodes : forall (v: V_set) (a: A_set) (g: Connected v a), NoDup (Nodes v a g).
+Lemma NoDup_Nodes : NoDup Nodes.
 Proof.
   unfold Nodes.
   intros.
