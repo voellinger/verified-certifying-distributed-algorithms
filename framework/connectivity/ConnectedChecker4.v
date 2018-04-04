@@ -1463,6 +1463,96 @@ Proof.
   auto.
 Qed.
 
+
+
+Instance Checker_BaseParams : BaseParams :=
+  {
+    data := Data;
+    input := Input;
+    output := Output
+  }.
+
+
+
+Instance Checker_MultiParams : MultiParams Checker_BaseParams :=
+  {
+    name := Name;
+    name_eq_dec := Name_eq_dec;
+    msg := Msg;
+    msg_eq_dec := Msg_eq_dec;
+    nodes := Nodes a v g;
+    all_names_nodes := all_Names_Nodes a v g;
+    no_dup_nodes := NoDup_Nodes a v g;
+    init_handlers := init_Data; 
+    input_handlers := InputHandler ;
+    net_handlers := NetHandler
+    }.
+
+Function get_distance (m : Msg) : nat :=
+  match m with
+  | leader (v, c, d, n) => d
+  end.
+
+Lemma Distance_always_bigger_zero: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  forall (c : Component) (le : Msg),
+  In le (nwState net (Checker c)).(leaders) ->
+    get_distance le >= 0.
+Proof.
+  intros.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  - subst.
+    simpl in *.
+    destruct (init_certificate (Checker c)) as [l|a l].
+    + simpl in H0.
+      inversion H0.
+    + unfold init_leader_list in H0.
+      induction l.
+        simpl in H0.
+        destruct H0.
+        rewrite <- H.
+        auto.
+
+        inversion H.
+
+        simpl in *.
+        destruct H0.
+        auto.
+        destruct H.
+        rewrite <- H.
+        auto.
+        apply IHl.
+        right. auto.
+  - invc H1.
+    simpl in *.
+    invc H.
+    simpl in *.      
+    
+
+
+Record Data := mkData{
+  checkerknowledge: Checkerknowledge; 
+  checkerinput : Checkerinput;
+  leaders : list Msg
+}.
+
+(* This is the content of a message. It consists of:
+  - var 
+  - local leader for the var
+  - distance from where it was sent (the temporary local leader)
+  - last sender (parent), so that the receiving node can make a parent towards the temporary local leader
+*)
+Inductive Msg := leader : (Var * Component_Index * Distance * Name) -> Msg.
+
+
+
+
+
+
+
+
+
 Variable state_of : Component -> Data.
 
 Definition get_aVar_leader (aVar : Var) (c : Component) : Component :=
