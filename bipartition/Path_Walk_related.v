@@ -9,31 +9,33 @@ Load "List_related".
 
 Section Path_Walk_related.
 
-
+(* p1 and p2 are the same *)
 Definition path_same (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y:Component) (p1: Path v a x y vl el) (p2: Path v a x y vl' el') :=
   vl = vl' /\ el = el'.
 
+(* w2 is appended to w1 and together they form a walk *)
 Definition append_w (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (w1: Walk v a x y vl el) (w2: Walk v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
+(* p2 is appended to p1 and together they form a path *)
 Definition append_p (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') :=
   Walk v a x z (vl ++ vl') (el ++ el').
 
+(* length of a walk *)
 Function length_w {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Walk v a c1 c2 vl el) := length el.
+
+(* length of a path *)
 Function length_p {v: V_set} {a: A_set} {vl : V_list} {el: E_list} {c1 c2: Component} (p: Path v a c1 c2 vl el) := length el.
 
+(* shortest possible path from c0 to c1 *)
 Definition shortest_path2 (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component) (p1: Path v a c0 c1 vl el) := 
   forall (vl': V_list) (el' : E_list) (p2: Path v a c0 c1 vl' el'), length_p p1 <= length_p p2.
 
+(* distance of the shortest path from c0 to c1 is n *)
 Definition distance2 (v: V_set) (a: A_set) (c0 c1 : Component) (n : nat) :=
   exists (vl : V_list) (el : E_list) (p: Path v a c0 c1 vl el), shortest_path2 v a vl el c0 c1 p /\ length el = n.
 
-
-
-
-
-
-
+(* A path can be seen as an identical walk *)
 Lemma Path_isa_walk: 
   forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> Walk v a x y vl el.
@@ -44,6 +46,7 @@ Proof.
   apply H.
 Qed.
 
+(* Two appended paths form a walk, for sure (not necessarily a path, though) *)
 Lemma Path_appended_isa_walk :
  forall (v: V_set) (a: A_set) (x y z : Component) (vl vl' : V_list) (el el' : E_list),
  Path v a x y vl el ->
@@ -61,7 +64,7 @@ Proof.
 Qed.
 
 
-
+(* ensuring append_p works correctly *)
 Lemma Path_append (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el'):
  Walk v a x z (vl ++ vl') (el ++ el') = append_p v a vl vl' el el' x y z p1 p2.
 Proof.
@@ -70,6 +73,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* the edge list and vertex list of a path are of the same length *)
 Lemma Path_vl_el_lengths_eq : forall (v: V_set) (a: A_set) (vl : V_list) (el : E_list) (x y : Component) (p : Path v a x y vl el),
   length vl = length el.
 Proof.
@@ -80,7 +84,7 @@ Proof.
   reflexivity.
 Qed.
 
-
+(* two paths appended have the same length, as both of them added individually *)
 Lemma Path_append_lengthsum (v: V_set) (a: A_set) (vl vl' : V_list) (el el' : E_list) (x y z:Component) (p1: Path v a x y vl el) (p2: Path v a y z vl' el') (p3: append_p v a vl vl' el el' x y z p1 p2):
   length_p p1 + length_p p2 = length_w p3.
 Proof.
@@ -92,6 +96,7 @@ Proof.
   reflexivity.
 Qed.
 
+(* every edge of walk is in the graph itself *)
 Lemma W_inel_ina :
  forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list),
  Walk v a x y vl el ->
@@ -107,20 +112,21 @@ Proof.
   auto.
 Qed.
 
+(* the starting vertex of a walk is in the graph itself *)
 Lemma W_endx_inv :
  forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list), Walk v a x y vl el -> v x.
 Proof.
         intros. inversion H. apply H0. apply H1.
 Qed.
 
+(* the ending vertex of a walk is in the graph itself *)
 Lemma W_endy_inv :
  forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
 Proof.
         intros. elim H. intros. apply v0. intros. apply H0.
 Qed.
 
-
-
+(* you might add a vertex to an existing path to form a new one - if it's not in the path already *)
 Lemma Path_cons : forall (v: V_set) (a: A_set) (x y z: Component) (vl : V_list) (el : E_list),
   v z -> a (A_ends y z) -> (x = y -> vl = V_nil) -> y <> z -> ~ In z vl -> (forall u : Edge, In u el -> ~ E_eq u (E_ends y z)) ->
   Path v a x y vl el -> Path v a x z (vl ++ z :: nil) (el ++ (E_ends y z) :: nil).
@@ -214,6 +220,7 @@ Proof.
   inversion H.
 Qed.
 
+(* you might append a path to another, if they don't intersect, apart from the ends *)
 Lemma Path_append2 : forall (v: V_set) (a: A_set) (x y z : Component) (vl vl' : V_list) (el el' : E_list),
   (forall (c: Component), In c vl -> ~ In c vl') -> (forall u u': Edge, In u el -> In u' el' -> ~ E_eq u' u) ->
   (x = y -> vl = V_nil \/ vl' = V_nil) -> 
@@ -321,6 +328,7 @@ Proof.
   apply H.
 Qed.
 
+(* if you turn a path around, the new starting vertex isn't in the vertex list -- the old starting vertex wasn't by definition as well *)
 Lemma P_y_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In y (cdr Vertex (rev vl)).
 Proof.
@@ -351,7 +359,7 @@ Proof.
   apply nil_cons.
 Qed.
 
-
+(* if you turn a path around, the old starting vertex isn't in the old vertex list -- by definition *)
 Lemma P_x_not_in_cdrrevvl : forall (v: V_set) (a:A_set) (x y : Component) (vl : V_list) (el : E_list),
   Path v a x y vl el -> ~ In x (cdr Vertex (rev vl)).
 Proof.
@@ -372,6 +380,7 @@ Proof.
   intuition.
 Qed.
 
+(* Main theorem of this file: a path is reversible *)
 Lemma Path_reverse :
  forall (v: V_set) (a: A_set) (x y : Vertex) (vl : V_list) (el : E_list) (g: Graph v a),
  Path v a x y vl el -> Path v a y x (cdr Vertex (rev (x :: vl))) (E_reverse el).
@@ -450,6 +459,7 @@ Proof.
   apply app_cons_not_nil.
 Qed.
 
+(* it follows directly: the shortest path is also reversible *)
 Lemma shortest_path2_rev: forall (v : V_set) (a : A_set) (vl : V_list) (el : E_list) (c0 c1 : Component)
   (p0 : (Path v a c0 c1 vl el)) (p1 : (Path v a c1 c0 (cdr Component (rev (c0 :: vl))) (E_reverse el))) (g : Graph v a),
   shortest_path2 v a vl el c0 c1 p0 -> 
@@ -466,7 +476,8 @@ Proof.
   apply g.
 Qed.
 
-Lemma path_length_geq_0: forall (v: V_set) (a: A_set) (vl:V_list) (el:E_list) (x y : Component),
+(* every walk has length 0 or greater *)
+Lemma walk_length_geq_0: forall (v: V_set) (a: A_set) (vl:V_list) (el:E_list) (x y : Component),
   Walk v a x y vl el -> length el >= 0.
 Proof.
   intros v a vl el x y w.
@@ -477,10 +488,8 @@ Proof.
   intuition.
 Qed.
 
-
-
-
-Lemma distance_refl: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n:nat) (g: Graph v a),
+(* distance for two vertices is symmetric *)
+Lemma distance_symm: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n:nat) (g: Graph v a),
   distance2 v a c0 c1 n -> distance2 v a c1 c0 n.
 Proof.
   intros v a c0 c1 n g dis.
@@ -503,7 +512,8 @@ Proof.
   apply g.
 Qed.
 
-Lemma distance_no_dup: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n m:nat),
+(* distances between vertices don't change in a graph *)
+Lemma distance_always_same: forall (v:V_set) (a:A_set) (c0 c1 : Component) (n m:nat),
   distance2 v a c0 c1 n -> distance2 v a c0 c1 m -> n = m.
 Proof.
   intros v a c0 c1 n m dis1 dis2.
