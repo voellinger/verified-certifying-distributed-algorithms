@@ -1286,6 +1286,7 @@ Proof.
     apply v1.
   + rewrite <- e in *.
     apply IHatree.
+    apply c.
 Qed.
 
 Lemma cdr_app :
@@ -1483,7 +1484,7 @@ Variable get_aVar_CC : Var -> Component -> (V_set * A_set).
 
 Axiom get_aVar_vTaT_is_CC : forall (aVar : Var) (c : Component),
   let (vT, aT) := get_aVar_CC aVar c in
-  {v2 : V_set & {a2 : A_set & {_: aVarTree aVar v2 a2 & (vT = v2 /\ aT = a2 /\ v2 c /\ max_aVarVset aVar v2 a2)}}}.
+  {v2 : V_set & {a2 : A_set & {aTree: aVarTree aVar v a v2 a2 & (vT = v2 /\ aT = a2 /\ v2 c /\ max_aVarVset aVar a v2)}}}.
 
 Definition is_aVar_vcc_leader (aVar : Var) (vT : V_set) (c : Component) : Prop :=
   vT c /\ forall (v : Component), vT v -> get_aVar_leader aVar v = c.
