@@ -1500,6 +1500,19 @@ Lemma Distance_always_bigger_zero: forall net tr,
     get_distance le >= 0.
 Proof.
   intros.
+  destruct le.
+  destruct p.
+  destruct p.
+  destruct p.
+  unfold Distance in d.
+  simpl.
+  induction d.
+  auto.
+  intuition.
+
+
+
+  intros.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind.
   - subst.
@@ -1508,6 +1521,7 @@ Proof.
     + simpl in H0.
       inversion H0.
     + unfold init_leader_list in H0.
+      simpl in *.
       induction l.
         simpl in H0.
         destruct H0.
@@ -1524,10 +1538,42 @@ Proof.
         auto.
         apply IHl.
         right. auto.
-  - invc H1.
-    simpl in *.
-    invc H.
-    simpl in *.      
+  - subst. invc H1.
+    + simpl in *.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      destruct (Name_eq_dec (Checker c) (pDst p)) in H0.
+        rewrite <- e in *.
+        unfold nwState in *.
+        repeat break_match.
+        unfold NetHandler in H4.
+        repeat break_match.
+          inversion H4.
+          rewrite <- H6 in H0.
+          simpl in *.
+          destruct (nwState (Checker c)).
+          simpl in *.
+          rewrite <- H5 in *. clear H5. clear out.
+          clear e. clear Heqp3. clear p2. clear Heqp2. clear p1. clear Heqp1. clear p0.
+          destruct p. simpl in *.
+          destruct pBody.
+          admit.
+          inversion H4.
+          rewrite <- H6 in H0.
+          auto.
+        apply H0.
+    + simpl in *.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      destruct (Name_eq_dec (Checker c) h) in H0.
+        rewrite <- e in H3.
+        unfold nwState in *.
+        destruct le.
+        repeat break_match.
+        unfold InputHandler in H3.
+        inversion H3.
+        rewrite <- H5 in H0.
+        apply H0.
+        apply H0.
+Qed.
     
 
 
