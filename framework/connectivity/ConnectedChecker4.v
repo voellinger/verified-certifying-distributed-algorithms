@@ -1509,9 +1509,15 @@ Proof.
   induction d.
   auto.
   intuition.
+Qed.
 
-
-
+(* 
+Lemma Distance_always_bigger_zero: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  forall (c : Component) (le : Msg),
+  In le (nwState net (Checker c)).(leaders) ->
+    get_distance le >= 0.
+Proof.
   intros.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind.
@@ -1573,7 +1579,7 @@ Proof.
         rewrite <- H5 in H0.
         apply H0.
         apply H0.
-Qed.
+Qed. *)
     
 
 
