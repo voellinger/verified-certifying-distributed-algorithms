@@ -104,7 +104,18 @@ verified local checkers with possibility of program extraction
 ### Certifying Distributed Bipartite Testing:
 The certifying variant of distributed bipartite testing will be 
 published at RV17 but not the coq formalisation.
-The coq formalisation is work in progress.
+
+#### Files:
+**Bipartition_related.v**:
+The formalisation and machine checked proofs for the witness property and the composition property.
+
+
+**Spanning_Tree_related.v**:
+Reusing and adapting **composition_witness_prop_leader_election.v** of _Certifying Leader Election_ some more lemmata 
+are shown.
+
+All other files consist of minor lemmata, that are needed in the proofs for the theorem in **Bipartition_related.v**, 
+or that came up, while trying to solve it.
 
 
 ### Certifying Shortest Path Construction:
