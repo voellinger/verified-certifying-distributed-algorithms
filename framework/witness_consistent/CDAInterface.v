@@ -136,7 +136,7 @@ Variable init_certificate : Name -> list Assignment.
 
 (* initialisation of a sub-checker;
  * knowledge a sub-checker has even before the cda computed and terminated *)
-Record Checkerknowledge : Set := mk_Checkerknowledge {
+Record Checkerknowledge : Type := mk_Checkerknowledge {
   inp_l : list inp;
   Predicate_distribution_l: list Predicate_distribution;
   var_l: list Var;
@@ -147,10 +147,10 @@ Definition init_Checkerknowledge (me : Name) :=
   mk_Checkerknowledge (init_inp_l me) (init_predicate_distribution_l me) (init_var_l me) (init_neighbor_l me).
 
 (* a sub-checker gets the sub-output and sub-certificate of its component after the cda computed and terminated *)
-Record Checkerinput : Set := mk_Checkerinput{
+Record Checkerinput : Type := mk_Checkerinput{
   outp_l : list outp;
   certificate : list Assignment
 }.
 
-Definition init_Checkerinput (me : Name) :=
+Definition init_Checkerinput (me : Name) : Checkerinput :=
   mk_Checkerinput (init_outp_l me) (init_certificate me).

@@ -276,6 +276,49 @@ Proof.
       reflexivity.
 Qed.
 
+Lemma is_alwayssss : forall v2 v1 a0 cert,
+  is_always (assign_cons v2 v1) (a0 :: cert) = true ->
+  is_always (assign_cons v2 v1) cert = true.
+Proof.
+  intros v2 v1 a0 cert H.
+  simpl in H.
+  destruct a0.
+  unfold var_beq in H.
+  unfold val_beq in H.
+  destruct (var_eq_dec v2 v0) in H.
+  destruct (val_eq_dec v1 v3) in H.
+  apply andb_true_iff in H.
+  destruct H ; auto.
+  apply andb_true_iff in H.
+  destruct H. inversion H.
+  auto.
+Qed.
+
+Lemma is_alwaysss : forall v2 v1 v3 cert,
+  is_always (assign_cons v2 v1) cert = true ->
+  In (assign_cons v2 v3) cert ->
+  v1 = v3.
+Proof.
+  intros v2 v1 v3 cert H H0.
+  induction cert.
+  + inversion H0.
+  + assert (H' := H).
+    assert (is_always (assign_cons v2 v1) cert = true).
+    apply is_alwayssss in H ; auto.
+    inversion H0.
+    - rewrite H2 in *.
+      simpl in H.
+      unfold var_beq in H.
+      destruct (var_eq_dec v2 v2).
+      apply andb_true_iff in H.
+        destruct H.
+        unfold val_beq in H.
+        destruct (val_eq_dec v1 v3).
+        auto.
+        inversion H.
+        intuition.
+    - apply IHcert in H1 ; auto.
+Qed.
 
 Lemma check_var_list_works : forall (cert : Certificate),
   (check_var_list cert) = true <-> is_consistent cert.
@@ -289,9 +332,40 @@ Proof.
     destruct assign2.
     intuition.
   + split ; intros.
-    - unfold check_var_list in H.
-      unfold is_always in H.
-      admit.
+    - assert (check_var_list cert = true).
+      simpl in H.
+      apply andb_true_iff in H.
+      destruct H.
+      auto.
+      apply IHcert in H0.
+      unfold is_consistent.
+      destruct assign1.
+      destruct assign2.
+      intros.
+      inversion H1.
+        inversion H2.
+          rewrite H5 in H4.
+          apply <- Assignment_eq_dec3 in H4.
+          destruct H4 ; auto.
+          unfold check_var_list in H.
+          apply andb_true_iff in H.
+          destruct H.
+          rewrite H4 in *.
+          rewrite H3 in *.
+          apply (is_alwaysss v2 v1 v3 cert) ; auto.
+        inversion H2.
+          unfold check_var_list in H.
+          apply andb_true_iff in H.
+          destruct H.
+          rewrite H3 in *.
+          rewrite H5 in *.
+          symmetry.
+          apply (is_alwaysss v2 v3 v1 cert) ; auto.
+          unfold is_consistent in H0.
+          rewrite H3 in *.
+          specialize (H0 (assign_cons v2 v1) (assign_cons v2 v3)).
+          simpl in H0.
+          apply H0 ; auto.
     - assert (check_var_list cert = true).
       apply IHcert.
       unfold is_consistent in *.
@@ -310,7 +384,7 @@ Proof.
       auto.
       rewrite H1.
       auto.
-Admitted.
+Qed.
       
 
 Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
@@ -535,7 +609,15 @@ Lemma Drei_zwei : forall net tr c,
   (nwState net (Checker c)).(consistent) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   is_consistent (nwState net (Checker c)).(var_list).
-
+Proof.
+  intros net tr c H H0 H1.
+  unfold is_consistent.
+  destruct assign1. destruct assign2.
+  intros.
+  remember net as y in *.
+  induction H1 using refl_trans_1n_trace_n1_ind.
+  + subst.
+  
 
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
