@@ -614,10 +614,72 @@ Proof.
   unfold is_consistent.
   destruct assign1. destruct assign2.
   intros.
-  remember net as y in *.
+  remember step_async_init as y in *.
   induction H1 using refl_trans_1n_trace_n1_ind.
   + subst.
-  
+    simpl in H.
+    inversion H.
+  + subst.
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H5.
+      assert ({Checker c = pDst p} + {Checker c <> pDst p}).
+      apply Name_eq_dec.
+      destruct H1.
+        rewrite <- e in *.
+        destruct (Name_eq_dec (Checker c) (Checker c)).
+        destruct ((terminated (nwState x' (Checker c)))).
+        simpl in H5.
+        inversion H5.
+        rewrite <- H8 in *.
+        rewrite <- H6 in *.
+        simpl in *.
+        assert (var_list d = var_list (nwState x' (Checker c))).
+        rewrite <- H7.
+        destruct ((nwState x' (Checker c))) ; auto.
+        assert (consistent (nwState x' (Checker c)) = true).
+        destruct d.
+        simpl in H0.
+        rewrite H0 in H7.
+        inversion H7.
+        auto.
+        apply IHrefl_trans_1n_trace1 ; auto.
+        rewrite H1 in *.
+        auto.
+        rewrite H1 in *.
+        auto.
+        simpl in H5.
+        break_match.
+        inversion H5.
+        destruct d.
+        simpl in H.
+        inversion H7.
+        rewrite H in H12.
+        inversion H12.
+        break_match.
+          inversion H5.
+          destruct d.
+          inversion H7.
+          simpl in *.
+          rewrite H0 in *.
+          rewrite H in *.
+          apply check_var_list_works in H13.
+          rewrite H11 in *.
+          unfold is_consistent in H13.
+          apply (H13 (assign_cons v2 v1) (assign_cons v2 v3)) ; auto.
+
+          destruct d.
+          simpl in H.
+          inversion H5.
+          rewrite H in H10.
+          inversion H10.
+          intuition.
+        
+        destruct (Name_eq_dec (Checker c) (pDst p)).
+        intuition.
+        apply IHrefl_trans_1n_trace1 ; auto.
+    - simpl in *.
+      unfold InputHandler in H4.
 
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
