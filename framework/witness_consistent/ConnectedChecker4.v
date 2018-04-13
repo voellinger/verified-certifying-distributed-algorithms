@@ -209,6 +209,60 @@ Fixpoint check_var_list (vl : list Assignment) : bool :=
   | hd :: tl => (is_always hd tl) && check_var_list tl
   end.
 
+Definition is_consistent (cert : Certificate) : Prop :=
+  forall (assign1 assign2 : Assignment), 
+    let (var1, val1) := assign1 in
+      let (var2, val2) := assign2 in
+        In assign1 cert -> In assign2 cert ->
+          var1 = var2 -> val1 = val2.
+
+Lemma check_var_list_works : forall (cert : Certificate),
+  (check_var_list cert) = true <-> is_consistent cert.
+Proof.
+  intros cert.
+  induction cert.
+  + unfold is_consistent.
+    simpl.
+    intuition.
+    destruct assign1.
+    destruct assign2.
+    intuition.
+  + split ; intros.
+    - unfold check_var_list in H.
+      unfold is_always in H.
+      admit.
+    - assert (check_var_list cert = true).
+      apply IHcert.
+      unfold is_consistent in *.
+      intros.
+      specialize (H assign1 assign2).
+      destruct assign1.
+      destruct assign2.
+      intros.
+      apply H ; auto.
+      simpl ; right ; auto.
+      simpl ; right ; auto.
+      simpl.
+      rewrite H0.
+      assert (is_always a0 cert = true).
+      induction cert.
+        simpl. destruct a0. reflexivity.
+        simpl in *.
+        destruct a0. destruct a1.
+        destruct (var_beq v0 v2).
+        unfold is_consistent in H.
+        specialize (H (assign_cons v0 v1)).
+        
+          
+      unfold is_always.
+      unfold is_consistent in H.
+      simpl in *.
+      admit.
+      rewrite H1.
+      auto.
+      
+      
+
 Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
     (list Output) * Data * list (Name * Msg) :=
   if (eqb (terminated state) true) then
@@ -425,6 +479,13 @@ Proof.
   intros net net2 tr c H0 H1.
   apply (terminated_means_no_change net net2 tr c) ; auto.
 Qed.
+
+Lemma Drei_zwei : forall net tr c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (nwState net (Checker c)).(consistent) = true ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  is_consistent (nwState net (Checker c)).(var_list).
+
 
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
