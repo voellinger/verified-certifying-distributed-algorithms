@@ -236,8 +236,46 @@ Proof.
   inversion H1.
   left. auto.
   right. right. auto.
-Qed.    
-  
+Qed.
+
+Lemma is_alwayss: forall a0 cert,
+  is_consistent (a0 :: cert) -> is_always a0 cert = true.
+Proof.
+  intros.
+  destruct a0.
+  induction cert.
+  + auto.
+  + simpl.
+    assert (H' := H).
+    apply is_consistent_one_less in H.
+    apply IHcert in H.
+    rewrite H in *.
+    destruct a0.
+    assert ({v0 = v2} + {v0 <> v2}).
+    apply var_eq_dec.
+    destruct H0.
+      rewrite e in *.
+      unfold var_beq.
+      destruct (var_eq_dec v2 v2).
+      unfold is_consistent in H'.
+      assert (v1 = v3).
+      specialize (H' (assign_cons v2 v1)).
+      specialize (H' (assign_cons v2 v3)).
+      simpl in H'.
+      apply H' ; auto.
+      rewrite H0.
+      unfold val_beq.
+      destruct (val_eq_dec v3 v3).
+      auto.
+      intuition.
+      intuition.
+    
+      unfold var_beq.
+      destruct (var_eq_dec v0 v2).
+      intuition.
+      reflexivity.
+Qed.
+
 
 Lemma check_var_list_works : forall (cert : Certificate),
   (check_var_list cert) = true <-> is_consistent cert.
@@ -268,21 +306,11 @@ Proof.
       simpl.
       rewrite H0.
       assert (is_always a0 cert = true).
-      induction cert.
-        simpl. destruct a0. reflexivity.
-        simpl in *.
-        destruct a0. destruct a1.
-        destruct (var_beq v0 v2).
-          *
-          *        
-          
-      unfold is_always.
-      unfold is_consistent in H.
-      simpl in *.
-      admit.
+      apply is_alwayss.
+      auto.
       rewrite H1.
       auto.
-      
+Admitted.
       
 
 Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
