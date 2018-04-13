@@ -418,7 +418,6 @@ Proof.
       auto.
       auto.
 Qed.
-(* comment 2*)
 
 
 Lemma terminated_means_no_change2: forall net,
