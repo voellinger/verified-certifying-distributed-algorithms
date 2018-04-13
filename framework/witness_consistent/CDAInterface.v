@@ -54,6 +54,9 @@ Proof.
     left. auto.
 Qed.
 
+Axiom Assignment_eq_dec3 : forall (x y : Var) (a b : Value),
+  (x = y /\ a = b) <-> (assign_cons x a = assign_cons y b).
+
 Definition Certificate := list Assignment.
 
 Definition val_beq (x y : Value) : bool :=
