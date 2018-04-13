@@ -29,19 +29,31 @@ Inductive Predicate_distribution: Set:=
 |or : Predicate_distribution.
 
 (* A sub-certificate is an assigment of variables to values. *)
-Inductive Var: Type.
+Variable Var: Type.
 (* Design choice: Var needs to be differentiable *)
 Axiom var_eq_dec : forall x y : Var, {x = y} + {x <> y}.
-Inductive Value: Type.
+Variable Value: Type.
 (* Design choice: Value needs to be differentiable *)
 Axiom val_eq_dec : forall x y : Value, {x = y} + {x <> y}.
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
+Axiom Assignment_eq_dec2 : forall (x y : Var) (a b : Value),
+  {x <> y} + {a <> b} -> assign_cons x a <> assign_cons y b.
 Lemma Assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
 Proof.
   intros.
   destruct x, y.
-  destruct v0. destruct v1. destruct v2. destruct v3. left. reflexivity.
+  assert ({v0 = v2} + {v0 <> v2}).
+  apply var_eq_dec.
+  assert ({v1 = v3} + {v1 <> v3}).
+  apply val_eq_dec.
+  destruct H.
+    destruct H0.
+      left. rewrite e. rewrite e0. auto.
+      right. apply Assignment_eq_dec2 ; auto.
+    right. apply Assignment_eq_dec2.
+    left. auto.
 Qed.
+
 Definition Certificate := list Assignment.
 
 Definition val_beq (x y : Value) : bool :=
