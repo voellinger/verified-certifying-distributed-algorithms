@@ -381,52 +381,12 @@ Instance Checker_MultiParams : MultiParams Checker_BaseParams :=
     }.
 
 
-Lemma terminated_means_no_change: forall net tr1,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr1 ->
-  forall (c : Component), (nwState net (Checker c)).(terminated) = true ->
-  forall net2 tr2,
-  step_async_star (params := Checker_MultiParams) net net2 tr2 ->
+Lemma terminated_means_no_change: forall net net2 tr c,
+  (nwState net (Checker c)).(terminated) = true ->
+  step_async_star (params := Checker_MultiParams) net net2 tr ->
   nwState net2 (Checker c) = nwState net (Checker c).
 Proof.
-  intros net tr1 H c H0 net2 tr2 H1.
-  induction H1 using refl_trans_1n_trace_n1_ind.
-  - auto.
-  - assert (nwState x' (Checker c) = nwState x (Checker c)) ; auto.
-    invc H1.
-    + simpl in *.
-      unfold NetHandler in H4.
-      destruct (Name_eq_dec (Checker c) (pDst p)).
-      rewrite <- e in *.
-      rewrite H2 in *.
-      rewrite H0 in *.
-      simpl in *.
-      inversion H4.
-      rewrite <- H0.
-      destruct (nwState x (Checker c)). 
-      auto.
-      auto.
-    + simpl in *.
-      unfold InputHandler in H3.
-      destruct (Name_eq_dec (Checker c) h).
-      rewrite <- e in *.
-      rewrite H2 in *.
-      rewrite H0 in *.
-      simpl in *.
-      inversion H3.
-      rewrite <- H0.
-      destruct (nwState x (Checker c)). 
-      auto.
-      auto.
-Qed.
-
-
-Lemma terminated_means_no_change2: forall net,
-  forall (c : Component), (nwState net (Checker c)).(terminated) = true ->
-  forall net2 tr2,
-  step_async_star (params := Checker_MultiParams) net net2 tr2 ->
-  nwState net2 (Checker c) = nwState net (Checker c).
-Proof.
-  intros net c H0 net2 tr2 H1.
+  intros net net2 tr c H0 H1.
   induction H1 using refl_trans_1n_trace_n1_ind.
   - auto.
   - assert (nwState x' (Checker c) = nwState x (Checker c)) ; auto.
@@ -455,7 +415,16 @@ Proof.
       destruct (nwState x (Checker c)). 
       auto.
       auto.
-Qed.  
+Qed.
+
+Lemma terminated_means_no_change_global: forall net net2 tr c,
+  (forall (c : Component), (nwState net (Checker c)).(terminated) = true) ->
+  step_async_star (params := Checker_MultiParams) net net2 tr ->
+  nwState net2 (Checker c) = nwState net (Checker c).
+Proof.
+  intros net net2 tr c H0 H1.
+  apply (terminated_means_no_change net net2 tr c) ; auto.
+Qed.
 
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
