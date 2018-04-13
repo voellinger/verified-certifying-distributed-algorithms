@@ -216,6 +216,29 @@ Definition is_consistent (cert : Certificate) : Prop :=
         In assign1 cert -> In assign2 cert ->
           var1 = var2 -> val1 = val2.
 
+Lemma is_consistent_one_less : forall a0 a1 cert,
+  is_consistent (a0 :: a1 :: cert) ->
+  is_consistent (a0 :: cert).
+Proof.
+  intros a0 a1 cert H.
+  unfold is_consistent in *.
+  intros.
+  destruct assign1.
+  destruct assign2.
+  intros.
+  specialize (H (assign_cons v0 v1)).
+  specialize (H (assign_cons v2 v3)).
+  simpl in H.
+  apply H ; auto.
+  inversion H0.
+  left. auto.
+  right. right. auto.
+  inversion H1.
+  left. auto.
+  right. right. auto.
+Qed.    
+  
+
 Lemma check_var_list_works : forall (cert : Certificate),
   (check_var_list cert) = true <-> is_consistent cert.
 Proof.
@@ -250,9 +273,8 @@ Proof.
         simpl in *.
         destruct a0. destruct a1.
         destruct (var_beq v0 v2).
-        unfold is_consistent in H.
-        specialize (H (assign_cons v0 v1)).
-        
+          *
+          *        
           
       unfold is_always.
       unfold is_consistent in H.
