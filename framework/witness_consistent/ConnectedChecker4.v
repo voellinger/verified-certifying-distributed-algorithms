@@ -138,41 +138,6 @@ Inductive Input := alg_terminated : Input.
 Definition Output := bool.
 
 
-(* Sendet zu Beginn hoch, falls *me* ein Blatt ist *)
-Definition InputHandler (me : Name) (c : Input) (state: Data) :
-            (list Output) * Data * list (Name * Msg) :=
-  if (eqb (terminated state) true) then
-  ([] , (mkData
-            (checkerknowledge state)
-            (checkerinput state)
-            (var_list state)
-            (terminated state)
-            (consistent state)
-            (child_list state)),
-      [])
-  else
-	match (child_list state) with
-  | [] => 
-    ([true] , (mkData
-            (checkerknowledge state)
-            (checkerinput state)
-            (var_list state)
-            (true)
-            (true)
-            (child_list state)),
-      [(parent me, (var_list state))])
-  | _ =>
-    ([] , (mkData
-            (checkerknowledge state)
-            (checkerinput state)
-            (var_list state)
-            (terminated state)
-            (consistent state)
-            (child_list state)),
-      [])
-  end.
-
-
 
 Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
 Notation "a == b" := (beq_nat a b) (at level 70).
@@ -208,13 +173,6 @@ Fixpoint check_var_list (vl : list Assignment) : bool :=
   | nil => true
   | hd :: tl => (is_always hd tl) && check_var_list tl
   end.
-
-Definition is_consistent (cert : Certificate) : Prop :=
-  forall (assign1 assign2 : Assignment), 
-    let (var1, val1) := assign1 in
-      let (var2, val2) := assign2 in
-        In assign1 cert -> In assign2 cert ->
-          var1 = var2 -> val1 = val2.
 
 Lemma is_consistent_one_less : forall a0 a1 cert,
   is_consistent (a0 :: a1 :: cert) ->
@@ -385,7 +343,42 @@ Proof.
       rewrite H1.
       auto.
 Qed.
-      
+
+
+(* Sendet zu Beginn hoch, falls *me* ein Blatt ist *)
+Definition InputHandler (me : Name) (c : Input) (state: Data) :
+            (list Output) * Data * list (Name * Msg) :=
+  if (eqb (terminated state) true) then
+  ([] , (mkData
+            (checkerknowledge state)
+            (checkerinput state)
+            (var_list state)
+            (terminated state)
+            (consistent state)
+            (child_list state)),
+      [])
+  else
+	match (child_list state) with
+  | [] => 
+    ([true] , (mkData
+            (checkerknowledge state)
+            (checkerinput state)
+            (var_list state)
+            (true)
+            (check_var_list (var_list state))
+            (child_list state)),
+      [(parent me, (var_list state))])
+  | _ =>
+    ([] , (mkData
+            (checkerknowledge state)
+            (checkerinput state)
+            (var_list state)
+            (terminated state)
+            (consistent state)
+            (child_list state)),
+      [])
+  end.
+
 
 Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
     (list Output) * Data * list (Name * Msg) :=
@@ -611,10 +604,15 @@ Lemma Drei_zwei : forall net tr c,
   is_consistent (nwState net (Checker c)).(var_list).
 Proof.
   intros net tr c H H0 H1.
+
+
   unfold is_consistent.
   destruct assign1. destruct assign2.
   intros.
   remember step_async_init as y in *.
+  assert (is_consistent (var_list (nwState step_async_init (Checker c)))) as H19.
+  simpl.
+  apply init_certificate_is_consistent.
   induction H1 using refl_trans_1n_trace_n1_ind.
   + subst.
     simpl in H.
@@ -680,7 +678,54 @@ Proof.
         apply IHrefl_trans_1n_trace1 ; auto.
     - simpl in *.
       unfold InputHandler in H4.
+      assert ({Checker c = h} + {Checker c <> h}).
+      apply Name_eq_dec.
+      destruct H1.
+        rewrite <- e in *.
+        destruct (Name_eq_dec (Checker c) (Checker c)).
+        destruct (terminated (nwState x' (Checker c))).
+        simpl in H4.
+        inversion H4.
+        destruct d.
+        inversion H6.
+        simpl in H0.
+        rewrite H0 in *.
+        simpl in H.
+        rewrite H in *.
+        simpl in H2.
+        rewrite H10 in *.
+        apply IHrefl_trans_1n_trace1 ; auto.
+        simpl in H4.
+        break_match.
+          inversion H4.
+          destruct d.
+          inversion H6.
+          simpl in H0.
+          rewrite H0 in *.
+          simpl in H.
+          rewrite H in *.
+          simpl in H3.
+          simpl in H2.
+          rewrite H8 in *.
+          rewrite H9 in *.
+          rewrite H10 in *.
+          rewrite <- H13 in *.
+          simpl in *.
+          apply check_var_list_works in H12.
+          unfold is_consistent in H12.
+          apply (H12 (assign_cons v2 v1) (assign_cons v2 v3)) ; auto.
 
+          inversion H4.
+          destruct d.
+          inversion H6.
+          simpl in H.
+          rewrite H in H11.
+          inversion H11.
+        intuition.
+        destruct (Name_eq_dec (Checker c) h).
+        intuition.
+        apply IHrefl_trans_1n_trace1 ; auto.
+Qed.    
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
 2. wenn terminated, dann \u00e4ndert sich consistent nicht mehr            (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)

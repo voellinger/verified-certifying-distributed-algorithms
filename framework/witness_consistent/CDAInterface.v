@@ -134,6 +134,16 @@ Variable init_var_l : Name -> list Var.
 Variable init_outp_l : Name -> list outp.
 Variable init_certificate : Name -> list Assignment.
 
+Definition is_consistent (cert : Certificate) : Prop :=
+  forall (assign1 assign2 : Assignment), 
+    let (var1, val1) := assign1 in
+      let (var2, val2) := assign2 in
+        In assign1 cert -> In assign2 cert ->
+          var1 = var2 -> val1 = val2.
+
+Axiom init_certificate_is_consistent : forall Name,
+  is_consistent (init_certificate Name).
+
 (* initialisation of a sub-checker;
  * knowledge a sub-checker has even before the cda computed and terminated *)
 Record Checkerknowledge : Type := mk_Checkerknowledge {
