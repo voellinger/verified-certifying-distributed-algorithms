@@ -674,7 +674,7 @@ Proof.
           rewrite H in H10.
           inversion H10.
           intuition.
-        
+
         destruct (Name_eq_dec (Checker c) (pDst p)).
         intuition.
         apply IHrefl_trans_1n_trace1 ; auto.
