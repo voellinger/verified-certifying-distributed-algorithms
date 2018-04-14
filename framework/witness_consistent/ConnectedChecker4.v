@@ -188,6 +188,10 @@ Fixpoint check_var_list (vl : list Assignment) : bool :=
   | hd :: tl => (is_always hd tl) && check_var_list tl
   end.
 
+
+Lemma not_consistent : forall cert,
+ ~ is_consistent cert <-> {n : nat & n = 1}.
+
 Lemma is_consistent_one_less : forall a0 a1 cert,
   is_consistent (a0 :: a1 :: cert) ->
   is_consistent (a0 :: cert).
@@ -740,6 +744,22 @@ Proof.
         intuition.
         apply IHrefl_trans_1n_trace1 ; auto.
 Qed.
+
+Lemma Drei_zwei' : forall c,
+  is_consistent (nwState step_async_init (Checker c)).(var_list).
+Proof.
+  intros c.
+  simpl.
+  apply init_certificate_is_consistent.
+Qed.
+
+Lemma Drei_zwei'' : forall net tr c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (nwState net (Checker c)).(consistent) = false ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  ~ is_consistent (nwState net (Checker c)).(var_list).
+Proof.
+Admitted.
 
 Lemma all_subtree_in_var_list: forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
