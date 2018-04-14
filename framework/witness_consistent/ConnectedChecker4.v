@@ -111,6 +111,20 @@ Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) (w : Walk v
 Axiom parent_walk_to_root : forall (c : Name),
   {vl : V_list & {el : E_list & {w : Walk v a (name_component c) (name_component root) vl el & parent_walk (name_component c) (name_component root) vl el w}}}.
 
+Definition descendand (des ancestor : Name) : Set :=
+  {vl : V_list & {el : E_list & {w : Walk v a (name_component des) (name_component ancestor) vl el & parent_walk (name_component des) (name_component ancestor) vl el w}}}.
+
+(* 
+
+Fixpoint descendands (ancestor : Name) (child_list : list Name) : list Name :=
+  match child_list with
+  | [] => [ancestor]
+  | hd :: tl => (descendands hd (children hd)) ++ (descendands ancestor tl)
+  end. 
+
+kann man auch \u00fcber parent_walk definieren
+
+*)
 
 Record Data := mkData{
   checkerknowledge: Checkerknowledge; 
@@ -488,11 +502,11 @@ Definition valueOf (aVar : Var) (c : Name) : Value :=
 Definition Witness_consistent : Prop :=
   forall (c1 c2 : Name) (a : Var), v (name_component c1) -> v (name_component c2) -> isa_aVarComponent a c1 -> isa_aVarComponent a c2 -> valueOf a c1 = valueOf a c2.
 
-Definition descendand (d : Name) : Set :=
+Definition descendand_r (d : Name) : Set :=
   {vl : V_list & {el : E_list & {w : Walk v a (name_component d) (name_component root) vl el & parent_walk (name_component d) (name_component root) vl el w}}}.
 
 Definition root_subtree_consistent :=
-  forall a d1 d2, descendand d1 -> descendand d2 -> isa_aVarComponent a d1 -> isa_aVarComponent a d2 -> valueOf a d1 = valueOf a d2.
+  forall a d1 d2, descendand_r d1 -> descendand_r d2 -> isa_aVarComponent a d1 -> isa_aVarComponent a d2 -> valueOf a d1 = valueOf a d2.
 
 Lemma Witness_consistent_root_subtree_consistent :
   Witness_consistent <-> root_subtree_consistent.
@@ -515,7 +529,7 @@ Proof.
 Qed.
 
 Lemma root_descendand : 
-  descendand root.
+  descendand_r root.
 Proof.
   unfold descendand.
   exists V_nil.
@@ -725,7 +739,21 @@ Proof.
         destruct (Name_eq_dec (Checker c) h).
         intuition.
         apply IHrefl_trans_1n_trace1 ; auto.
-Qed.    
+Qed.
+
+Lemma all_subtree_in_var_list: forall net tr c,
+  (nwState net (Checker c)).(terminated) = true ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (forall d, descendand (component_name d) (component_name c) -> 
+    (forall e, In e (nwState net (Checker d)).(var_list) -> In e (nwState net (Checker c)).(var_list))).
+Proof.
+  intros.
+Admitted.
+
+Axiom everything_ends : forall c net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  {net2 : network & {tr2 : list (Name * (Input + list Output)) & step_async_star (params := Checker_MultiParams) step_async_init net tr /\
+  (nwState net2 (Checker c)).(terminated) = true}}.
 
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
 2. wenn terminated, dann \u00e4ndert sich consistent nicht mehr            (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
