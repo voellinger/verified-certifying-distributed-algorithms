@@ -829,15 +829,24 @@ Proof.
   apply (terminated_means_no_change net net2 tr c) ; auto.
 Qed.
 
+Lemma Drei_zwei' : forall c,
+  is_consistent (nwState step_async_init (Checker c)).(var_list).
+Proof.
+  intros c.
+  simpl.
+  apply init_certificate_is_consistent.
+Qed.
+
 Lemma Drei_zwei : forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
-  (nwState net (Checker c)).(consistent) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  is_consistent (nwState net (Checker c)).(var_list).
+  ((nwState net (Checker c)).(consistent) = true <->
+  is_consistent (nwState net (Checker c)).(var_list)).
 Proof.
-  intros net tr c H H0 H1.
+  intros net tr c H H1.
+  split ; intros.
 
-
+  {
   unfold is_consistent.
   destruct assign1. destruct assign2.
   intros.
@@ -957,15 +966,44 @@ Proof.
         destruct (Name_eq_dec (Checker c) h).
         intuition.
         apply IHrefl_trans_1n_trace1 ; auto.
+  }
+  {
+(* mit * schritten von nicht terminated zu terminated
+   danach bleibt immer alles gleich
+   *)
+  remember step_async_init as y in *.
+  assert (is_consistent (nwState step_async_init (Checker c)).(var_list)) as new.
+  apply Drei_zwei'.
+  induction H1 using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    reflexivity.
+  + subst.
+    simpl in *.
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H3.
+      simpl in *.
+      destruct (Name_eq_dec (Checker c) (pDst p)).
+        rewrite <- e in *.
+        destruct (eqb (terminated (nwState x' (Checker c)))).
+          inversion H3.
+        
+        assert (H0' := H0).
+        apply <- check_var_list_works in H0.
+        rewrite H in *.
+        apply IHrefl_trans_1n_trace1 ; auto.
+  }
 Qed.
 
-Lemma Drei_zwei' : forall c,
-  is_consistent (nwState step_async_init (Checker c)).(var_list).
-Proof.
-  intros c.
-  simpl.
-  apply init_certificate_is_consistent.
+
+
+Lemma check_var_list_works : forall (cert : Certificate),
+  (check_var_list cert) = true <-> is_consistent cert.
+  }
 Qed.
+
+
 
 Lemma Drei_zwei'' : forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
