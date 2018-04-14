@@ -188,9 +188,223 @@ Fixpoint check_var_list (vl : list Assignment) : bool :=
   | hd :: tl => (is_always hd tl) && check_var_list tl
   end.
 
+Lemma is_consistent_one_lesss : forall a0 cert,
+  is_consistent (a0 :: cert) ->
+  is_consistent cert.
+Proof.
+  intros a0 cert H.
+  unfold is_consistent in *.
+  intros.
+  destruct assign1.
+  destruct assign2.
+  intros.
+  specialize (H (assign_cons v0 v1)).
+  specialize (H (assign_cons v2 v3)).
+  simpl in H.
+  apply H ; auto.
+Qed.
+
+Lemma not_consistent_one_less : forall cert va0 va1,
+  ~ is_consistent (assign_cons va0 va1 :: cert) ->
+  (~ is_consistent cert \/ (exists v3, In (assign_cons va0 v3) cert /\ va1 <> v3)).
+Proof.
+  intros cert va0 va1 H.
+  assert (is_consistent cert \/ ~is_consistent cert) as new.
+  apply classic.
+  destruct new as [new|neww].
+  right.
+  induction cert.
+  + assert (is_consistent [assign_cons va0 va1]).
+    unfold is_consistent.
+    destruct assign1.
+    destruct assign2.
+    intros.
+    inversion H0.
+    inversion H1.
+    apply <- Assignment_eq_dec3 in H3.
+    apply <- Assignment_eq_dec3 in H4.
+    destruct H3. destruct H4.
+    rewrite <- H5. rewrite H6. auto.
+    inversion H4.
+    inversion H3.
+    intuition.
+  + assert (new' := new).
+    apply is_consistent_one_lesss in new'.
+    destruct a0.
+    assert ((va0 = v0 /\ va1 <> v1) \/ ~ is_consistent (assign_cons va0 va1 :: cert)).
+      clear new' IHcert.
+      assert ((va0 = v0 /\ va1 <> v1) \/ ~(va0 = v0 /\ va1 <> v1)).
+      apply classic.
+      destruct H0.
+      destruct H0.
+      left. auto.
+      assert (va0 <> v0 \/ va1 = v1).
+      assert (va0 = v0 \/ va0 <> v0).
+      apply classic.
+      destruct H1.
+      assert (va1 = v1 \/ va1 <> v1).
+      apply classic.
+      destruct H2.
+      right. auto.
+      rewrite H1 in H0. intuition.
+      left. auto.
+      right. clear H0.
+      destruct H1.
+        intuition.
+        apply H.
+        unfold is_consistent.
+        destruct assign1. destruct assign2.
+        intros. subst.
+        simpl in *.
+        destruct H4.
+          apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+          destruct H5.
+            apply <- Assignment_eq_dec3 in H4. destruct H4. auto.
+            destruct H4.
+              apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+              intuition.
+              unfold is_consistent in H1.
+              apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+              simpl. left. auto.
+              simpl. right. auto.
+          destruct H4.
+            apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+            destruct H5.
+              apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+              intuition.
+              destruct H4.
+                apply <- Assignment_eq_dec3 in H4. destruct H4. auto.
+                unfold is_consistent in new.
+                apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+                simpl. left. auto.
+                simpl. right. auto.
+            destruct H5.
+            apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
+            apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+            simpl. right. auto.
+            simpl. left. auto.
+            destruct H5.
+            apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
+            apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+            simpl. right. auto.
+            simpl. left. auto.
+            apply (is_consistent_one_lesss) in new.
+          unfold is_consistent in new.
+          apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+
+        intuition.
+        apply H.
+        unfold is_consistent.
+        intros.
+        destruct assign1. destruct assign2.
+        intros.
+        subst.
+        inversion H4.
+          apply <- Assignment_eq_dec3 in H0.
+          destruct H0.
+          subst.
+          inversion H5.
+            apply <- Assignment_eq_dec3 in H0.
+            destruct H0.
+            subst.
+            auto.
+            inversion H0.
+              apply <- Assignment_eq_dec3 in H6.
+              destruct H6. subst. auto.
+              unfold is_consistent in H1.
+              apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+              simpl. left. auto.
+            simpl. right. auto.
+          inversion H0.
+            apply <- Assignment_eq_dec3 in H6.
+            destruct H6.
+            subst.
+            inversion H5.
+              apply <- Assignment_eq_dec3 in H6.
+              destruct H6.
+              auto.
+              inversion H6.
+              apply <- Assignment_eq_dec3 in H7.
+              destruct H7. auto.
+            unfold is_consistent in new.
+            apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+          inversion H5.
+          apply <- Assignment_eq_dec3 in H7. destruct H7. subst.
+          unfold is_consistent in H1.
+          apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+          simpl. right. auto.
+          simpl. left. auto.
+          inversion H7.
+          apply <- Assignment_eq_dec3 in H8. destruct H8. subst.
+          unfold is_consistent in new.
+          apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+          apply (is_consistent_one_lesss) in new.
+          unfold is_consistent in new.
+          apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
+    destruct H0.
+    exists v1.
+    destruct H0.
+    rewrite H0.
+    split.
+    simpl. left. auto.
+    auto.
+    apply IHcert in H0 ; auto.
+    destruct H0.
+    destruct H0.
+    exists x.
+    split.
+    simpl. right. auto.
+    auto.
+  + left. auto.
+Qed.
 
 Lemma not_consistent : forall cert,
- ~ is_consistent cert <-> {n : nat & n = 1}.
+ ~ is_consistent cert <-> 
+  (exists v0 v1 v3, In (assign_cons v0 v1) cert /\ In (assign_cons v0 v3) cert /\ v1 <> v3).
+Proof.
+  intros cert.
+  split ; intros.
+  + induction cert.
+    - assert (is_consistent []).
+      unfold is_consistent.
+      intros.
+      destruct assign1. destruct assign2.
+      intros.
+      inversion H0.
+      intuition.
+    - destruct a0 as [va0 va1].
+      assert (~ is_consistent cert \/ (exists v3, In (assign_cons va0 v3) cert /\ va1 <> v3)).
+      apply not_consistent_one_less ; auto.
+      destruct H0.
+      apply IHcert in H0.
+      destruct H0.
+      destruct H0.
+      destruct H0.
+      destruct H0.
+      destruct H1.
+      exists x. exists x0. exists x1.
+      split.
+      simpl. right. auto.
+      split.
+      simpl. right. auto.
+      auto.
+      destruct H0.
+      destruct H0.
+      exists va0. exists va1. exists x.
+      split.
+      simpl. left. auto.
+      split.
+      simpl. right. auto.
+      auto.
+  + repeat destruct H.
+    destruct H0.
+    unfold is_consistent.
+    intuition.
+    specialize (H2 (assign_cons x x0) (assign_cons x x1)).
+    simpl in H2.
+    apply H1.
+    apply H2 ; auto.
+Qed.
 
 Lemma is_consistent_one_less : forall a0 a1 cert,
   is_consistent (a0 :: a1 :: cert) ->
