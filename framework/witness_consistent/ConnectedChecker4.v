@@ -129,7 +129,7 @@ kann man auch \u00fcber parent_walk definieren
 Record Data := mkData{
   checkerknowledge: Checkerknowledge; 
   checkerinput : Checkerinput;
-  var_list : Certificate;
+  ass_list : Certificate;
   terminated : bool;
   consistent : bool;
   child_list : list Name
@@ -182,10 +182,10 @@ Fixpoint is_always (test_case : Assignment) (vl : list Assignment) : bool :=
       if (var_beq var vl_var) then (val_beq val vl_val) && is_always test_case tl else is_always test_case tl
   end.
 
-Fixpoint check_var_list (vl : list Assignment) : bool :=
+Fixpoint check_ass_list (vl : list Assignment) : bool :=
   match vl with
   | nil => true
-  | hd :: tl => (is_always hd tl) && check_var_list tl
+  | hd :: tl => (is_always hd tl) && check_ass_list tl
   end.
 
 Lemma is_consistent_one_lesss : forall a0 cert,
@@ -358,6 +358,34 @@ Proof.
   + left. auto.
 Qed.
 
+Lemma is_consistent_in_parts : forall c1 c2,
+  is_consistent (c1 ++ c2) -> is_consistent c1 /\ is_consistent c2.
+Proof.
+  intros c1 c2 H.
+  + induction c1.
+    - simpl in *.
+      split.
+      unfold is_consistent.
+      intros. destruct assign1. destruct assign2. intros. inversion H0.
+      auto.
+    - simpl in *.
+      assert (H' := H).
+      apply is_consistent_one_lesss in H'.
+      apply IHc1 in H'.
+      destruct H'.
+      split.
+      unfold is_consistent. unfold is_consistent in H.
+      intros.
+      specialize (H assign1 assign2).
+      destruct assign1. destruct assign2.
+      intros. apply H ; auto ; simpl.
+      inversion H2 ; auto. right. apply in_or_app. left. auto.
+      inversion H3 ; auto. right. apply in_or_app. left. auto.
+      auto.
+Qed.
+      
+    
+
 Lemma not_consistent : forall cert,
  ~ is_consistent cert <-> 
   (exists v0 v1 v3, In (assign_cons v0 v1) cert /\ In (assign_cons v0 v3) cert /\ v1 <> v3).
@@ -510,8 +538,8 @@ Proof.
     - apply IHcert in H1 ; auto.
 Qed.
 
-Lemma check_var_list_works : forall (cert : Certificate),
-  (check_var_list cert) = true <-> is_consistent cert.
+Lemma check_ass_list_works : forall (cert : Certificate),
+  (check_ass_list cert) = true <-> is_consistent cert.
 Proof.
   intros cert.
   induction cert.
@@ -522,7 +550,7 @@ Proof.
     destruct assign2.
     intuition.
   + split ; intros.
-    - assert (check_var_list cert = true).
+    - assert (check_ass_list cert = true).
       simpl in H.
       apply andb_true_iff in H.
       destruct H.
@@ -537,14 +565,14 @@ Proof.
           rewrite H5 in H4.
           apply <- Assignment_eq_dec3 in H4.
           destruct H4 ; auto.
-          unfold check_var_list in H.
+          unfold check_ass_list in H.
           apply andb_true_iff in H.
           destruct H.
           rewrite H4 in *.
           rewrite H3 in *.
           apply (is_alwaysss v2 v1 v3 cert) ; auto.
         inversion H2.
-          unfold check_var_list in H.
+          unfold check_ass_list in H.
           apply andb_true_iff in H.
           destruct H.
           rewrite H3 in *.
@@ -556,7 +584,7 @@ Proof.
           specialize (H0 (assign_cons v2 v1) (assign_cons v2 v3)).
           simpl in H0.
           apply H0 ; auto.
-    - assert (check_var_list cert = true).
+    - assert (check_ass_list cert = true).
       apply IHcert.
       unfold is_consistent in *.
       intros.
@@ -584,7 +612,7 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
   ([] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            (var_list state)
+            (ass_list state)
             (terminated state)
             (consistent state)
             (child_list state)),
@@ -595,16 +623,16 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
     ([true] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            (var_list state)
+            (ass_list state)
             (true)
-            (check_var_list (var_list state))
+            (check_ass_list (ass_list state))
             (child_list state)),
-      [(parent me, (var_list state))])
+      [(parent me, (ass_list state))])
   | _ =>
     ([] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            (var_list state)
+            (ass_list state)
             (terminated state)
             (consistent state)
             (child_list state)),
@@ -618,7 +646,7 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
   ([] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            (var_list state)
+            (ass_list state)
             (terminated state)
             (consistent state)
             (child_list state)),
@@ -629,25 +657,25 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
     ([] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            (var_list state)
+            (ass_list state)
             (terminated state)
             (consistent state)
             (child_list state)),
       [])
   | [c] =>
-    ([check_var_list ((var_list state) ++ child_cert)] , (mkData
+    ([check_ass_list ((ass_list state) ++ child_cert)] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            ((var_list state) ++ child_cert)
+            ((ass_list state) ++ child_cert)
             (true)
-            (check_var_list ((var_list state) ++ child_cert))
+            (check_ass_list ((ass_list state) ++ child_cert))
             ([])),
-      [(parent me, (var_list state))])
+      [(parent me, (ass_list state))])
   | _ =>
     ([] , (mkData
             (checkerknowledge state)
             (checkerinput state)
-            ((var_list state) ++ child_cert)
+            ((ass_list state) ++ child_cert)
             (terminated state)
             (consistent state)
             (remove_src src (child_list state))),
@@ -830,28 +858,101 @@ Proof.
 Qed.
 
 Lemma Drei_zwei' : forall c,
-  is_consistent (nwState step_async_init (Checker c)).(var_list).
+  is_consistent (nwState step_async_init (Checker c)).(ass_list).
 Proof.
   intros c.
   simpl.
   apply init_certificate_is_consistent.
 Qed.
 
+Lemma Drei_zwei'' : forall net tr c,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (is_consistent (nwState net (Checker c)).(ass_list)) ->
+  (nwState net (Checker c)).(consistent) = true.
+Proof.
+  intros net tr c H H0.
+  remember step_async_init as y in *.
+  assert (is_consistent (nwState step_async_init (Checker c)).(ass_list)) as new.
+  apply Drei_zwei'.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    reflexivity.
+  + subst.
+    simpl in *.
+    assert (is_consistent (ass_list (nwState x' (Checker c)))).
+    assert (exists xyz: Certificate, ass_list (nwState x'' (Checker c)) = ass_list (nwState x' (Checker c)) ++ xyz).
+    {invc H1.
+    - simpl in *.
+      unfold NetHandler in H4.
+      repeat break_match.
+      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
+      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+    - simpl in *.
+      unfold InputHandler in H3.
+      repeat break_match.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto. }
+
+    destruct H3.
+    rewrite H3 in H0.
+    apply is_consistent_in_parts in H0.
+    destruct H0.
+    auto.
+    assert (consistent (nwState x' (Checker c)) = true).
+    apply IHrefl_trans_1n_trace1 ; auto.
+
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H6.
+      repeat break_match.
+        rewrite <- e in *. inversion H6. rewrite H4 in *. reflexivity.
+        rewrite <- e in *. inversion H6. rewrite H4 in *. reflexivity.
+        rewrite <- e in *. inversion H6. simpl. 
+          assert (ass_list d = ass_list (nwState x' (Checker c)) ++ pBody p). rewrite <- H8. auto.
+          rewrite H1 in H0. apply <- check_ass_list_works in H0. auto.
+        rewrite <- e in *. inversion H6. rewrite H4 in *. reflexivity.
+        auto.
+        auto.
+        auto.
+        auto.
+    - simpl in *.
+      unfold InputHandler in H5.
+      repeat break_match.
+        inversion H5. rewrite <- e in *. auto.
+        apply <- check_ass_list_works in H0. rewrite <- e in *. inversion H5. simpl in *.
+          assert (ass_list d = ass_list (nwState x' (Checker c))). rewrite <- H7. auto.
+          rewrite <- H1. auto.
+        inversion H5. rewrite <- e in *. auto.
+        auto.
+        auto.
+        auto.
+Qed.
+
 Lemma Drei_zwei : forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  ((nwState net (Checker c)).(consistent) = true <->
-  is_consistent (nwState net (Checker c)).(var_list)).
+  ((nwState net (Checker c)).(consistent) = true ->
+  is_consistent (nwState net (Checker c)).(ass_list)).
 Proof.
   intros net tr c H H1.
-  split ; intros.
 
   {
   unfold is_consistent.
   destruct assign1. destruct assign2.
   intros.
   remember step_async_init as y in *.
-  assert (is_consistent (var_list (nwState step_async_init (Checker c)))) as H19.
+  assert (is_consistent (ass_list (nwState step_async_init (Checker c)))) as H19.
   simpl.
   apply init_certificate_is_consistent.
   induction H1 using refl_trans_1n_trace_n1_ind.
@@ -873,7 +974,7 @@ Proof.
         rewrite <- H8 in *.
         rewrite <- H6 in *.
         simpl in *.
-        assert (var_list d = var_list (nwState x' (Checker c))).
+        assert (ass_list d = ass_list (nwState x' (Checker c))).
         rewrite <- H7.
         destruct ((nwState x' (Checker c))) ; auto.
         assert (consistent (nwState x' (Checker c)) = true).
@@ -902,7 +1003,7 @@ Proof.
           simpl in *.
           rewrite H0 in *.
           rewrite H in *.
-          apply check_var_list_works in H13.
+          apply check_ass_list_works in H13.
           rewrite H11 in *.
           unfold is_consistent in H13.
           apply (H13 (assign_cons v2 v1) (assign_cons v2 v3)) ; auto.
@@ -952,7 +1053,7 @@ Proof.
           rewrite H10 in *.
           rewrite <- H13 in *.
           simpl in *.
-          apply check_var_list_works in H12.
+          apply check_ass_list_works in H12.
           unfold is_consistent in H12.
           apply (H12 (assign_cons v2 v1) (assign_cons v2 v3)) ; auto.
 
@@ -967,45 +1068,12 @@ Proof.
         intuition.
         apply IHrefl_trans_1n_trace1 ; auto.
   }
-  {
-   assert ({between: network & {tr2 : list (name * (input + list output)) & 
-    {tr3 : list (name * (input + list output)) & 
-    step_async_star step_async_init between tr2 /\ step_async_star between net tr3 /\
-    terminated (nwState between (Checker c)) = false /\ 
-    consistent (nwState between (Checker c)) = true}}}).
-  admit.
-(* mit * schritten  von nicht terminated zu terminated
-   danach bleibt immer alles gleich
-   *)
-  remember step_async_init as y in *.
-  assert (is_consistent (nwState step_async_init (Checker c)).(var_list)) as new.
-  apply Drei_zwei'.
-  induction H1 using refl_trans_1n_trace_n1_ind.
-  + subst.
-    simpl in *.
-    reflexivity.
-  + subst.
-    simpl in *.
-    invc H1.
-    - simpl in *.
-      unfold NetHandler in H3.
-      simpl in *.
-      destruct (Name_eq_dec (Checker c) (pDst p)).
-        rewrite <- e in *.
-        destruct (eqb (terminated (nwState x' (Checker c)))).
-          inversion H3.
-        
-        assert (H0' := H0).
-        apply <- check_var_list_works in H0.
-        rewrite H in *.
-        apply IHrefl_trans_1n_trace1 ; auto.
-  }
 Qed.
 
 
 
-Lemma check_var_list_works : forall (cert : Certificate),
-  (check_var_list cert) = true <-> is_consistent cert.
+Lemma check_ass_list_works : forall (cert : Certificate),
+  (check_ass_list cert) = true <-> is_consistent cert.
   }
 Qed.
 
@@ -1015,15 +1083,15 @@ Lemma Drei_zwei'' : forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
   (nwState net (Checker c)).(consistent) = false ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  ~ is_consistent (nwState net (Checker c)).(var_list).
+  ~ is_consistent (nwState net (Checker c)).(ass_list).
 Proof.
 Admitted.
 
-Lemma all_subtree_in_var_list: forall net tr c,
+Lemma all_subtree_in_ass_list: forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (forall d, descendand (component_name d) (component_name c) -> 
-    (forall e, In e (nwState net (Checker d)).(var_list) -> In e (nwState net (Checker c)).(var_list))).
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
 Proof.
   intros.
 Admitted.
@@ -1036,10 +1104,10 @@ Axiom everything_ends : forall c net tr,
 1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
 2. wenn terminated, dann \u00e4ndert sich consistent nicht mehr            (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
 3. wenn terminated, dann 
-  i. sind alle Belegungen der Variablen des Teilbaums in der var_list
-  ii. wenn consistent, dann sind alle Variablen der var_list sind gleichbelegt
+  i. sind alle Belegungen der Variablen des Teilbaums in der ass_list
+  ii. wenn consistent, dann sind alle Variablen der ass_list sind gleichbelegt
   -> der gesamte Teilbaum hat eine konsistente Belegung
-  iii. wenn nicht consistent, dann existiert eine Variable in der var_list, die zwei verschiedene Belegungen hat
+  iii. wenn nicht consistent, dann existiert eine Variable in der ass_list, die zwei verschiedene Belegungen hat
   -> es existieren zwei Komponenten im Teilbaum, die f\u00fcr eine Variable verschiedene Belegungen haben
 5. wenn alle Variablen im Teilbaum gleichbelegt sind, dann ist der Zeuge konsistent
 6. wenn nicht alle Variablen im Teilbaum gleichbelegt sind, dann ist der Zeuge nicht konsistent
