@@ -383,8 +383,7 @@ Proof.
       inversion H3 ; auto. right. apply in_or_app. left. auto.
       auto.
 Qed.
-      
-    
+
 
 Lemma not_consistent : forall cert,
  ~ is_consistent cert <-> 
@@ -1072,19 +1071,37 @@ Qed.
 
 
 
-Lemma check_ass_list_works : forall (cert : Certificate),
-  (check_ass_list cert) = true <-> is_consistent cert.
-  }
-Qed.
-
-
-
-Lemma Drei_zwei'' : forall net tr c,
-  (nwState net (Checker c)).(terminated) = true ->
+Lemma Drei_zwei''' : forall net tr c,
   (nwState net (Checker c)).(consistent) = false ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   ~ is_consistent (nwState net (Checker c)).(ass_list).
 Proof.
+
+
+
+(* assert (exists xyz: Certificate, ass_list (nwState x'' (Checker c)) = ass_list (nwState x' (Checker c)) ++ xyz).
+    {invc H1.
+    - simpl in *.
+      unfold NetHandler in H4.
+      repeat break_match.
+      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
+      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+    - simpl in *.
+      unfold InputHandler in H3.
+      repeat break_match.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto.
+      exists []. rewrite app_nil_r. auto. } *)
+
 Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr c,
@@ -1109,7 +1126,8 @@ Axiom everything_ends : forall c net tr,
   -> der gesamte Teilbaum hat eine konsistente Belegung
   iii. wenn nicht consistent, dann existiert eine Variable in der ass_list, die zwei verschiedene Belegungen hat
   -> es existieren zwei Komponenten im Teilbaum, die f\u00fcr eine Variable verschiedene Belegungen haben
-5. wenn alle Variablen im Teilbaum gleichbelegt sind, dann ist der Zeuge konsistent
+5. wenn alle Variablen im Teilbaum von root gleichbelegt sind, dann ist der Zeuge konsistent
+  (weil alle knoten des graphen im teilbaum von root sind)
 6. wenn nicht alle Variablen im Teilbaum gleichbelegt sind, dann ist der Zeuge nicht konsistent
 
 
