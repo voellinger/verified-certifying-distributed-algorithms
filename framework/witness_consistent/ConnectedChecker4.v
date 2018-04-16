@@ -968,7 +968,13 @@ Proof.
         apply IHrefl_trans_1n_trace1 ; auto.
   }
   {
-(* mit * schritten von nicht terminated zu terminated
+   assert ({between: network & {tr2 : list (name * (input + list output)) & 
+    {tr3 : list (name * (input + list output)) & 
+    step_async_star step_async_init between tr2 /\ step_async_star between net tr3 /\
+    terminated (nwState between (Checker c)) = false /\ 
+    consistent (nwState between (Checker c)) = true}}}).
+  admit.
+(* mit * schritten  von nicht terminated zu terminated
    danach bleibt immer alles gleich
    *)
   remember step_async_init as y in *.
