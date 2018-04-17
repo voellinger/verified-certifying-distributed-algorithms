@@ -1076,31 +1076,83 @@ Lemma Drei_zwei''' : forall net tr c,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   ~ is_consistent (nwState net (Checker c)).(ass_list).
 Proof.
-
-
-
-(* assert (exists xyz: Certificate, ass_list (nwState x'' (Checker c)) = ass_list (nwState x' (Checker c)) ++ xyz).
-    {invc H1.
+  intros net tr c H H0.
+  remember step_async_init as y in *.
+  induction H0 using refl_trans_1n_trace_n1_ind.
+  + subst.
+    intuition.
+  + subst. simpl in *.
+    assert (exists xyz: Certificate, ass_list (nwState x'' (Checker c)) = ass_list (nwState x' (Checker c)) ++ xyz).
+    {invc H0.
     - simpl in *.
-      unfold NetHandler in H4.
+      unfold NetHandler in H2.
       repeat break_match.
-      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
-      rewrite e in *. exists []. inversion H4. simpl. rewrite app_nil_r. auto.
-      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
-      rewrite e in *. exists (pBody p). inversion H4. simpl. auto.
+      rewrite e in *. exists []. inversion H2. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists []. inversion H2. simpl. rewrite app_nil_r. auto.
+      rewrite e in *. exists (pBody p). inversion H2. simpl. auto.
+      rewrite e in *. exists (pBody p). inversion H2. simpl. auto.
       exists []. rewrite app_nil_r. auto.
       exists []. rewrite app_nil_r. auto.
       exists []. rewrite app_nil_r. auto.
       exists []. rewrite app_nil_r. auto.
     - simpl in *.
-      unfold InputHandler in H3.
+      unfold InputHandler in H1.
       repeat break_match.
-      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
-      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
-      rewrite e in *. inversion H3. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H1. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H1. simpl. exists []. rewrite app_nil_r. auto.
+      rewrite e in *. inversion H1. simpl. exists []. rewrite app_nil_r. auto.
       exists []. rewrite app_nil_r. auto.
       exists []. rewrite app_nil_r. auto.
-      exists []. rewrite app_nil_r. auto. } *)
+      exists []. rewrite app_nil_r. auto. }
+    destruct H1.
+    rewrite H1 in *.
+    intuition.
+    assert (H2' := H2).
+    apply is_consistent_in_parts in H2.
+    destruct H2.
+    apply (Drei_zwei'' x' tr1) in H2 ; auto.
+    invc H0.
+    - simpl in *.
+      unfold NetHandler in H5.
+      repeat break_match.
+        rewrite <- e in *. inversion H5. rewrite <- H7 in H. simpl in *. apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        rewrite <- e in *. inversion H5. rewrite <- H7 in H. simpl in *. apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        rewrite <- e in *. inversion H5. rewrite <- H7 in H. rewrite <- H7 in H1. simpl in *. 
+        apply app_inv_head in H1. rewrite H1 in *. apply check_ass_list_works in H2'.
+        apply (eq_true_false_abs (check_ass_list (ass_list (nwState x' (Checker c)) ++ x)) H2' H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        rewrite <- e in*. inversion H5. rewrite <- H7 in H. simpl in *. 
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+    - simpl in *.
+      unfold InputHandler in H4.
+      repeat break_match.
+        rewrite <- e in *. inversion H4. rewrite <- H6 in H. simpl in *.
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        rewrite <- e in *. inversion H4. rewrite <- H6 in H. simpl in *.
+        apply is_consistent_in_parts in H2'. destruct H2'.
+        apply <- check_ass_list_works in H0.
+        apply (eq_true_false_abs (check_ass_list (ass_list (nwState x' (Checker c)))) H0 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        rewrite <- e in *. inversion H4. rewrite <- H6 in H. simpl in *.
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+        apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
+Qed.
+        
+        
+
+
+
+
+
+
+Lemma Drei_zwei'' : forall net tr c,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (is_consistent (nwState net (Checker c)).(ass_list)) ->
+  (nwState net (Checker c)).(consistent) = true.
 
 Admitted.
 
