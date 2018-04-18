@@ -114,9 +114,13 @@ Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) (w : Walk v
 Axiom parent_walk_to_root : forall (c : Name),
   {vl : V_list & {el : E_list & {w : Walk v a (name_component c) (name_component root) vl el & parent_walk (name_component c) (name_component root) vl el w}}}.
 
-Definition descendand (des ancestor : Name) : Set :=
-  {vl : V_list & {el : E_list & {w : Walk v a (name_component des) (name_component ancestor) vl el & parent_walk (name_component des) (name_component ancestor) vl el w}}}.
+Definition descendand (des ancestor : Name) : Prop :=
+  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el w.
 
+
+(* Definition descendand (des ancestor : Name) : Set :=
+  {vl : V_list & {el : E_list & {w : Walk v a (name_component des) (name_component ancestor) vl el & parent_walk (name_component des) (name_component ancestor) vl el w}}}.
+ *)
 (* 
 
 Fixpoint descendands (ancestor : Name) (child_list : list Name) : list Name :=
@@ -1190,7 +1194,7 @@ Admitted.
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (nwState net (Checker c)).(terminated) = true ->
-  In a (ass_list (nwState net (Checker c))) -> {d : Name & descendand d (component_name c)}.
+  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate (component_name c)).
 Proof.
   intros.
 Admitted.
@@ -1300,14 +1304,21 @@ Proof.
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list))).
   apply (all_subtree_in_ass_list net tr) ; auto.
   rename H3 into Hd.
+  assert (forall (c : Name),
+  {vl : V_list & {el : E_list & {w : Walk v a (name_component c) (name_component root) vl el & parent_walk (name_component c) (name_component root) vl el w}}}) as pwtr.
+  apply parent_walk_to_root.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d1)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d1)) ; auto.
+  specialize (pwtr d1).
+  destruct pwtr. destruct s. destruct s. unfold descendand. exists x. exists x0. exists x1. simpl. apply p.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d2)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d2)) ; auto.
+  specialize (pwtr d2).
+  destruct pwtr. destruct s. destruct s. unfold descendand. exists x. exists x0. exists x1. simpl. apply p.
   assert (is_consistent (nwState net (Checker (name_component root))).(ass_list)).
   apply (Drei_zwei net tr) ; auto.
   unfold is_consistent in H5.
