@@ -1146,6 +1146,22 @@ Proof.
 Qed.
 
 Lemma all_subtree_in_ass_list: forall net tr c,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker c)).(terminated) = true ->
+  (nwState net (Checker c)).(ass_list)) = sum of all childrens ass_lists
+Proof.
+  intros.
+Admitted.
+
+Lemma all_subtree_in_ass_list: forall net tr c,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker c)).(terminated) = true ->
+  (nwState net (Checker c)).(ass_list)) = sum of all descendands ass_lists
+Proof.
+  intros.
+Admitted.
+
+Lemma all_subtree_in_ass_list: forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (forall d, descendand (component_name d) (component_name c) -> 
@@ -1246,12 +1262,12 @@ Proof.
 Qed.
 
 Theorem root_ends_true_witness_consistent: forall net tr,
-  (nwState net (Checker (name_component root))).(consistent) = true ->
-  (nwState net (Checker (name_component root))).(terminated) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker (name_component root))).(terminated) = true ->
+  (nwState net (Checker (name_component root))).(consistent) = true ->
   Witness_consistent. (*terminated<->wc*)
 Proof.
-  intros net tr cons term reachable.
+  intros net tr reachable term cons.
   apply Witness_consistent_root_subtree_consistent.
   unfold root_subtree_consistent.
   intros.
@@ -1288,6 +1304,30 @@ Proof.
   apply H4 ; auto.
   apply (cert_stays_in_ass_list net tr) ; auto.
 Qed.
+
+Theorem root_ends_false_witness_inconsistent: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker (name_component root))).(terminated) = true ->
+  (nwState net (Checker (name_component root))).(consistent) = false ->
+  ~ Witness_consistent.
+Proof.
+  intros net tr reachable terminated inconsistent.
+  intuition.
+  apply Witness_consistent_root_subtree_consistent in H.
+  unfold root_subtree_consistent in H.
+  apply (Drei_zwei''' net tr) in inconsistent ; auto.
+  intuition.
+  apply inconsistent.
+  unfold is_consistent.
+  intros.
+  destruct assign1. destruct assign2.
+  intros.
+  assert ((forall d, descendand (component_name d) root -> 
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list)))).
+  apply (all_subtree_in_ass_list net tr (name_component root)) ; auto.
+  subst.
+  
+  
 
 
 Axiom everything_ends : forall c net tr,
