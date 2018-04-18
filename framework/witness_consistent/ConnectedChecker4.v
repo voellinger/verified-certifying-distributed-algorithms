@@ -1173,12 +1173,59 @@ Qed.
 Definition permutation (X : Type) (l1 l2 : list X) : Prop :=
   forall x, In x l1 <-> In x l2.
 
+Lemma cert_stays_in_ass_list : forall net tr c a,
+  step_async_star step_async_init net tr ->
+  In a (init_certificate c) ->
+  In a (ass_list (nwState net (Checker (name_component c)))).
+Proof.
+  intros net tr c a reachable genesis.
+  remember step_async_init as y in *.
+  induction reachable using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl.
+    unfold name_component.
+    break_match.
+    auto.
+  + subst.
+    invc H ; simpl in *.
+    - unfold NetHandler in H1.
+      repeat break_match.
+      inversion H1. rewrite <- e in *. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+    - unfold InputHandler in H0.
+      repeat break_match.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+Qed.
+
 Lemma all_children_in_ass_list: forall net tr c,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (nwState net (Checker c)).(terminated) = true ->
   permutation Assignment ((nwState net (Checker c)).(ass_list)) ((init_certificate (component_name c)) ++ list_of_lists (children (component_name c)) net).
 Proof.
   intros.
+(*   remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    inversion H0.
+  + subst.
+    simpl in *.
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H4.
+      induction 
+     *)
 Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr c,
@@ -1279,41 +1326,6 @@ Proof.
       inversion Heqb.
 Qed.
 
-
-Lemma cert_stays_in_ass_list : forall net tr c a,
-  step_async_star step_async_init net tr ->
-  In a (init_certificate c) ->
-  In a (ass_list (nwState net (Checker (name_component c)))).
-Proof.
-  intros net tr c a reachable genesis.
-  remember step_async_init as y in *.
-  induction reachable using refl_trans_1n_trace_n1_ind.
-  + subst.
-    simpl.
-    unfold name_component.
-    break_match.
-    auto.
-  + subst.
-    invc H ; simpl in *.
-    - unfold NetHandler in H1.
-      repeat break_match.
-      inversion H1. rewrite <- e in *. simpl in *. apply IHreachable1 ; auto.
-      rewrite <- e in *. inversion H1. simpl in *. apply IHreachable1 ; auto.
-      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
-      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-    - unfold InputHandler in H0.
-      repeat break_match.
-      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
-      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
-      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-      apply IHreachable1 ; auto.
-Qed.
 
 Theorem root_ends_true_witness_consistent: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
