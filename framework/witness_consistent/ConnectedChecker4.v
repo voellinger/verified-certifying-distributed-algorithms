@@ -1213,7 +1213,34 @@ Lemma cert_stays_in_ass_list : forall net tr c a,
   In a (ass_list (nwState net (Checker (name_component c)))).
 Proof.
   intros net tr c a reachable genesis.
-Admitted.
+  remember step_async_init as y in *.
+  induction reachable using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl.
+    unfold name_component.
+    break_match.
+    auto.
+  + subst.
+    invc H ; simpl in *.
+    - unfold NetHandler in H1.
+      repeat break_match.
+      inversion H1. rewrite <- e in *. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H1. simpl in *. apply in_or_app. left. apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+    - unfold InputHandler in H0.
+      repeat break_match.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      rewrite <- e in *. inversion H0. simpl in *. apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+      apply IHreachable1 ; auto.
+Qed.
 
 Theorem root_ends_true_witness_consistent: forall net tr,
   (nwState net (Checker (name_component root))).(consistent) = true ->
