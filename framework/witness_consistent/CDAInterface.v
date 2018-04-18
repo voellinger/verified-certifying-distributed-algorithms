@@ -141,6 +141,12 @@ Definition is_consistent (cert : Certificate) : Prop :=
         In assign1 cert -> In assign2 cert ->
           var1 = var2 -> val1 = val2.
 
+Axiom init_var_l_init_certificate : forall Name var,
+  In var (init_var_l Name) -> (exists val : Value, In (assign_cons var val) (init_certificate Name)).
+
+Axiom init_certificate_init_var_l : forall Name var val,
+  In (assign_cons var val) (init_certificate Name) -> In var (init_var_l Name).
+
 Axiom init_certificate_is_consistent : forall Name,
   is_consistent (init_certificate Name).
 

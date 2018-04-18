@@ -1153,13 +1153,66 @@ Admitted.
 
 Lemma has_var_exists_val : forall var d,
   isa_aVarComponent var d -> exists val : Value, In (assign_cons var val) (init_certificate d).
-Admitted.
+Proof.
+  intros var d H.
+  unfold isa_aVarComponent in H.
+  assert (In var (init_var_l d)).
+  - unfold varList_has_var in H.
+    unfold varList_has_varb in H.
+    induction (init_var_l d).
+    + inversion H.
+    + simpl in *.
+      repeat break_match.
+      apply andb_prop in H.
+      destruct H.
+      unfold var_beq in H.
+      repeat break_match.
+      left. auto.
+      inversion H.
+  - apply init_var_l_init_certificate in H0.
+    apply H0.
+Qed.
 
 Lemma is_in_cons_cert_then_take_it : forall var val d,
   In (assign_cons var val) (init_certificate d) -> valueOf var d = val.
-(* init_certificate is consistent *)
-Admitted.
+Proof.
+  intros var val d H.
+  assert (is_consistent (init_certificate d)).
+  apply init_certificate_is_consistent.
+  unfold valueOf.
+  induction (init_certificate d).
+  + inversion H.
+  + simpl in *.
+    destruct H.
+    - rewrite H in *.
+      unfold var_beq.
+      repeat break_match ; auto.
+      inversion Heqb.
+      intuition.
+    - destruct a0.
+      assert (H0' := H0).
+      apply is_consistent_one_lesss in H0.
+      assert (valueOfa var l = val).
+      apply IHl ; auto.
+      repeat break_match ; auto.
+      unfold var_beq in Heqb.
+      break_match.
+      rewrite e in *.
+      unfold is_consistent in H0'.
+      apply (H0' (assign_cons var v1) (assign_cons var val)) ; auto.
+      simpl. left. auto.
+      simpl. right. auto.
+      inversion Heqb.
+Qed.
 
+
+Lemma cert_stays_in_ass_list : forall net tr c a,
+  step_async_star step_async_init net tr ->
+  In a (init_certificate c) ->
+  In a (ass_list (nwState net (Checker (name_component c)))).
+Proof.
+  intros net tr c a reachable genesis.
+Admitted.
 
 Theorem root_ends_true_witness_consistent: forall net tr,
   (nwState net (Checker (name_component root))).(consistent) = true ->
@@ -1200,7 +1253,10 @@ Proof.
   rewrite H2.
   apply (H5 (assign_cons a0 val1) (assign_cons a0 val2)) ; auto.
   apply H3 ; auto.
-Admitted.
+  apply (cert_stays_in_ass_list net tr) ; auto.
+  apply H4 ; auto.
+  apply (cert_stays_in_ass_list net tr) ; auto.
+Qed.
 
 
 Axiom everything_ends : forall c net tr,
