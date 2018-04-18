@@ -1141,20 +1141,6 @@ Proof.
         apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
         apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
 Qed.
-        
-        
-
-
-
-
-
-
-Lemma Drei_zwei'' : forall net tr c,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (is_consistent (nwState net (Checker c)).(ass_list)) ->
-  (nwState net (Checker c)).(consistent) = true.
-
-Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
@@ -1165,20 +1151,74 @@ Proof.
   intros.
 Admitted.
 
+Lemma has_var_exists_val : forall var d,
+  isa_aVarComponent var d -> exists val : Value, In (assign_cons var val) (init_certificate d).
+Admitted.
+
+Lemma is_in_cons_cert_then_take_it : forall var val d,
+  In (assign_cons var val) (init_certificate d) -> valueOf var d = val.
+(* init_certificate is consistent *)
+Admitted.
+
+Theorem root_ends_true_witness_consistent: forall net tr,
+  (nwState net (Checker (name_component root))).(consistent) = true ->
+  (nwState net (Checker (name_component root))).(terminated) = true ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  Witness_consistent.
+Proof.
+  intros net tr cons term reachable.
+  apply Witness_consistent_root_subtree_consistent.
+  unfold root_subtree_consistent.
+  intros.
+  assert (forall d, descendand (component_name d) (root) -> 
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list))).
+  apply (all_subtree_in_ass_list net tr) ; auto.
+  rename H3 into Hd.
+  assert (forall e : Assignment,
+     In e (ass_list (nwState net (Checker (name_component d1)))) ->
+     In e (ass_list (nwState net (Checker (name_component root))))).
+  apply (Hd (name_component d1)) ; auto.
+  assert (forall e : Assignment,
+     In e (ass_list (nwState net (Checker (name_component d2)))) ->
+     In e (ass_list (nwState net (Checker (name_component root))))).
+  apply (Hd (name_component d2)) ; auto.
+  assert (is_consistent (nwState net (Checker (name_component root))).(ass_list)).
+  apply (Drei_zwei net tr) ; auto.
+  unfold is_consistent in H5.
+  clear Hd.
+
+  apply has_var_exists_val in H1.
+  apply has_var_exists_val in H2.
+  destruct H1 as [val1 H1].
+  destruct H2 as [val2 H2].
+  assert (Hd1 := H1).
+  assert (Hd2 := H2).
+  apply (is_in_cons_cert_then_take_it a0 val1) in H1.
+  apply (is_in_cons_cert_then_take_it a0 val2) in H2.
+  rewrite H1.
+  rewrite H2.
+  apply (H5 (assign_cons a0 val1) (assign_cons a0 val2)) ; auto.
+  apply H3 ; auto.
+Admitted.
+
+
 Axiom everything_ends : forall c net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   {net2 : network & {tr2 : list (Name * (Input + list Output)) & step_async_star (params := Checker_MultiParams) step_async_init net tr /\
   (nwState net2 (Checker c)).(terminated) = true}}.
 
-1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
-2. wenn terminated, dann \u00e4ndert sich consistent nicht mehr            (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
+Axiom every_step_is_towards_an_end : forall c net tr,
+ .
+
+x1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
+x2. wenn terminated, dann \u00e4ndert sich consistent nicht mehr            (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
 3. wenn terminated, dann 
   i. sind alle Belegungen der Variablen des Teilbaums in der ass_list
-  ii. wenn consistent, dann sind alle Variablen der ass_list sind gleichbelegt
+  xii. wenn consistent, dann sind alle Variablen der ass_list sind gleichbelegt
   -> der gesamte Teilbaum hat eine konsistente Belegung
-  iii. wenn nicht consistent, dann existiert eine Variable in der ass_list, die zwei verschiedene Belegungen hat
+  xiii. wenn nicht consistent, dann existiert eine Variable in der ass_list, die zwei verschiedene Belegungen hat
   -> es existieren zwei Komponenten im Teilbaum, die f\u00fcr eine Variable verschiedene Belegungen haben
-5. wenn alle Variablen im Teilbaum von root gleichbelegt sind, dann ist der Zeuge konsistent
+x5. wenn alle Variablen im Teilbaum von root gleichbelegt sind, dann ist der Zeuge konsistent
   (weil alle knoten des graphen im teilbaum von root sind)
 6. wenn nicht alle Variablen im Teilbaum gleichbelegt sind, dann ist der Zeuge nicht konsistent
 
