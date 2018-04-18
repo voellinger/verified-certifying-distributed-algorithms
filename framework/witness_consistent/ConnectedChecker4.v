@@ -724,7 +724,7 @@ Qed.
 Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
   match vl with
   | nil => false
-  | hd :: tl => var_beq hd v && varList_has_varb tl v
+  | hd :: tl => var_beq hd v || varList_has_varb tl v
   end.
 
 Definition varList_has_var (vl : list Var) (v : Var) : Prop :=
@@ -1162,13 +1162,14 @@ Proof.
     induction (init_var_l d).
     + inversion H.
     + simpl in *.
-      repeat break_match.
-      apply andb_prop in H.
+      apply orb_prop in H.
       destruct H.
       unfold var_beq in H.
       repeat break_match.
       left. auto.
       inversion H.
+      right.
+      apply IHl ; auto.
   - apply init_var_l_init_certificate in H0.
     apply H0.
 Qed.
