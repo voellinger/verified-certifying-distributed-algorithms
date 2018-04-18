@@ -112,7 +112,7 @@ Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) (w : Walk v
   forall (c1 c2 : Name), In (E_ends (name_component c1) (name_component c2)) el -> parent c1 = c2.
 
 Axiom parent_walk_to_root : forall (c : Name),
-  {vl : V_list & {el : E_list & {w : Walk v a (name_component c) (name_component root) vl el & parent_walk (name_component c) (name_component root) vl el w}}}.
+  exists vl el w, parent_walk (name_component c) (name_component root) vl el w.
 
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el w.
@@ -755,7 +755,7 @@ Definition Witness_consistent : Prop :=
   forall (c1 c2 : Name) (a : Var), v (name_component c1) -> v (name_component c2) -> isa_aVarComponent a c1 -> isa_aVarComponent a c2 -> valueOf a c1 = valueOf a c2.
 
 Definition descendand_r (d : Name) : Set :=
-  {vl : V_list & {el : E_list & {w : Walk v a (name_component d) (name_component root) vl el & parent_walk (name_component d) (name_component root) vl el w}}}.
+  exists (vl : V_list) (el : E_list) (w : Walk v a (name_component d) (name_component root) vl el), parent_walk (name_component d) (name_component root) vl el w.
 
 Definition root_subtree_consistent :=
   forall a d1 d2, descendand_r d1 -> descendand_r d2 -> isa_aVarComponent a d1 -> isa_aVarComponent a d2 -> valueOf a d1 = valueOf a d2.
@@ -766,16 +766,15 @@ Proof.
   unfold Witness_consistent. unfold root_subtree_consistent.
   split ; intros.
   + unfold descendand in *.
-    destruct H0.
-    destruct s. destruct s.
-    destruct H1.
-    destruct s. destruct s.
+    repeat destruct H0.
+    repeat destruct H1.
     assert (x1' := x1).
     apply W_endx_inv in x1'.
     assert (x4' := x4).
     apply W_endx_inv in x4'.
     apply (H d1 d2 a0) ; auto.
-  + apply (H a0 c1 c2) ; auto ; unfold descendand.
+  + apply (H a0 c1 c2) ; auto ; unfold descendand_r.
+    
     apply (parent_walk_to_root c1) ; auto.
     apply (parent_walk_to_root c2) ; auto.
 Qed.
@@ -1194,10 +1193,36 @@ Admitted.
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (nwState net (Checker c)).(terminated) = true ->
-  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate (component_name c)).
+  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
 Proof.
   intros.
 Admitted.
+
+Lemma is_in_isa : forall v2 v1 n,
+  In (assign_cons v2 v1) (init_certificate n) -> isa_aVarComponent v2 n.
+Proof.
+  intros v2 v1 n H.
+  unfold isa_aVarComponent.
+  apply init_certificate_init_var_l in H.
+  induction (init_var_l n).
+  + induction H. 
+  + simpl in *.
+    destruct H.
+    - subst.
+      unfold varList_has_var.
+      unfold varList_has_varb.
+      unfold var_beq.
+      break_match.
+      simpl. auto.
+      intuition.
+    - apply IHl in H.
+      unfold varList_has_var in *.
+      unfold varList_has_varb in *.
+      apply orb_true_intro.
+      right.
+      auto.
+Qed.      
+  
 
 Lemma has_var_exists_val : forall var d,
   isa_aVarComponent var d -> exists val : Value, In (assign_cons var val) (init_certificate d).
@@ -1304,21 +1329,16 @@ Proof.
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list))).
   apply (all_subtree_in_ass_list net tr) ; auto.
   rename H3 into Hd.
-  assert (forall (c : Name),
-  {vl : V_list & {el : E_list & {w : Walk v a (name_component c) (name_component root) vl el & parent_walk (name_component c) (name_component root) vl el w}}}) as pwtr.
+  assert (forall (c : Name), exists vl el w, parent_walk (name_component c) (name_component root) vl el w) as pwtr.
   apply parent_walk_to_root.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d1)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d1)) ; auto.
-  specialize (pwtr d1).
-  destruct pwtr. destruct s. destruct s. unfold descendand. exists x. exists x0. exists x1. simpl. apply p.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d2)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d2)) ; auto.
-  specialize (pwtr d2).
-  destruct pwtr. destruct s. destruct s. unfold descendand. exists x. exists x0. exists x1. simpl. apply p.
   assert (is_consistent (nwState net (Checker (name_component root))).(ass_list)).
   apply (Drei_zwei net tr) ; auto.
   unfold is_consistent in H5.
@@ -1358,11 +1378,26 @@ Proof.
   intros.
   destruct assign1. destruct assign2.
   intros.
-  assert ((forall d, descendand (component_name d) root -> 
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list)))).
-  apply (all_subtree_in_ass_list net tr (name_component root)) ; auto.
   subst.
-  
+  assert (terminated' := terminated).
+  apply (only_desc_in_ass_list net tr _ (assign_cons v2 v1)) in terminated ; auto.
+  apply (only_desc_in_ass_list net tr _ (assign_cons v2 v3)) in terminated' ; auto.
+  destruct terminated.
+  destruct H2.
+  destruct terminated'.
+  destruct H4.
+  assert (H3' := H3). assert (H5' := H5).
+  apply is_in_cons_cert_then_take_it in H3.
+  apply is_in_cons_cert_then_take_it in H5.
+  apply is_in_isa in H3'.
+  apply is_in_isa in H5'.
+  specialize (H v2 x x0).
+  subst.
+  unfold descendand_r in *.
+  unfold descendand in *.
+
+  apply H ; auto.
+Qed.
   
 
 
