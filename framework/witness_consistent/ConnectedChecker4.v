@@ -1160,6 +1160,7 @@ Lemma is_in_cons_cert_then_take_it : forall var val d,
 (* init_certificate is consistent *)
 Admitted.
 
+
 Theorem root_ends_true_witness_consistent: forall net tr,
   (nwState net (Checker (name_component root))).(consistent) = true ->
   (nwState net (Checker (name_component root))).(terminated) = true ->
