@@ -93,6 +93,9 @@ Axiom root_prop : v (name_component root).
 
 Axiom root_own_parent : parent root = root.
 
+Axiom parent_different : forall (c : Name),
+  c <> root -> parent c <> c.
+
 Axiom parent_children : forall (p c : Name),
   In c (children p) -> parent c = p.
 
@@ -1246,7 +1249,7 @@ Theorem root_ends_true_witness_consistent: forall net tr,
   (nwState net (Checker (name_component root))).(consistent) = true ->
   (nwState net (Checker (name_component root))).(terminated) = true ->
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  Witness_consistent.
+  Witness_consistent. (*terminated<->wc*)
 Proof.
   intros net tr cons term reachable.
   apply Witness_consistent_root_subtree_consistent.
