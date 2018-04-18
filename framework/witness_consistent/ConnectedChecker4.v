@@ -1145,18 +1145,35 @@ Proof.
         apply (eq_true_false_abs (consistent (nwState x' (Checker c))) H2 H).
 Qed.
 
-Lemma all_subtree_in_ass_list: forall net tr c,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (nwState net (Checker c)).(terminated) = true ->
-  (nwState net (Checker c)).(ass_list)) = sum of all childrens ass_lists
-Proof.
-  intros.
-Admitted.
+Function list_of_lists (nl : list Name) (net : network) : list Assignment :=
+  match nl with
+  | [] => []
+  | hd :: tl => ass_list (nwState net (Checker (name_component hd))) ++ list_of_lists tl net
+  end.
 
-Lemma all_subtree_in_ass_list: forall net tr c,
+Lemma list_of_lists_works: forall n nl net,
+  In n nl -> (forall a, In a (ass_list (nwState net (Checker (name_component n)))) -> In a (list_of_lists nl net)).
+Proof.
+  intros n nl get_al innnl.
+  intros.
+  induction nl.
+  + inversion innnl.
+  + simpl in *.
+    destruct innnl.
+    - subst.
+      apply in_or_app.
+      left. auto.
+    - apply in_or_app.
+      right. auto.
+Qed.
+
+Definition permutation (X : Type) (l1 l2 : list X) : Prop :=
+  forall x, In x l1 <-> In x l2.
+
+Lemma all_children_in_ass_list: forall net tr c,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (nwState net (Checker c)).(terminated) = true ->
-  (nwState net (Checker c)).(ass_list)) = sum of all descendands ass_lists
+  permutation Assignment ((nwState net (Checker c)).(ass_list)) ((init_certificate (component_name c)) ++ list_of_lists (children (component_name c)) net).
 Proof.
   intros.
 Admitted.
@@ -1166,6 +1183,14 @@ Lemma all_subtree_in_ass_list: forall net tr c,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (forall d, descendand (component_name d) (component_name c) -> 
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+Proof.
+  intros.
+Admitted.
+
+Lemma only_desc_in_ass_list: forall net tr c a,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker c)).(terminated) = true ->
+  In a (ass_list (nwState net (Checker c))) -> {d : Name & descendand d (component_name c)}.
 Proof.
   intros.
 Admitted.
