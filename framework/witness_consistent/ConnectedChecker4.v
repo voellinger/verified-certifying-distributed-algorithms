@@ -85,21 +85,87 @@ Proof.
 Qed.
 
 
-Variable parent : Name -> Name.
 Variable children : Name -> list Name.
 
 
-Fixpoint get_root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
+Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
   match c with
   | C_isolated x => component_name (x)
-  | C_leaf v a co x y _ _ => get_root v a co
-  | C_edge v a co x y _ _ _ _ _ => get_root v a co
-  | C_eq v v' a a' _ _ co => get_root v a co
+  | C_leaf v a co x y _ _ => root v a co
+  | C_edge v a co x y _ _ _ _ _ => root v a co
+  | C_eq v v' a a' _ _ co => root v a co
   end.
 
 Definition root_prop (root : Name) : Prop :=
-  
+  v (name_component root).
 
+Lemma root_root_prop : 
+  root_prop (root v a g).
+Proof.
+  induction g ; simpl ; auto.
+  + apply Component_prop_1 ; auto.
+Qed.
+
+Fixpoint parent (v : V_set) (a : A_set) (c : Connected v a) (child : Name) : Name :=
+  match c with
+  | C_isolated _ => child
+  | C_leaf v a co x y _ _ => if (Name_eq_dec child (component_name y)) then (component_name x) else parent v a co child
+  | C_edge v a co x y _ _ _ _ _ => parent v a co child
+  | C_eq v v' a a' _ _ co => parent v a co child
+  end.
+
+Definition parent_prop (c : Name) : Set :=
+  (parent v a g c <> c) \/ (c = (root v a g)).
+
+Lemma parent_parent_prop : forall (c : Name),
+  parent_prop c.
+Proof.
+  intros c.
+  unfold parent_prop.
+  remember g as y in *.
+  assert (v (name_component c)).
+  apply Component_prop_1 ; auto.
+  induction g.
+  induction g ; simpl ; auto.
+  + rewrite Heqy.
+    simpl.
+    right.
+    inversion H.
+    subst.
+    unfold component_name.
+    unfold name_component.
+    break_match.
+    auto.
+  + subst ; simpl ; auto.
+    inversion H.
+    inversion H0.
+    subst.
+    break_match.
+    admit.
+    simpl in n0.
+    intuition.
+    subst.
+    assert (parent v0 a0 c0 c <> c \/ c = root v0 a0 c0).
+    apply IHc0 ; auto.
+    destruct H2.
+    break_match.
+    subst.
+    assert (x = y0 \/ x <> y0).
+    apply classic.
+    destruct H1.
+    subst.
+    intuition.
+    left.
+    intuition.
+    auto.
+    auto.
+    
+    
+(**************************************************)    
+(* alle Axiome nach-definieren und lemmatisieren
+zeigen, dass f\u00fcr (Connected v a) (Tree v a') existiert, mit
+  A_included a' a, parent-child<->a'   *)
+(**************************************************)
 
 Axiom root_own_parent : parent root = root.
 
@@ -127,21 +193,6 @@ Axiom parent_walk_to_root : forall (c : Name),
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el w.
 
-
-(* Definition descendand (des ancestor : Name) : Set :=
-  {vl : V_list & {el : E_list & {w : Walk v a (name_component des) (name_component ancestor) vl el & parent_walk (name_component des) (name_component ancestor) vl el w}}}.
- *)
-(* 
-
-Fixpoint descendands (ancestor : Name) (child_list : list Name) : list Name :=
-  match child_list with
-  | [] => [ancestor]
-  | hd :: tl => (descendands hd (children hd)) ++ (descendands ancestor tl)
-  end. 
-
-kann man auch \u00fcber parent_walk definieren
-
-*)
 
 Record Data := mkData{
   checkerknowledge: Checkerknowledge; 

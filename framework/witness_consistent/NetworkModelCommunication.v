@@ -39,6 +39,17 @@ match c with
   | x => Checker x
 end.
 
+
+Lemma cnnc : forall c,
+  component_name (name_component c) = c.
+Proof.
+  intros c.
+  unfold component_name.
+  unfold name_component.
+  break_match.
+  auto.
+Qed.
+
 Definition Nodes : list Name := (map Checker (CV_list v a g)).
 
 (* all components that exist are actually part of our graph *)
