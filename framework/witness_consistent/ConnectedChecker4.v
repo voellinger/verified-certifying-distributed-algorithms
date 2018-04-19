@@ -87,9 +87,19 @@ Qed.
 
 Variable parent : Name -> Name.
 Variable children : Name -> list Name.
-Variable root : Name.
 
-Axiom root_prop : v (name_component root).
+
+Fixpoint get_root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
+  match c with
+  | C_isolated x => component_name (x)
+  | C_leaf v a co x y _ _ => get_root v a co
+  | C_edge v a co x y _ _ _ _ _ => get_root v a co
+  | C_eq v v' a a' _ _ co => get_root v a co
+  end.
+
+Definition root_prop (root : Name) : Prop :=
+  
+
 
 Axiom root_own_parent : parent root = root.
 
@@ -1263,7 +1273,11 @@ Proof.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
-      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
+      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto.
+
+
+
+ admit.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
       apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
