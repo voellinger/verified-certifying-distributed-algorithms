@@ -1241,6 +1241,44 @@ Proof.
   intros.
 Admitted.
 
+Lemma only_child_in_ass_list: forall net tr c a,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  In a (ass_list (nwState net (Checker c))) -> exists d : Name, In d ((component_name c) :: (children (component_name c))) /\ In a (init_certificate d).
+Proof.
+  intros.
+ remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    exists (component_name c).
+    split ; auto.
+  + subst.
+    simpl in *.
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in *.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
+      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
+      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
+      apply IHrefl_trans_1n_trace1 ; auto.
+    - simpl in *.
+      unfold InputHandler in H3.
+      repeat break_match ; inversion H3 ; simpl in *.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+Admitted.
+
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
@@ -1256,8 +1294,7 @@ Proof.
     exists nil. exists nil.
     assert (Walk v a (name_component (component_name c)) (name_component (component_name c)) [] []).
     apply W_null ; auto.
-    apply (Component_prop_1 v a) ; auto.
-    apply g.
+    apply (Component_prop_1) ; auto.
     exists H.
     unfold parent_walk.
     intros.
@@ -1272,10 +1309,24 @@ Proof.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
       apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
+      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. 
+      destruct p.
+
+admit.
       apply IHrefl_trans_1n_trace1 ; auto.
-      
-    -
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
+      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
+      apply IHrefl_trans_1n_trace1 ; auto.      
+    - simpl in *.
+      unfold InputHandler in H3.
+      repeat break_match ; inversion H3 ; simpl in *.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
 Admitted.
 
 Lemma is_in_isa : forall v2 v1 n,
