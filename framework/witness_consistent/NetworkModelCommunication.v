@@ -42,7 +42,7 @@ end.
 Definition Nodes : list Name := (map Checker (CV_list v a g)).
 
 (* all components that exist are actually part of our graph *)
-Axiom Component_prop_1: forall (v: V_set) (a: A_set) (g: Connected v a)(c: Component),
+Axiom Component_prop_1: forall (c: Component),
 v c.
 
 Lemma Component_prop_2: forall (c: Component),
@@ -50,7 +50,7 @@ In c (CV_list v a g).
 Proof.
   intros.
   assert (H:= Component_prop_1).
-  specialize (H v a g c).
+  specialize (H c).
   induction g.
    -simpl.
     inversion H.

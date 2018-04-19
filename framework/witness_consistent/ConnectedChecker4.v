@@ -1170,9 +1170,6 @@ Proof.
       right. auto.
 Qed.
 
-Definition permutation (X : Type) (l1 l2 : list X) : Prop :=
-  forall x, In x l1 <-> In x l2.
-
 Lemma cert_stays_in_ass_list : forall net tr c a,
   step_async_star step_async_init net tr ->
   In a (init_certificate c) ->
@@ -1208,13 +1205,17 @@ Proof.
       apply IHreachable1 ; auto.
 Qed.
 
+
+(* (* in jedem schritt: alles drin von (init_child_list - child_list net).
+zum schluss ist child_list leer, also von allen kindern drin. *)
+
 Lemma all_children_in_ass_list: forall net tr c,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (nwState net (Checker c)).(terminated) = true ->
-  permutation Assignment ((nwState net (Checker c)).(ass_list)) ((init_certificate (component_name c)) ++ list_of_lists (children (component_name c)) net).
+  exists perm, (nwState net (Checker c)).(ass_list) = (init_certificate (component_name c)) ++ list_of_lists perm net /\ Permutation perm (children (component_name c)).
 Proof.
   intros.
-(*   remember step_async_init as y in *.
+  remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind.
   + subst.
     simpl in *.
@@ -1224,9 +1225,12 @@ Proof.
     invc H1.
     - simpl in *.
       unfold NetHandler in H4.
-      induction 
-     *)
-Admitted.
+      repeat break_match ; inversion H4 ; subst ; simpl in *. 
+      rewrite <- e in *. apply IHrefl_trans_1n_trace1 in H0 ; auto.
+      destruct H0. exists x. destruct H0. split. rewrite H0.
+      apply Permutation
+      auto.
+Admitted. *)
 
 Lemma all_subtree_in_ass_list: forall net tr c,
   (nwState net (Checker c)).(terminated) = true ->
@@ -1239,10 +1243,39 @@ Admitted.
 
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (nwState net (Checker c)).(terminated) = true ->
   In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
 Proof.
   intros.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    exists (component_name c).
+    split ; auto.
+    unfold descendand.
+    exists nil. exists nil.
+    assert (Walk v a (name_component (component_name c)) (name_component (component_name c)) [] []).
+    apply W_null ; auto.
+    apply (Component_prop_1 v a) ; auto.
+    apply g.
+    exists H.
+    unfold parent_walk.
+    intros.
+    inversion H1.
+  + subst.
+    simpl in *.
+    invc H1.
+    - simpl in *.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in *.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto.
+      
+    -
 Admitted.
 
 Lemma is_in_isa : forall v2 v1 n,
