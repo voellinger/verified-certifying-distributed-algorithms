@@ -196,6 +196,28 @@ Proof.
     apply IHc0 ; auto.
 Qed.
 
+Lemma children_help2 : forall v0 a0 c0 c p,
+  In c (children v0 a0 c0 p) -> v0 (name_component c).
+Proof.
+  intros.
+  induction c0 ; simpl in * ; auto.
+  + intuition.
+  + break_match.
+    - subst.
+      simpl in H.
+      destruct H.
+      subst.
+      apply In_left.
+      simpl.
+      apply In_single.
+      apply In_right.
+      auto.
+    - apply In_right.
+      auto.
+  + rewrite <- e.
+    auto.
+Qed.
+
 Lemma children_not_reflexive : forall v a c p,
   ~ In p (children v a c p).
 Proof.
@@ -240,7 +262,30 @@ Proof.
     intuition.
     apply children_help in H.
     intuition.
-    repeat break_match ; subst ; auto.
+    subst.
+    repeat break_match ; subst ; simpl in * ; auto.
+    apply children_help2 in H.
+    simpl in H.
+    intuition.
+    destruct H.
+    symmetry in H.
+    intuition.
+    inversion H0.
+    inversion H3.
+    subst.
+    rewrite cnnc in n0.
+    intuition.
+    subst.
+    apply IHc0 ; auto.
+    assert (H' := H).
+    apply children_help2 in H.
+    apply IHc0 ; auto.
+  + simpl in *.
+    apply IHc0 ; auto.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    apply IHc0 ; auto.
+Qed.
     
     
 
