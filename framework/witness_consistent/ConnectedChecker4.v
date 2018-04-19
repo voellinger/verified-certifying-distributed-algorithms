@@ -84,6 +84,61 @@ Proof.
         apply list_not_equals ; auto.
 Qed.
 
+Lemma W_endx_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v x.
+Proof.
+        intros v a x y vl el w; elim w; auto.
+Qed.
+
+Lemma W_endy_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
+Proof.
+        intros v a x y vl el w; elim w; auto.
+Qed.
+
+Lemma W_invl_inv :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el -> forall z : Vertex, In z vl -> v z.
+Proof.
+        intros v a x y vl el w; elim w; intros.
+        inversion H.
+
+        inversion H0.
+        rewrite <- H1; apply (W_endx_inv _ _ _ _ _ _ w0).
+
+        auto.
+Qed.
+
+Lemma W_iny_vl :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el -> vl <> V_nil -> In y vl.
+Proof.
+        intros v a x y vl el w; elim w; intros.
+        absurd (V_nil = V_nil); auto.
+
+        inversion w0.
+        simpl; auto.
+
+        rewrite H6; simpl; right.
+        apply H; rewrite <- H6; discriminate.
+Qed.
+
+Lemma W_inxyel_inxvl :
+ forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x y vl el ->
+ forall x' y' : Vertex, In (E_ends x' y') el -> In x' (x :: vl).
+Proof.
+        intros v a x y vl el p; elim p; intros.
+        inversion H.
+
+        inversion H0.
+        inversion H1.
+        simpl; auto.
+
+        simpl; right.
+        apply (H x' y'); auto.
+Qed.
+
 Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
   match c with
   | C_isolated x => component_name (x)
@@ -94,7 +149,7 @@ Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
 
 Fixpoint parent (v : V_set) (a : A_set) (c : Connected v a) (child : Name) : Name :=
   match c with
-  | C_isolated _ => child
+  | C_isolated x => (component_name x)
   | C_leaf v a co x y _ _ => if (Name_eq_dec child (component_name y)) then (component_name x) else parent v a co child
   | C_edge v a co x y _ _ _ _ _ => parent v a co child
   | C_eq v v' a a' _ _ co => parent v a co child
@@ -293,20 +348,28 @@ Proof.
     apply IHc0 ; auto.
 Qed.
 
-Lemma parent_help1 : forall v0 a0 g0 c1 c2,
-  parent v0 a0 g0 c1 = c2 -> v0 (name_component c1).
-Admitted.
-
 Lemma parent_help2 : forall v0 a0 g0 c1 c2,
   parent v0 a0 g0 c1 = c2 -> v0 (name_component c2).
-Admitted.
+Proof.
+  intros.
+  induction g0 ; simpl in * ; auto.
+  + subst.
+    simpl.
+    apply In_single.
+  + break_match.
+    subst.
+    apply In_right.
+    simpl. auto.
+    apply In_right.
+    auto.
+  + rewrite <- e in *.
+    auto.
+Qed.
 
 Lemma parent_constant : forall (v0 : V_set) a0 g0 c1 c2 x y (v0x : v0 x) (v0y : ~v0 y),
   parent v0 a0 g0 c1 = c2 -> parent (V_union (V_single y) v0) (A_union (E_set x y) a0) (C_leaf v0 a0 g0 x y v0x v0y) c1 = c2.
 Proof.
   intros.
-  assert (v0 (name_component c1)).
-  apply parent_help1 in H ; auto.
   assert (v0 (name_component c2)).
   apply parent_help2 in H ; auto.
   induction g0 ; simpl in * ; auto.
@@ -351,6 +414,12 @@ Proof.
     exists H1.
     unfold parent_walk in *.
     intros.
+    assert (v0 (name_component c1)).
+    apply (W_inxyel_inxvl v0 a0 (name_component c) (name_component (root v0 a0 g0)) x0 x1) in H2 ; auto.
+    inversion H2.
+    rewrite <- H3.
+    apply (W_endx_inv v0 a0 (name_component c) (name_component (root v0 a0 g0)) x0 x1) ; auto.
+    apply (W_invl_inv v0 a0 (name_component c) (name_component (root v0 a0 g0)) x0 x1 x2 (name_component c1)) in H3 ; auto.
     apply (H0 c1 c2) in H2.
     apply (parent_constant v0 a0 g0 c1 c2 x y v1 n) in H2 ; auto.
   + apply IHg0 in H.
@@ -947,45 +1016,6 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
       [])
   end.
 
-
-Lemma W_endx_inv :
- forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v x.
-Proof.
-        intros v a x y vl el w; elim w; auto.
-Qed.
-
-Lemma W_endy_inv :
- forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
-Proof.
-        intros v a x y vl el w; elim w; auto.
-Qed.
-
-Lemma W_invl_inv :
- forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
- Walk v a x y vl el -> forall z : Vertex, In z vl -> v z.
-Proof.
-        intros v a x y vl el w; elim w; intros.
-        inversion H.
-
-        inversion H0.
-        rewrite <- H1; apply (W_endx_inv _ _ _ _ _ _ w0).
-
-        auto.
-Qed.
-
-Lemma W_iny_vl :
- forall (v : V_set) (a : A_set) (x y : Vertex) (vl : V_list) (el : E_list),
- Walk v a x y vl el -> vl <> V_nil -> In y vl.
-Proof.
-        intros v a x y vl el w; elim w; intros.
-        absurd (V_nil = V_nil); auto.
-
-        inversion w0.
-        simpl; auto.
-
-        rewrite H6; simpl; right.
-        apply H; rewrite <- H6; discriminate.
-Qed.
 
 Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
   match vl with
