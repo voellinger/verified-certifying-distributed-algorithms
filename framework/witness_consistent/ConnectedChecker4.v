@@ -84,10 +84,6 @@ Proof.
         apply list_not_equals ; auto.
 Qed.
 
-
-Variable children : Name -> list Name.
-
-
 Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
   match c with
   | C_isolated x => component_name (x)
@@ -95,16 +91,6 @@ Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
   | C_edge v a co x y _ _ _ _ _ => root v a co
   | C_eq v v' a a' _ _ co => root v a co
   end.
-
-Definition root_prop (root : Name) : Prop :=
-  v (name_component root).
-
-Lemma root_root_prop : 
-  root_prop (root v a g).
-Proof.
-  induction g ; simpl ; auto.
-  + apply Component_prop_1 ; auto.
-Qed.
 
 Fixpoint parent (v : V_set) (a : A_set) (c : Connected v a) (child : Name) : Name :=
   match c with
@@ -114,10 +100,34 @@ Fixpoint parent (v : V_set) (a : A_set) (c : Connected v a) (child : Name) : Nam
   | C_eq v v' a a' _ _ co => parent v a co child
   end.
 
-Definition parent_prop (c : Name) : Set :=
+Fixpoint children (v : V_set) (a : A_set) (c : Connected v a) (parent : Name) : list Name :=
+  match c with
+  | C_isolated _ => []
+  | C_leaf v a co x y _ _ => if (Name_eq_dec parent (component_name x)) then (component_name y) :: (children v a co parent) else children v a co parent
+  | C_edge v a co x y _ _ _ _ _ => children v a co parent
+  | C_eq v v' a a' _ _ co => children v a co parent
+  end.
+
+Definition root_prop (root : Name) : Prop :=
+  v (name_component root).
+
+Definition parent_prop (c : Name) : Prop :=
   (parent v a g c <> c) \/ (c = (root v a g)).
 
-Lemma parent_parent_prop : forall (c : Name),
+Definition parent_children (p c : Name) : Prop := 
+  In c (children v a g p) -> parent v a g c = p.
+
+Definition children_parent (c : Name) : Prop :=
+  In c (children v a g (parent v a g c)) \/ c = root v a g.
+
+Lemma root_prop_holds : 
+  root_prop (root v a g).
+Proof.
+  induction g ; simpl ; auto.
+  + apply Component_prop_1 ; auto.
+Qed.
+
+Lemma parent_prop_holds : forall (c : Name),
   parent_prop c.
 Proof.
   intros c.
@@ -141,36 +151,105 @@ Proof.
     inversion H0.
     subst.
     break_match.
-    admit.
-    simpl in n0.
+    left.
+    assert (component_name x = c \/ component_name x <> c).
+    apply classic.
+    destruct H1.
+    subst.
+    simpl in n.
+    intuition.
+    auto.
+    rewrite cnnc in n0.
     intuition.
     subst.
     assert (parent v0 a0 c0 c <> c \/ c = root v0 a0 c0).
     apply IHc0 ; auto.
-    destruct H2.
+    destruct H1.
     break_match.
     subst.
     assert (x = y0 \/ x <> y0).
     apply classic.
-    destruct H1.
+    destruct H2.
     subst.
     intuition.
     left.
     intuition.
     auto.
     auto.
+  + subst ; simpl ; auto.
+  + subst ; simpl ; auto.
+Qed.
+
+Lemma children_help : forall v0 a0 c0 c p,
+  In c (children v0 a0 c0 p) -> v0 (name_component p).
+Proof.
+  intros.
+  induction c0 ; simpl in * ; auto.
+  + inversion H.
+  + break_match ; subst.
+    simpl in *.
+    destruct H ; subst.
+    apply In_right. auto.
+    apply In_right. auto.
+    apply In_right. auto.
+  + rewrite <- e in *.
+    apply IHc0 ; auto.
+Qed.
+
+Lemma children_not_reflexive : forall v a c p,
+  ~ In p (children v a c p).
+Proof.
+  intros.
+  induction c ; simpl in * ; auto.
+  intuition.
+  break_match.
+  subst.
+  apply IHc.
+  simpl in H.
+  destruct H.
+  inversion H.
+  subst.
+  intuition.
+  auto.
+  auto.
+Qed.
+
+Lemma parent_children_holds: forall (p c : Name),
+  parent_children p c.
+Proof.
+  intros p c.
+  unfold parent_children.
+  intros.
+  assert (v (name_component c)).
+  apply Component_prop_1 ; auto.
+  assert (v (name_component p)).
+  apply Component_prop_1 ; auto.
+  induction g.
+  + simpl in *.
+    inversion H.
+  + simpl in *.
+    inversion H1.
+    inversion H2.
+    subst.
+    rewrite cnnc in *.
+    repeat break_match ; subst ; auto.
+    destruct p. simpl in *.
+    apply children_not_reflexive in H.
+    intuition.
+    simpl in *.
+    intuition.
+    apply children_help in H.
+    intuition.
+    repeat break_match ; subst ; auto.
     
     
+
+
 (**************************************************)    
 (* alle Axiome nach-definieren und lemmatisieren
 zeigen, dass f\u00fcr (Connected v a) (Tree v a') existiert, mit
   A_included a' a, parent-child<->a'   *)
 (**************************************************)
-
-Axiom root_own_parent : parent root = root.
-
-Axiom parent_different : forall (c : Name),
-  c <> root -> parent c <> c.
 
 Axiom parent_children : forall (p c : Name),
   In c (children p) -> parent c = p.
