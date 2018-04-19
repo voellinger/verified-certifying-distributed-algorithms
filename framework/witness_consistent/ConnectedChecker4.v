@@ -120,6 +120,12 @@ Definition parent_children (p c : Name) : Prop :=
 Definition children_parent (c : Name) : Prop :=
   In c (children v a g (parent v a g c)) \/ c = root v a g.
 
+Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) v a g (w : Walk v a x y vl el) : Prop :=
+  forall (c1 c2 : Name), In (E_ends (name_component c1) (name_component c2)) el -> parent v a g c1 = c2.
+
+Definition descendand (des ancestor : Name) : Prop :=
+  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el v a g w.
+
 Lemma root_prop_holds : 
   root_prop (root v a g).
 Proof.
@@ -286,8 +292,83 @@ Proof.
     rewrite <- e0 in *.
     apply IHc0 ; auto.
 Qed.
-    
-    
+
+Lemma parent_help1 : forall v0 a0 g0 c1 c2,
+  parent v0 a0 g0 c1 = c2 -> v0 (name_component c1).
+Admitted.
+
+Lemma parent_help2 : forall v0 a0 g0 c1 c2,
+  parent v0 a0 g0 c1 = c2 -> v0 (name_component c2).
+Admitted.
+
+Lemma parent_constant : forall (v0 : V_set) a0 g0 c1 c2 x y (v0x : v0 x) (v0y : ~v0 y),
+  parent v0 a0 g0 c1 = c2 -> parent (V_union (V_single y) v0) (A_union (E_set x y) a0) (C_leaf v0 a0 g0 x y v0x v0y) c1 = c2.
+Proof.
+  intros.
+  assert (v0 (name_component c1)).
+  apply parent_help1 in H ; auto.
+  assert (v0 (name_component c2)).
+  apply parent_help2 in H ; auto.
+  induction g0 ; simpl in * ; auto.
+  + inversion v0x.
+    inversion H.
+    inversion H0.
+    subst.
+    break_match.
+    rewrite cnnc. auto.
+    auto.
+  + 
+Admitted.
+
+
+Lemma parent_walk_to_root : forall (c : Name) (v : V_set) a g,
+  v (name_component c) -> exists vl el w, parent_walk (name_component c) (name_component (root v a g)) vl el v a g w.
+Proof.
+  intros.
+  induction g0 ; simpl in * ; auto.
+  + inversion H.
+    rewrite H0 in *.
+    exists nil.
+    exists nil.
+    assert (Walk (V_single (name_component c)) A_empty (name_component c) (name_component c) [] []).
+    apply W_null ; auto.
+    exists H1.
+    unfold parent_walk.
+    intros.
+    inversion H2.
+  + inversion H.
+    inversion H0.
+    subst.
+    admit.
+    subst.
+    assert (H0' := H0).
+    apply IHg0 in H0.
+    repeat destruct H0.
+    assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) (name_component c) (name_component (root v0 a0 g0)) x0 x1).
+    admit.
+    exists x0.
+    exists x1.
+    exists H1.
+    unfold parent_walk in *.
+    intros.
+    apply (H0 c1 c2) in H2.
+    apply (parent_constant v0 a0 g0 c1 c2 x y v1 n) in H2 ; auto.
+  + apply IHg0 in H.
+    repeat destruct H.
+    exists x0.
+    exists x1.
+    assert (Walk v0 (A_union (E_set x y) a0) (name_component c) (name_component (root v0 a0 g0)) x0 x1).
+    admit.
+    exists H0.
+    unfold parent_walk in *.
+    intros.
+    simpl in *.
+    auto.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    auto.
+Qed. 
+  
 
 
 (**************************************************)    
@@ -295,9 +376,6 @@ Qed.
 zeigen, dass f\u00fcr (Connected v a) (Tree v a') existiert, mit
   A_included a' a, parent-child<->a'   *)
 (**************************************************)
-
-Axiom parent_children : forall (p c : Name),
-  In c (children p) -> parent c = p.
 
 Axiom children_parent : forall (c : Name),
   {In c (children (parent c))} + {c = root}.
@@ -308,14 +386,10 @@ Axiom c_arcs : forall (p c : Name),
 Axiom p_arcs : forall (c : Name),
   {a (A_ends (name_component c) (name_component (parent c)))} + {c = root}.
 
-Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el) :=
-  forall (c1 c2 : Name), In (E_ends (name_component c1) (name_component c2)) el -> parent c1 = c2.
 
-Axiom parent_walk_to_root : forall (c : Name),
-  exists vl el w, parent_walk (name_component c) (name_component root) vl el w.
 
-Definition descendand (des ancestor : Name) : Prop :=
-  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el w.
+
+
 
 
 Record Data := mkData{
