@@ -182,8 +182,27 @@ Fixpoint children (v : V_set) (a : A_set) (c : Connected v a) (parent : Name) : 
   | C_eq v v' a a' _ _ co => children v a co parent
   end.
 
+(* (A_Union (E_set x y) (E_set x y)) *)
+
+Fixpoint treeify (v : V_set) (a : A_set) (c : Connected v a) : A_set :=
+  match c with
+  | C_isolated _ => A_empty
+  | C_leaf v a co x y _ _ => A_empty
+  | C_edge v a co _ _ _ _ _ _ _ => A_empty
+  | C_eq v _ a _ _ _ co => A_empty
+  end.
+
+(* Fixpoint treeify (v : V_set) (a : A_set) (c : Connected v a) : A_set :=
+  match c with
+  | C_isolated _ => A_empty
+  | C_leaf v a co x y _ _ => (A_union (E_set x y) (treeify v a co))
+  | C_edge v a co _ _ _ _ _ _ _ => treeify v a co
+  | C_eq v _ a _ _ _ co => treeify v a co
+  end. *)
+
 Definition root_prop (root : Name) : Prop :=
   v (name_component root).
+
 
 Definition parent_prop (c : Name) : Prop :=
   (parent v a g c <> c) \/ (c = (root v a g)).
