@@ -436,7 +436,7 @@ Proof.
   + rewrite <- e in *.
     rewrite <- e0 in *.
     auto.
-Qed. 
+Qed.
   
 
 
