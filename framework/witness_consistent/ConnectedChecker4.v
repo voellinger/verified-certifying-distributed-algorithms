@@ -441,15 +441,20 @@ Proof.
     exists ([x] ++ x0). exists ([E_ends (name_component c) x] ++ x1).
     exists H3.
     simpl in *.
-    unfold parent_walk in *.
+    assert (H2' := H2).
+    unfold parent_walk.
+    unfold parent_walk in H2.
     intros.
-    apply parent_constant ; auto.
-    simpl in *.
-    apply H2 ; auto.
+(*     assert (v0 (name_component c1) \/ ~ v0 (name_component c1)).
+    apply classic.
+    destruct H5. *)
+
     destruct H4.
+    apply parent_constant ; auto ; admit.
+    simpl in *.
+    repeat break_match ; subst ; simpl in * ; auto.
     admit.
-    auto.
-    
+    (* for parent_walks H4 cannot hold *)
 
 
     admit.
