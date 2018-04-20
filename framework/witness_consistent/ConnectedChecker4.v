@@ -445,19 +445,31 @@ Proof.
     unfold parent_walk.
     unfold parent_walk in H2.
     intros.
-(*     assert (v0 (name_component c1) \/ ~ v0 (name_component c1)).
-    apply classic.
-    destruct H5. *)
 
     destruct H4.
-    apply parent_constant ; auto ; admit.
+    inversion H4.
+    assert (c = c1).
+    unfold name_component in H6.
+    break_match.
+    break_match.
+    rewrite H6. auto.
+    subst.
+    simpl in *.
+    rewrite cnnc.
+    break_match.
+    rewrite cnnc. auto.
+    intuition.
+
     simpl in *.
     repeat break_match ; subst ; simpl in * ; auto.
-    admit.
-    (* for parent_walks H4 cannot hold *)
+    
+    apply (W_inxyel_inxvl v0 a0 x (name_component (root v0 a0 g0)) x0 x1 x2 (name_component c) (name_component c2)) in H4 ; auto.
+    simpl in H4. destruct H4 ; intuition.
+    subst. intuition.
+    apply (W_invl_inv v0 a0 x (name_component (root v0 a0 g0)) x0 x1 x2) in H4.
+    intuition.
 
 
-    admit.
     subst.
     assert (H0' := H0).
     apply IHg0 in H0.
