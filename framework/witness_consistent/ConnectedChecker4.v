@@ -405,11 +405,11 @@ Proof.
     auto.
 Qed.
 
-Lemma parent_walk_to_root : forall (c : Name) (v : V_set) a g,
+Lemma parent_walk_to_root : forall (v : V_set) a g c,
   v (name_component c) -> exists vl el w, parent_walk (name_component c) (name_component (root v a g)) vl el v a g w.
 Proof.
-  intros.
-  induction g0 ; simpl in * ; auto.
+  intros v0 a0 g0.
+  induction g0 ; intros ; simpl in * ; auto.
   + inversion H.
     rewrite H0 in *.
     exists nil.
@@ -423,6 +423,35 @@ Proof.
   + inversion H.
     inversion H0.
     subst.
+    assert (w := v1).
+    apply (IHg0 (component_name x)) in w.
+    clear IHg0.
+    assert (Walk (V_union (V_single (name_component c)) v0) (A_union (E_set x (name_component c)) a0) (name_component c) x [x] [E_ends (name_component c) x]).
+    apply W_step ; auto.
+    apply W_null ; auto.
+    apply In_right. auto.
+    apply In_left. apply E_left.
+    destruct w.
+    repeat destruct H2.
+    assert (Walk (V_union (V_single (name_component c)) v0)
+                                     (A_union (E_set x (name_component c)) a0)
+       (name_component (component_name x)) (name_component (root v0 a0 g0)) x0 x1).
+    admit.
+    apply (Walk_append _ _ _ _ _ _ _ _ _ H1) in H3.
+    exists ([x] ++ x0). exists ([E_ends (name_component c) x] ++ x1).
+    exists H3.
+    simpl in *.
+    unfold parent_walk in *.
+    intros.
+    apply parent_constant ; auto.
+    simpl in *.
+    apply H2 ; auto.
+    destruct H4.
+    admit.
+    auto.
+    
+
+
     admit.
     subst.
     assert (H0' := H0).
