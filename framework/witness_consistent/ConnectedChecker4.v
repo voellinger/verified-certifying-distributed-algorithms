@@ -366,21 +366,121 @@ Proof.
     auto.
 Qed.
 
-Lemma parent_constant : forall (v0 : V_set) a0 g0 c1 c2 x y (v0x : v0 x) (v0y : ~v0 y),
-  parent v0 a0 g0 c1 = c2 -> parent (V_union (V_single y) v0) (A_union (E_set x y) a0) (C_leaf v0 a0 g0 x y v0x v0y) c1 = c2.
+Lemma parent_constant' : forall (v0 : V_set) a0 g0 child paren x y (v0x : v0 x) (v0y : ~v0 y),
+  parent v0 a0 g0 child = paren -> 
+  parent (V_union (V_single y) v0) (A_union (E_set x y) a0) (C_leaf v0 a0 g0 x y v0x v0y) (component_name y) = (component_name x).
 Proof.
   intros.
-  assert (v0 (name_component c2)).
-  apply parent_help2 in H ; auto.
   induction g0 ; simpl in * ; auto.
   + inversion v0x.
-    inversion H.
-    inversion H0.
     subst.
-    break_match.
-    rewrite cnnc. auto.
+    break_match ; auto.
+  + inversion v0x.
+    inversion H0.
+    rewrite H2 in *.
+    repeat break_match ; auto.
+    inversion e.
+    rewrite H4 in *.
+    intuition.
+    inversion e.
+    rewrite H4 in *.
+    intuition.
+    intuition.
+    intuition.
+    assert (~ v0 y) as v0y2.
+    intuition.
+    apply v0y.
+    apply In_right. auto.
+    repeat break_match ; auto.
+    inversion e.
+    rewrite H3 in *.
+    intuition.
+    inversion e.
+    rewrite H3 in *.
+    intuition.
+    intuition.
+  + rewrite <- e in *.
     auto.
-  + 
+Qed.
+
+Lemma parent_constant : forall (v0 : V_set) a0 g0 child paren x y (v0x : v0 x) (v0y : ~v0 y),
+  parent v0 a0 g0 child = paren -> 
+  parent (V_union (V_single y) v0) (A_union (E_set x y) a0) (C_leaf v0 a0 g0 x y v0x v0y) child = paren.
+Proof.
+  intros.
+  induction g0 ; auto.
+  + simpl in *.
+    inversion v0x.
+    subst.
+    break_match ; auto.
+  + simpl in *.
+    assert (y0 <> y) as y0y.
+    intuition.
+    apply v0y.
+    rewrite H0.
+    apply In_left. apply In_single.
+    assert (~ v0 y) as v0y2.
+    intuition.
+    apply v0y.
+    apply In_right. auto.
+    clear v0y.
+    
+    inversion v0x.
+    inversion H0.
+    rewrite H2 in *.
+    break_match.
+    rewrite e in *.
+    break_match.
+    inversion e0.
+    symmetry in H4.
+    intuition.
+    subst. clear H0 n0 IHg0.
+
+
+    inversion v0x.
+    inversion H0.
+    rewrite H2 in *.
+    repeat break_match.
+    rewrite e in e0.
+    inversion e0.
+    subst.
+    intuition.
+    rewrite e in *.
+    assert (v0 (name_component child)) as v0child.
+    apply parent_help2 in H ; auto. 
+    subst.
+    
+
+
+
+    repeat break_match ; subst ; auto.
+    inversion e. subst.
+    inversion v0x.
+    inversion H.
+    subst.
+    intuition.
+    subst.
+    intuition.
+    assert (V_union (V_single y) v0 y).
+    apply In_left. apply In_single.
+    intuition.
+    
+    inversion v0x.
+    inversion H.
+    subst.
+    admit.
+    subst.
+    assert (y0 <> y /\ ~ v0 y).
+    split.
+    intuition.
+    apply v0y.
+    apply In_left. rewrite H0. apply In_single.
+    intuition. apply v0y.
+    apply In_right. auto.
+    destruct H0.
+    apply IHg0 ; auto.
+  + rewrite <- e in *.
+    auto.
 Admitted.
 
 
