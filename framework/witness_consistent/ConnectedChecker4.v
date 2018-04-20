@@ -139,6 +139,25 @@ Proof.
         apply (H x' y'); auto.
 Qed.
 
+Lemma Walk_in_bigger_conn : forall (v vB : V_set) (a aB : A_set) (v1 v2 : Component) (vl : V_list) (el : E_list),
+  V_included v vB -> A_included a aB -> Walk v a v1 v2 vl el -> Walk vB aB v1 v2 vl el.
+Proof.
+  intros v vB a aB v1 v2 vl el vI aI w.
+  induction w.
+  + apply W_null.
+    unfold V_included in vI.
+    unfold Included in vI.
+    apply (vI x v0).
+  + apply W_step.
+    apply IHw.
+    unfold V_included in vI.
+    unfold Included in vI.
+    apply (vI x v0).
+    unfold A_included in aI.
+    unfold Included in aI.
+    apply (aI (A_ends x y) a0).
+Qed.
+
 Fixpoint root (v : V_set) (a : A_set) (c : Connected v a) : Name :=
   match c with
   | C_isolated x => component_name (x)
@@ -436,7 +455,15 @@ Proof.
     assert (Walk (V_union (V_single (name_component c)) v0)
                                      (A_union (E_set x (name_component c)) a0)
        (name_component (component_name x)) (name_component (root v0 a0 g0)) x0 x1).
-    admit.
+    apply (Walk_in_bigger_conn v0 (V_union (V_single (name_component c)) v0) a0) ; auto.
+    unfold V_included.
+    unfold Included.
+    intros.
+    apply In_right. auto.
+    unfold A_included.
+    unfold Included.
+    intros.
+    apply In_right. auto.
     apply (Walk_append _ _ _ _ _ _ _ _ _ H1) in H3.
     exists ([x] ++ x0). exists ([E_ends (name_component c) x] ++ x1).
     exists H3.
@@ -475,7 +502,15 @@ Proof.
     apply IHg0 in H0.
     repeat destruct H0.
     assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) (name_component c) (name_component (root v0 a0 g0)) x0 x1).
-    admit.
+    apply (Walk_in_bigger_conn v0 _ a0) ; auto.
+    unfold V_included.
+    unfold Included.
+    intros.
+    apply In_right. auto.
+    unfold A_included.
+    unfold Included.
+    intros.
+    apply In_right. auto.
     exists x0.
     exists x1.
     exists H1.
@@ -494,7 +529,13 @@ Proof.
     exists x0.
     exists x1.
     assert (Walk v0 (A_union (E_set x y) a0) (name_component c) (name_component (root v0 a0 g0)) x0 x1).
-    admit.
+    apply (Walk_in_bigger_conn v0 _ a0) ; auto.
+    unfold V_included.
+    unfold Included. auto.
+    unfold A_included.
+    unfold Included.
+    intros.
+    apply In_right. auto.
     exists H0.
     unfold parent_walk in *.
     intros.
@@ -502,6 +543,7 @@ Proof.
     auto.
   + rewrite <- e in *.
     rewrite <- e0 in *.
+    specialize (IHg0 c).
     auto.
 Qed.
   
