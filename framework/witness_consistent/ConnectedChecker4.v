@@ -182,23 +182,69 @@ Fixpoint children (v : V_set) (a : A_set) (c : Connected v a) (parent : Name) : 
   | C_eq v v' a a' _ _ co => children v a co parent
   end.
 
-(* (A_Union (E_set x y) (E_set x y)) *)
-
-Fixpoint treeify (v : V_set) (a : A_set) (c : Connected v a) : A_set :=
+Fixpoint treeify_a (v : V_set) (a : A_set) (c : Connected v a) : A_list :=
   match c with
-  | C_isolated _ => A_empty
-  | C_leaf v a co x y _ _ => A_empty
-  | C_edge v a co _ _ _ _ _ _ _ => A_empty
-  | C_eq v _ a _ _ _ co => A_empty
+  | C_isolated _ => []
+  | C_leaf v a co x y _ _ => (A_ends x y) :: (A_ends y x) :: (treeify_a v a co)
+  | C_edge v a co _ _ _ _ _ _ _ => treeify_a v a co
+  | C_eq v _ a _ _ _ co => treeify_a v a co
   end.
 
-(* Fixpoint treeify (v : V_set) (a : A_set) (c : Connected v a) : A_set :=
-  match c with
-  | C_isolated _ => A_empty
-  | C_leaf v a co x y _ _ => (A_union (E_set x y) (treeify v a co))
-  | C_edge v a co _ _ _ _ _ _ _ => treeify v a co
-  | C_eq v _ a _ _ _ co => treeify v a co
-  end. *)
+Definition eq_list_set (al : A_list) (a : A_set) : Prop :=
+  forall e, In e al <-> a e.
+
+Lemma A_list_A_set : forall (al : A_list),
+  {a : A_set & eq_list_set al a}.
+Proof.
+  intros.
+  unfold eq_list_set.
+  induction al.
+  
+  + exists A_empty.
+    split ; intros.
+    inversion H.
+    inversion H.
+  + destruct IHal.
+    destruct a0.
+    exists (A_union (A_single (A_ends v0 v1)) x).
+    split ; intros.
+    simpl in *. destruct H.
+    apply In_left. rewrite <- H.
+    apply In_single.
+    apply In_right.
+    apply (i e) ; auto.
+    simpl.
+    inversion H.
+    inversion H0.
+    left. auto.
+    right. apply (i e) ; auto.
+Qed.
+
+
+Lemma treeify_creates_tree : forall (v : V_set) (a: A_set) (c : Connected v a),
+  {a' : A_set & {t : Tree v a' & eq_list_set (treeify_a v a c) a'}}.
+Proof.
+  intros v a c.
+  assert ({a0 : A_set & eq_list_set (treeify_a v a c) a0}).
+  apply A_list_A_set.
+  destruct X.
+  exists x.
+  induction c.
+  + simpl in *.
+    assert (Tree (V_single x0) A_empty).
+    apply T_root.
+    unfold eq_list_set in e.
+    simpl in e.
+    
+    exists H.
+
+
+(*  was danach noch kommen k\u00f6nnte: 
+    den beweis beenden
+    irgendwie zeigen, dass der baum dann nur aus eltern/kinder-kanten besteht
+    also die \u00e4quivalenz der kanten
+    danach \u00fcber den baum iterieren, der entstanden ist
+*)    
 
 Definition root_prop (root : Name) : Prop :=
   v (name_component root).
