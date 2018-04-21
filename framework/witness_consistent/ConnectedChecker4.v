@@ -221,23 +221,75 @@ Proof.
 Qed.
 
 
-Lemma treeify_creates_tree : forall (v : V_set) (a: A_set) (c : Connected v a),
-  {a' : A_set & {t : Tree v a' & eq_list_set (treeify_a v a c) a'}}.
+Lemma append_two : forall v0 a0 c a' a_old x y,
+  eq_list_set (A_ends x y :: A_ends y x :: treeify_a v0 a0 c) a' ->
+  eq_list_set (treeify_a v0 a0 c) a_old ->
+  a' = A_union (E_set x y) a_old.
+Proof.
+  intros.
+  apply U_set_eq.
+  split ; intros ; unfold eq_list_set in * ; simpl in *.
+  + specialize (H x0).
+    specialize (H0 x0).
+    apply <- H in H1.
+    destruct H1.
+    subst.
+    apply In_left.
+    apply E_right.
+    destruct H1.
+    subst.
+    apply In_left.
+    apply E_left.
+    apply In_right.
+    apply H0. auto.
+  + specialize (H x0).
+    specialize (H0 x0).
+    inversion H1.
+    subst.
+    apply H.
+    inversion H2.
+    left.
+    auto.
+    right. left. auto.
+    apply H.
+    subst.
+    apply <- H0 in H2.
+    right. right. auto.
+Qed.
+
+
+Lemma treeify_creates_tree' : forall (v : V_set) (a : A_set) (c : Connected v a) (a' : A_set),
+  eq_list_set (treeify_a v a c) a' -> Tree v a'.
 Proof.
   intros v a c.
-  assert ({a0 : A_set & eq_list_set (treeify_a v a c) a0}).
-  apply A_list_A_set.
-  destruct X.
-  exists x.
-  induction c.
-  + simpl in *.
-    assert (Tree (V_single x0) A_empty).
+  induction c ; intros ; simpl in * ; auto.
+  + assert (a' = A_empty).
+    apply U_set_eq.
+    unfold eq_list_set in H.
+    split ; intros.
+    apply H in H0.
+    inversion H0.
+    inversion H0.
+    subst.
     apply T_root.
-    unfold eq_list_set in e.
-    simpl in e.
-    
-    exists H.
+  + assert ({a_old : A_set & eq_list_set (treeify_a v0 a0 c) a_old}).
+    apply A_list_A_set.
+    destruct X as [a_old tree].
+    assert (eq := tree).
+    apply IHc in tree.
+    assert (a' = A_union (E_set x y) a_old).
+    apply (append_two v0 a0 c) ; auto.
+    subst.
+    apply (T_leaf v0 a_old tree y x) ; auto.
+  + rewrite <- e in *.
+    auto.
+Qed.
 
+(* Lemma treeify_creates_tree : forall (v : V_set) (a: A_set) (c : Connected v a),
+  {a' : A_set & {t : Tree v a' & eq_list_set (treeify_a v a c) a'}}.
+Proof.
+  intros.
+  induction c. *)
 
 (*  was danach noch kommen k\u00f6nnte: 
     den beweis beenden
