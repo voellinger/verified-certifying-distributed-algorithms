@@ -285,11 +285,19 @@ Proof.
     auto.
 Qed.
 
-(* Lemma treeify_creates_tree : forall (v : V_set) (a: A_set) (c : Connected v a),
+Lemma treeify_creates_tree : forall (v : V_set) (a: A_set) (c : Connected v a),
   {a' : A_set & {t : Tree v a' & eq_list_set (treeify_a v a c) a'}}.
 Proof.
   intros.
-  induction c. *)
+  assert ({a' : A_set & eq_list_set (treeify_a v0 a0 c) a'}).
+  apply A_list_A_set.
+  destruct X.
+  exists x.
+  assert (e' := e).
+  apply treeify_creates_tree' in e.
+  exists e.
+  auto.
+Qed.
 
 (*  was danach noch kommen k\u00f6nnte: 
     den beweis beenden
