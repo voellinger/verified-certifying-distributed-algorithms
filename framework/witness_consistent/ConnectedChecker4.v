@@ -678,10 +678,42 @@ Proof.
   auto.
 Qed.
 
+Lemma treeify_in_conn : forall (v : V_set) (a : A_set) (c : Connected v a) (a' : A_set),
+  eq_list_set (treeify_a v a c) a' -> A_included a' a.
+Proof.
+  intros v a c.
+  unfold A_included.
+  unfold Included.
+  induction c ; intros ; unfold eq_list_set in H ; simpl in * ; auto.
+  + specialize (H x0).
+    intuition.
+  + apply <- H in H0.
+    repeat destruct H0.
+    apply In_left. apply E_right.
+    apply In_left. apply E_left.
+    apply In_right.
+    assert ({a_old : A_set & eq_list_set (treeify_a v0 a0 c) a_old}).
+    apply A_list_A_set.
+    destruct X.
+    specialize (IHc x1).
+    assert (forall x : Arc, x1 x -> a0 x).
+    auto.
+    apply H1.
+    unfold eq_list_set in e.
+    apply e.
+    auto.
+  + apply <- H in H0.
+    specialize (IHc a').
+    apply In_right.
+    apply IHc ; auto.
+    apply (H x0) ; auto.
+  + rewrite <- e0 in *.
+    apply (IHc a'0) ; auto.
+Qed.
 
 
 (*  was danach noch kommen k\u00f6nnte:
-    A_included a' a, parent-child<->a'
+    parent-child<->a'
     irgendwie zeigen, dass der treeify-baum dann nur aus eltern/kinder-kanten besteht
     also die \u00e4quivalenz der kanten
     danach \u00fcber den baum iterieren, der entstanden ist
