@@ -681,7 +681,6 @@ Qed.
 
 
 (*  was danach noch kommen k\u00f6nnte:
-    wrapper f\u00fcr parent, child schreiben
     A_included a' a, parent-child<->a'
     irgendwie zeigen, dass der treeify-baum dann nur aus eltern/kinder-kanten besteht
     also die \u00e4quivalenz der kanten
