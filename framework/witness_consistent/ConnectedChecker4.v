@@ -1842,21 +1842,6 @@ Proof.
     repeat break_match ; inversion H2 ; subst ; simpl in *.
     admit.
     admit.
-    .
-
-
-
-
-    invc H7 ; simpl in *.
-    unfold NetHandler in H5.
-    repeat break_match.
-    inversion H5.
-    subst ; simpl in *.
-    
-
-
-admit. subst.
-    
 Admitted.
 
 
@@ -1979,6 +1964,9 @@ Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
 Proof.
+
+
+
   intros.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind.
@@ -1996,6 +1984,14 @@ Proof.
     unfold parent_walk'.
     intros.
     inversion H1.
+  + invc H1 ; simpl in *.
+    - unfold NetHandler in H4.
+      simpl in *.
+      induction g ; simpl in *.
+      
+      
+      
+
   + subst.
     simpl in *.
     invc H1.
