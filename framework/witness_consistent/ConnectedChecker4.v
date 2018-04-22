@@ -1823,11 +1823,40 @@ Lemma child_gives_ass_list_to_parent : forall c x' tr1 p xs ys d l out,
        (tr1 ++ [(pDst p, inr out)]) ->
   nwPackets x' = xs ++ p :: ys ->
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
-
 (In (pSrc p) (children (component_name c)) /\ (pBody p = (ass_list (nwState x' (pSrc p))))).
 Proof.
   intros.
-  subst. simpl in *.
+  simpl in *.
+  apply refl_trans_1n_n1_trace in H0.
+
+
+  invc H0 ; simpl in *.
+  + symmetry in H7.
+    apply app_eq_nil in H7.
+    destruct H7.
+    inversion H3.
+  + unfold NetHandler in H2.
+    assert (pDst p = Checker c).
+    admit.
+    rewrite H0 in *.
+    repeat break_match ; inversion H2 ; subst ; simpl in *.
+    admit.
+    admit.
+    .
+
+
+
+
+    invc H7 ; simpl in *.
+    unfold NetHandler in H5.
+    repeat break_match.
+    inversion H5.
+    subst ; simpl in *.
+    
+
+
+admit. subst.
+    
 Admitted.
 
 
