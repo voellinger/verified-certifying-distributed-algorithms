@@ -212,11 +212,14 @@ Definition parent_children (p c : Name) : Prop :=
 Definition children_parent (c : Name) : Prop :=
   In c (children' v a g (parent' v a g c)) \/ c = root' v a g.
 
-Definition parent_walk (x y : Component) (vl : V_list) (el : E_list) v a g (w : Walk v a x y vl el) : Prop :=
+Definition parent_walk' (x y : Component) (vl : V_list) (el : E_list) v a g (w : Walk v a x y vl el) : Prop :=
   forall (c1 c2 : Name), In (E_ends (name_component c1) (name_component c2)) el -> parent' v a g c1 = c2.
 
+Definition parent_walk x y vl el w : Prop :=
+  parent_walk' x y vl el v a g w.
+
 Definition descendand (des ancestor : Name) : Prop :=
-  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk (name_component des) (name_component ancestor) vl el v a g w.
+  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
 
 Lemma root_prop_holds : 
   root_prop (root' v a g).
@@ -443,7 +446,7 @@ Proof.
 Qed.
 
 Lemma parent_walk_to_root : forall (v : V_set) a g c,
-  v (name_component c) -> exists vl el w, parent_walk (name_component c) (name_component (root' v a g)) vl el v a g w.
+  v (name_component c) -> exists vl el w, parent_walk' (name_component c) (name_component (root' v a g)) vl el v a g w.
 Proof.
   intros v0 a0 g0.
   induction g0 ; intros ; simpl in * ; auto.
@@ -455,6 +458,7 @@ Proof.
     apply W_null ; auto.
     exists H1.
     unfold parent_walk.
+    unfold parent_walk'.
     intros.
     inversion H2.
   + inversion H.
@@ -488,7 +492,7 @@ Proof.
     simpl in *.
     assert (H2' := H2).
     unfold parent_walk.
-    unfold parent_walk in H2.
+    unfold parent_walk' in *.
     intros.
 
     destruct H4.
@@ -532,7 +536,7 @@ Proof.
     exists x0.
     exists x1.
     exists H1.
-    unfold parent_walk in *.
+    unfold parent_walk' in *.
     intros.
     assert (v0 (name_component c1)).
     apply (W_inxyel_inxvl v0 a0 (name_component c) (name_component (root' v0 a0 g0)) x0 x1) in H2 ; auto.
@@ -555,7 +559,7 @@ Proof.
     intros.
     apply In_right. auto.
     exists H0.
-    unfold parent_walk in *.
+    unfold parent_walk' in *.
     intros.
     simpl in *.
     auto.
@@ -834,35 +838,35 @@ Proof.
         destruct assign1. destruct assign2.
         intros. subst.
         simpl in *.
-        destruct H4.
-          apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
-          destruct H5.
-            apply <- Assignment_eq_dec3 in H4. destruct H4. auto.
-            destruct H4.
-              apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+        destruct H2.
+          apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+          destruct H3.
+            apply <- Assignment_eq_dec3 in H2. destruct H2. auto.
+            destruct H2.
+              apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
               intuition.
               unfold is_consistent in H1.
               apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
               simpl. left. auto.
               simpl. right. auto.
-          destruct H4.
-            apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
-            destruct H5.
-              apply <- Assignment_eq_dec3 in H4. destruct H4. subst.
+          destruct H2.
+            apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+            destruct H3.
+              apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
               intuition.
-              destruct H4.
-                apply <- Assignment_eq_dec3 in H4. destruct H4. auto.
+              destruct H2.
+                apply <- Assignment_eq_dec3 in H2. destruct H2. auto.
                 unfold is_consistent in new.
                 apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
                 simpl. left. auto.
                 simpl. right. auto.
-            destruct H5.
-            apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
+            destruct H3.
+            apply <- Assignment_eq_dec3 in H3. destruct H3. subst.
             apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
             simpl. right. auto.
             simpl. left. auto.
-            destruct H5.
-            apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
+            destruct H3.
+            apply <- Assignment_eq_dec3 in H3. destruct H3. subst.
             apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
             simpl. right. auto.
             simpl. left. auto.
@@ -877,43 +881,43 @@ Proof.
         destruct assign1. destruct assign2.
         intros.
         subst.
-        inversion H4.
+        inversion H2.
           apply <- Assignment_eq_dec3 in H0.
           destruct H0.
           subst.
-          inversion H5.
+          inversion H3.
             apply <- Assignment_eq_dec3 in H0.
             destruct H0.
             subst.
             auto.
             inversion H0.
-              apply <- Assignment_eq_dec3 in H6.
-              destruct H6. subst. auto.
+              apply <- Assignment_eq_dec3 in H4.
+              destruct H4. subst. auto.
               unfold is_consistent in H1.
               apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
               simpl. left. auto.
             simpl. right. auto.
           inversion H0.
-            apply <- Assignment_eq_dec3 in H6.
-            destruct H6.
+            apply <- Assignment_eq_dec3 in H4.
+            destruct H4.
             subst.
-            inversion H5.
-              apply <- Assignment_eq_dec3 in H6.
-              destruct H6.
+            inversion H3.
+              apply <- Assignment_eq_dec3 in H4.
+              destruct H4.
               auto.
-              inversion H6.
-              apply <- Assignment_eq_dec3 in H7.
-              destruct H7. auto.
+              inversion H4.
+              apply <- Assignment_eq_dec3 in H5.
+              destruct H5. auto.
             unfold is_consistent in new.
             apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
-          inversion H5.
-          apply <- Assignment_eq_dec3 in H7. destruct H7. subst.
+          inversion H3.
+          apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
           unfold is_consistent in H1.
           apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
           simpl. right. auto.
           simpl. left. auto.
-          inversion H7.
-          apply <- Assignment_eq_dec3 in H8. destruct H8. subst.
+          inversion H5.
+          apply <- Assignment_eq_dec3 in H6. destruct H6. subst.
           unfold is_consistent in new.
           apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
           apply (is_consistent_one_lesss) in new.
@@ -1307,8 +1311,8 @@ Proof.
     apply (H d1 d2 a0) ; auto.
   + apply (H a0 c1 c2) ; auto ; unfold descendand_r.
     
-    apply (parent_walk_to_root c1) ; auto.
-    apply (parent_walk_to_root c2) ; auto.
+    apply (parent_walk_to_root v a g c1) ; auto.
+    apply (parent_walk_to_root v a g c2) ; auto.
 Qed.
 
 Lemma root_descendand : 
@@ -1319,9 +1323,10 @@ Proof.
   exists E_nil.
   assert (Walk v a (name_component root) (name_component root) V_nil E_nil).
   apply W_null ; auto.
-  apply root_prop.
+  apply root_prop_holds.
   exists H.
   unfold parent_walk.
+  unfold parent_walk'.
   intros.
   inversion H0.
 Qed.
@@ -1833,6 +1838,7 @@ Proof.
     apply (Component_prop_1) ; auto.
     exists H.
     unfold parent_walk.
+    unfold parent_walk'.
     intros.
     inversion H1.
   + subst.
@@ -1888,8 +1894,8 @@ Proof.
       apply orb_true_intro.
       right.
       auto.
-Qed.      
-  
+Qed.
+
 
 Lemma has_var_exists_val : forall var d,
   isa_aVarComponent var d -> exists val : Value, In (assign_cons var val) (init_certificate d).
@@ -1962,7 +1968,11 @@ Proof.
   apply (all_subtree_in_ass_list net tr) ; auto.
   rename H3 into Hd.
   assert (forall (c : Name), exists vl el w, parent_walk (name_component c) (name_component root) vl el w) as pwtr.
+  unfold parent_walk.
+  unfold root.
+  intros.
   apply parent_walk_to_root.
+  apply Component_prop_1 ; auto.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d1)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
@@ -2000,6 +2010,7 @@ Theorem root_ends_false_witness_inconsistent: forall net tr,
   ~ Witness_consistent.
 Proof.
   intros net tr reachable terminated inconsistent.
+  unfold root in *.
   intuition.
   apply Witness_consistent_root_subtree_consistent in H.
   unfold root_subtree_consistent in H.
@@ -2011,12 +2022,13 @@ Proof.
   destruct assign1. destruct assign2.
   intros.
   subst.
-  assert (terminated' := terminated).
-  apply (only_desc_in_ass_list net tr _ (assign_cons v2 v1)) in terminated ; auto.
-  apply (only_desc_in_ass_list net tr _ (assign_cons v2 v3)) in terminated' ; auto.
-  destruct terminated.
+  assert (reachable' := reachable).
+  assert (reachable'' := reachable).
+  apply (only_desc_in_ass_list net tr (name_component (root' v a g)) (assign_cons v2 v1)) in reachable' ; auto.
+  apply (only_desc_in_ass_list net tr (name_component (root' v a g)) (assign_cons v2 v3)) in reachable'' ; auto.
+  destruct reachable'.
   destruct H2.
-  destruct terminated'.
+  destruct reachable''.
   destruct H4.
   assert (H3' := H3). assert (H5' := H5).
   apply is_in_cons_cert_then_take_it in H3.
