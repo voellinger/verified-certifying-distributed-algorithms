@@ -711,6 +711,8 @@ Proof.
     apply (IHc a'0) ; auto.
 Qed.
 
+Definition xor (p1 p2 : Prop) : Prop :=
+ (~p1 /\ p2) \/ (p1 /\ ~ p2).
 
 (*  was danach noch kommen k\u00f6nnte:
     parent-child<->a'
