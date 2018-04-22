@@ -1835,13 +1835,20 @@ Proof.
     apply app_eq_nil in H7.
     destruct H7.
     inversion H3.
-  + unfold NetHandler in H2.
-    assert (pDst p = Checker c).
+  + assert (cs = tr1).
     admit.
-    rewrite H0 in *.
-    repeat break_match ; inversion H2 ; subst ; simpl in *.
+    subst.
+    assert (cs' = [(pDst p, inr out)]).
     admit.
-    admit.
+    subst.
+    invc H7.
+    - assert (p0 = p).
+      admit.
+      subst.
+      simpl in *.
+      unfold NetHandler in H10.
+      repeat break_match ; inversion H10 ; subst ; simpl in * ; subst ; simpl in *.
+
 Admitted.
 
 
