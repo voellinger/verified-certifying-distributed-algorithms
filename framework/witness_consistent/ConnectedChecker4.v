@@ -1827,7 +1827,120 @@ Lemma child_gives_ass_list_to_parent : forall c x' tr1 p xs ys d l out,
 Proof.
   intros.
   simpl in *.
+
+
+
+
   apply refl_trans_1n_n1_trace in H0.
+  apply refl_trans_1n_n1_trace in H.
+
+
+  invc H ; subst ; simpl in *.
+
+  + symmetry in H1.
+    apply app_eq_nil in H1.
+    destruct H1.
+    inversion H1.
+  + invc H4 ; simpl in *.
+    - admit.
+    - unfold InputHandler in H.
+      repeat break_match ; subst ; simpl in * ; auto.
+      
+
+
+   invc H0.
+    - symmetry in H8.
+      apply app_eq_nil in H8.
+      destruct H8.
+      inversion H0.
+    - destruct p.
+      simpl in *.
+      invc H8.
+      apply app_inj_tail in H.
+      destruct H.
+      inversion H8.
+      subst. simpl in *.
+      inversion H7.
+
+      
+      
+      inversion H10.
+
+      unfold NetHandler in H2.
+      repeat break_match ; subst ; simpl in *.
+  
+
+
+
+
+
+
+
+
+ invc H4 ; simpl in *.
+    - unfold NetHandler.
+      
+    - symmetry in H8.
+      apply app_eq_nil in H8.
+      destruct H8.
+      subst.
+      symmetry in H1.
+      apply app_eq_nil in H1.
+      destruct H1.
+      inversion H4.
+    - destruct p. simpl in *.
+      invc H6 ; simpl in *.
+      { symmetry in H4.
+        apply app_eq_nil in H4.
+        destruct H4.
+        inversion H6.
+      }
+      { unfold InputHandler in H4.
+        repeat break_match ; subst ; simpl in *.
+        inversion Heqb.
+        unfold NetHandler in H2.
+        repeat break_match ; subst ; simpl in *.
+        inversion H2. rewrite <- H8 in *. simpl in *.
+        inversion H4. rewrite <- H12 in *. simpl in *.
+        subst. simpl in *. 
+
+
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; subst ; simpl in *.
+
+  + symmetry in H1.
+    apply app_eq_nil in H1.
+    destruct H1.
+    inversion H1.
+  + invc H4 ; simpl in *.
+    - symmetry in H8.
+      apply app_eq_nil in H8.
+      destruct H8.
+      subst.
+      symmetry in H1.
+      apply app_eq_nil in H1.
+      destruct H1.
+      inversion H4.
+    - destruct p. simpl in *.
+      invc H6 ; simpl in *.
+      { symmetry in H4.
+        apply app_eq_nil in H4.
+        destruct H4.
+        inversion H6.
+      }
+      { unfold InputHandler in H4.
+        repeat break_match ; subst ; simpl in *.
+        inversion Heqb.
+        unfold NetHandler in H2.
+        repeat break_match ; subst ; simpl in *.
+        inversion H2. rewrite <- H8 in *. simpl in *.
+        inversion H4. rewrite <- H12 in *. simpl in *.
+        subst. simpl in *. 
+Admitted.        
+
+
+
+  (* apply refl_trans_1n_n1_trace in H0.
 
 
   invc H0 ; simpl in *.
@@ -1841,15 +1954,20 @@ Proof.
     assert (cs' = [(pDst p, inr out)]).
     admit.
     subst.
-    invc H7.
+    invc H4.
     - assert (p0 = p).
       admit.
       subst.
       simpl in *.
       unfold NetHandler in H10.
       repeat break_match ; inversion H10 ; subst ; simpl in * ; subst ; simpl in *.
-
+      assert (terminated (nwState x'0 (pDst p)) = true).
+      apply eqb_true_iff. auto.
+      rewrite H5 in *. simpl in *.
+      inversion H11. 
 Admitted.
+*)
+      
 
 
 Lemma only_child_in_ass_list: forall net tr c a,
@@ -1867,7 +1985,6 @@ Proof.
     simpl in *.
     invc H1.
     - simpl in *.
-
 
       assert (In (pSrc p) (children (component_name c))) as isin.
       apply (child_gives_ass_list_to_parent c x' tr1 p xs ys d l out) ; auto.
