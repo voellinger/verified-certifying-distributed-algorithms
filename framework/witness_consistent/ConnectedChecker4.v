@@ -1916,54 +1916,34 @@ Proof.
 Qed.
 
 
-(* (* in jedem schritt: alles drin von (init_child_list - child_list net).
-zum schluss ist child_list leer, also von allen kindern drin. *)
+(*  *)
 
-Lemma all_children_in_ass_list: forall net tr c,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (nwState net (Checker c)).(terminated) = true ->
-  exists perm, (nwState net (Checker c)).(ass_list) = (init_certificate (component_name c)) ++ list_of_lists perm net /\ Permutation perm (children (component_name c)).
-Proof.
-  intros.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind.
-  + subst.
-    simpl in *.
-    inversion H0.
-  + subst.
-    simpl in *.
-    invc H1.
-    - simpl in *.
-      unfold NetHandler in H4.
-      repeat break_match ; inversion H4 ; subst ; simpl in *. 
-      rewrite <- e in *. apply IHrefl_trans_1n_trace1 in H0 ; auto.
-      destruct H0. exists x. destruct H0. split. rewrite H0.
-      apply Permutation
-      auto.
-Admitted. *)
 
-Lemma all_subtree_in_ass_list: forall net tr c,
+Lemma all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   (forall d, descendand (component_name d) (component_name c) -> 
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
 Proof.
-  intros.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  
 Admitted.
 
 
 
 (* wenn ein pfad existiert mit ..., dann macht InputHandler und NetHandler nichts kaputt und es existiert wieder ein Pfad *)
-Lemma only_desc_in_ass_list: forall net tr c a,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
+Lemma only_desc_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall a c,
+  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d)).
 Proof.
 
 
 
-  intros.
+  intros net tr H.
   remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind.
+  induction H using refl_trans_1n_trace_n1_ind ; intros.
   + subst.
     simpl in *.
     exists (component_name c).
@@ -1973,33 +1953,56 @@ Proof.
     assert (Walk v a (name_component (component_name c)) (name_component (component_name c)) [] []).
     apply W_null ; auto.
     apply (Component_prop_1) ; auto.
-    exists H.
+    exists H0.
     unfold parent_walk.
     unfold parent_walk'.
     intros.
     inversion H1.
-  + invc H1 ; simpl in *.
-    - unfold NetHandler in H4.
-      simpl in *.
-      induction g ; simpl in *.
-      (* 
+
       
       
 
   + subst.
     simpl in *.
-    invc H1.
+    invc H0.
     - simpl in *.
-      unfold NetHandler in H4.
+      assert (H4' := H4).
+      apply Nethandler_nil_one in H4'.
+      destruct H4'.
+      {unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; rewrite <- H6 in * ; subst ; simpl in * ; intuition.
+      specialize (H0 a0 (name_component (pDst p))).
+      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
+      specialize (H0 a0 (name_component (pDst p))).
+      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
+      apply in_app_or in H2. destruct H2. 
+      specialize (H0 a0 (name_component (pDst p))).
+      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
+      simpl in *. break_match ; subst ; simpl in * ; intuition.
+      
+
+      specialize (H0 a0 (name_component (pDst p))).
+      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
+
+
+      }
+      { destruct H0.
+        subst.
+        assert (H4' := H4).
+        destruct x.
+        apply (Nethandler_correct x' p out d) in H4'.
+      }
+
+ (*      unfold NetHandler in H4.
       repeat break_match ; simpl in *.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
-      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. 
-      destruct p.
-
+      apply in_app_or in H2. destruct H2. apply IHrefl_trans_1n_trace1 ; auto. 
+      destruct p. subst. simpl in *.
+      intuition. 
 admit.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
@@ -2167,19 +2170,17 @@ Proof.
   destruct assign1. destruct assign2.
   intros.
   subst.
-  assert (reachable' := reachable).
-  assert (reachable'' := reachable).
-  apply (only_desc_in_ass_list net tr (name_component (root' v a g)) (assign_cons v2 v1)) in reachable' ; auto.
-  apply (only_desc_in_ass_list net tr (name_component (root' v a g)) (assign_cons v2 v3)) in reachable'' ; auto.
-  destruct reachable'.
-  destruct H2.
-  destruct reachable''.
-  destruct H4.
-  assert (H3' := H3). assert (H5' := H5).
+  apply (only_desc_in_ass_list net tr reachable) in H0 ; auto.
+  apply (only_desc_in_ass_list net tr reachable) in H1 ; auto.
+  destruct H0.
+  destruct H0.
+  destruct H1.
+  destruct H1.
+  assert (H3' := H3). assert (H2' := H2).
   apply is_in_cons_cert_then_take_it in H3.
-  apply is_in_cons_cert_then_take_it in H5.
+  apply is_in_cons_cert_then_take_it in H2.
   apply is_in_isa in H3'.
-  apply is_in_isa in H5'.
+  apply is_in_isa in H2'.
   specialize (H v2 x x0).
   subst.
   unfold descendand_r in *.
