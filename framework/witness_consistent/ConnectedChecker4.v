@@ -1811,6 +1811,18 @@ Proof.
   intros.
 Admitted.
 
+Lemma easier': forall x' p out d  l,
+  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
+  (l = [] \/ exists p, l = [p]).
+Proof.
+  intros.
+  destruct p.
+  unfold NetHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H ; auto).
+  right. exists (parent pDst, ass_list (nwState x' pDst)).
+  auto.
+Qed. 
+
 Lemma easier: forall x' p out d nextDst msg,
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
   (parent (pDst p) = nextDst) /\ (msg = (ass_list (nwState x' (pDst p)))).
@@ -1820,171 +1832,30 @@ Proof.
   unfold NetHandler in H.
   repeat (break_match ; subst ; simpl in * ; inversion H).
   auto.
-Qed. (* 
+Qed.
 
-Definition children_parent (c : Name) : Prop :=
-  In c (children' v a g (parent' v a g c)) \/ c = root' v a g.
-
-  apply (parent_children_holds (parent pDst) v a g).
-
-Lemma child_gives_ass_list_to_parent : forall c x' tr1 p xs ys d l out,
-  refl_trans_1n_trace step_async step_async_init x' tr1 ->
-  refl_trans_1n_trace step_async step_async_init 
-       {|
-       nwPackets := map
-                      (fun m : Name * Msg => {| pSrc := pDst p; pDst := fst m; pBody := snd m |})
-                      l ++ xs ++ ys;
-       nwState := fun nm : Name => if Name_eq_dec nm (pDst p) then d else nwState x' nm |}
-       (tr1 ++ [(pDst p, inr out)]) ->
-  nwPackets x' = xs ++ p :: ys ->
-  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
-(In (pSrc p) (children (component_name c)) /\ (pBody p = (ass_list (nwState x' (pSrc p))))).
+Lemma Input_handler_nil_one : forall inp0 x' h out d l,
+  InputHandler h inp0 (nwState x' h) = (out, d, l) ->
+  (l = [] \/ exists p, l = [p]).
 Proof.
   intros.
-  simpl in *.
+  unfold InputHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H).
+  auto.
+  right.
+  exists ((parent h, ass_list (nwState x' h))). auto.
+  left. auto.
+Qed.
 
-  assert (parent (pSrc p) = (component_name c) \/ parent (pSrc p) <> component_name c) as new.
-  apply classic.
-
-
-  apply refl_trans_1n_n1_trace in H0.
-  apply refl_trans_1n_n1_trace in H.
-
-
-  invc H ; subst ; simpl in *.
-
-  + symmetry in H1.
-    apply app_eq_nil in H1.
-    destruct H1.
-    inversion H1.
-  + invc H4 ; simpl in *.
-    - admit.
-    - unfold InputHandler in H.
-      repeat break_match ; subst ; simpl in * ; auto.
-      inversion H. subst. simpl in *.
-
-
-   invc H0.
-    - symmetry in H8.
-      apply app_eq_nil in H8.
-      destruct H8.
-      inversion H0.
-    - destruct p.
-      simpl in *.
-      invc H8.
-      apply app_inj_tail in H.
-      destruct H.
-      inversion H8.
-      subst. simpl in *.
-      inversion H7.
-
-      
-      
-      inversion H10.
-
-      unfold NetHandler in H2.
-      repeat break_match ; subst ; simpl in *.
-  
-
-
-
-
-
-
-
-
- invc H4 ; simpl in *.
-    - unfold NetHandler.
-      
-    - symmetry in H8.
-      apply app_eq_nil in H8.
-      destruct H8.
-      subst.
-      symmetry in H1.
-      apply app_eq_nil in H1.
-      destruct H1.
-      inversion H4.
-    - destruct p. simpl in *.
-      invc H6 ; simpl in *.
-      { symmetry in H4.
-        apply app_eq_nil in H4.
-        destruct H4.
-        inversion H6.
-      }
-      { unfold InputHandler in H4.
-        repeat break_match ; subst ; simpl in *.
-        inversion Heqb.
-        unfold NetHandler in H2.
-        repeat break_match ; subst ; simpl in *.
-        inversion H2. rewrite <- H8 in *. simpl in *.
-        inversion H4. rewrite <- H12 in *. simpl in *.
-        subst. simpl in *. 
-
-
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; subst ; simpl in *.
-
-  + symmetry in H1.
-    apply app_eq_nil in H1.
-    destruct H1.
-    inversion H1.
-  + invc H4 ; simpl in *.
-    - symmetry in H8.
-      apply app_eq_nil in H8.
-      destruct H8.
-      subst.
-      symmetry in H1.
-      apply app_eq_nil in H1.
-      destruct H1.
-      inversion H4.
-    - destruct p. simpl in *.
-      invc H6 ; simpl in *.
-      { symmetry in H4.
-        apply app_eq_nil in H4.
-        destruct H4.
-        inversion H6.
-      }
-      { unfold InputHandler in H4.
-        repeat break_match ; subst ; simpl in *.
-        inversion Heqb.
-        unfold NetHandler in H2.
-        repeat break_match ; subst ; simpl in *.
-        inversion H2. rewrite <- H8 in *. simpl in *.
-        inversion H4. rewrite <- H12 in *. simpl in *.
-        subst. simpl in *. 
-Admitted.        
-
-
-
-  (* apply refl_trans_1n_n1_trace in H0.
-
-
-  invc H0 ; simpl in *.
-  + symmetry in H7.
-    apply app_eq_nil in H7.
-    destruct H7.
-    inversion H3.
-  + assert (cs = tr1).
-    admit.
-    subst.
-    assert (cs' = [(pDst p, inr out)]).
-    admit.
-    subst.
-    invc H4.
-    - assert (p0 = p).
-      admit.
-      subst.
-      simpl in *.
-      unfold NetHandler in H10.
-      repeat break_match ; inversion H10 ; subst ; simpl in * ; subst ; simpl in *.
-      assert (terminated (nwState x'0 (pDst p)) = true).
-      apply eqb_true_iff. auto.
-      rewrite H5 in *. simpl in *.
-      inversion H11. 
-Admitted.
-*)
-       *)
-
+Lemma Input_handler_correct: forall inp0 x' h out d nextDst msg,
+  InputHandler h inp0 (nwState x' h) = (out, d, [(nextDst, msg)]) ->
+  (parent h = nextDst) /\ (msg = (ass_list (nwState x' h))).
+Proof.
+  intros.
+  unfold InputHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H).
+  auto.
+Qed.
 
 Lemma only_child_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
@@ -2001,6 +1872,87 @@ Proof.
     simpl in *.
     invc H1.
     - simpl in *.
+      assert (H4' := H4).
+      apply easier' in H4'.
+      destruct H4'.
+      { subst.
+        unfold NetHandler in H4.
+        repeat (break_match ; subst ; simpl in * ; auto ; inversion H4 ; intuition ; subst ; intuition ; simpl in *).
+        rewrite e in *. apply H1 in H0. destruct H0. exists x. destruct H0. split ; auto. break_match ; subst ; simpl ; auto.
+        destruct H5. destruct H1. exists x. split ; auto. break_match ; subst ; simpl ; auto.
+        rewrite e in *. apply H1 in H0. destruct H0. exists x. destruct H0. split ; auto. break_match ; subst ; simpl ; auto.
+        destruct H6. destruct H1. exists x. split ; auto. break_match ; subst ; simpl ; auto.
+        apply in_app_or in H0. destruct H0.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto. intuition.
+        destruct H6. destruct H1. exists x. split ; auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+        apply in_app_or in H0. destruct H0.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto. intuition.
+        destruct H6. destruct H1. exists x. split ; auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+        apply in_app_or in H0. destruct H0.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+          exists (pDst p). split. left. unfold component_name. auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto. intuition.
+        destruct H6. destruct H1. exists x. split ; auto. break_match ; subst ; simpl ; auto. apply in_or_app. auto.
+      }
+      { destruct H1.
+        subst.
+        unfold NetHandler in H4.
+        repeat (break_match ; subst ; simpl in * ; auto ; inversion H4 ; intuition).
+        simpl in *.
+        subst. apply in_app_or in H0.
+        destruct H0.
+        exists (pDst p). split. left. rewrite <- e. simpl. unfold component_name. auto.
+        break_match. simpl. apply in_or_app. auto.
+        auto.
+        exists (pDst p). split. left. rewrite <- e. simpl. unfold component_name. auto.
+        break_match. simpl. apply in_or_app. auto.
+        intuition.
+
+        simpl in *. subst.
+        destruct H6.
+        exists x.
+        destruct H1.
+        split ; auto.
+        break_match ; simpl.
+        subst. apply in_or_app. auto.
+        auto.
+      }
+    - simpl in *.
+      assert (H3' := H3).
+      apply Input_handler_nil_one in H3'.
+      destruct H3'.
+      { subst.
+        unfold InputHandler in H3.
+        repeat (break_match ; subst ; simpl in * ; auto ; inversion H3 ; intuition).
+        destruct H4. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+        destruct H4. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+        destruct H5. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+        destruct H5. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+      }
+      { destruct H1.
+        subst.
+        assert (H3' := H3).
+        destruct x.
+        apply Input_handler_correct in H3'.
+        destruct H3'.
+        subst.
+        unfold InputHandler in H3.
+        repeat (break_match ; subst ; simpl in * ; auto ; inversion H3 ; intuition).
+        destruct H5. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+      destruct H5. destruct H1. exists x. split ; auto. break_match ; simpl.
+          subst. auto. auto.
+      }
+Qed.
+
+Lemma easier: forall x' p out d nextDst msg,
+  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
+  (parent (pDst p) = nextDst) /\ (msg = (ass_list (nwState x' (pDst p)))).
 
       assert (In (pSrc p) (children (component_name c))) as isin.
       apply (child_gives_ass_list_to_parent c x' tr1 p xs ys d l out) ; auto.
