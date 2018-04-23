@@ -1776,41 +1776,6 @@ Proof.
 Qed.
 
 
-(* (* in jedem schritt: alles drin von (init_child_list - child_list net).
-zum schluss ist child_list leer, also von allen kindern drin. *)
-
-Lemma all_children_in_ass_list: forall net tr c,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (nwState net (Checker c)).(terminated) = true ->
-  exists perm, (nwState net (Checker c)).(ass_list) = (init_certificate (component_name c)) ++ list_of_lists perm net /\ Permutation perm (children (component_name c)).
-Proof.
-  intros.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind.
-  + subst.
-    simpl in *.
-    inversion H0.
-  + subst.
-    simpl in *.
-    invc H1.
-    - simpl in *.
-      unfold NetHandler in H4.
-      repeat break_match ; inversion H4 ; subst ; simpl in *. 
-      rewrite <- e in *. apply IHrefl_trans_1n_trace1 in H0 ; auto.
-      destruct H0. exists x. destruct H0. split. rewrite H0.
-      apply Permutation
-      auto.
-Admitted. *)
-
-Lemma all_subtree_in_ass_list: forall net tr c,
-  (nwState net (Checker c)).(terminated) = true ->
-  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
-  (forall d, descendand (component_name d) (component_name c) -> 
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
-Proof.
-  intros.
-Admitted.
-
 Lemma easier': forall x' p out d  l,
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
   (l = [] \/ exists p, l = [p]).
@@ -1950,107 +1915,41 @@ Proof.
       }
 Qed.
 
-Lemma easier: forall x' p out d nextDst msg,
-  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
-  (parent (pDst p) = nextDst) /\ (msg = (ass_list (nwState x' (pDst p)))).
 
-      assert (In (pSrc p) (children (component_name c))) as isin.
-      apply (child_gives_ass_list_to_parent c x' tr1 p xs ys d l out) ; auto.
-      assert (pBody p = (ass_list (nwState x' (pSrc p)))) as isass.
-      apply (child_gives_ass_list_to_parent c x' tr1 p xs ys d l out) ; auto.
+(* (* in jedem schritt: alles drin von (init_child_list - child_list net).
+zum schluss ist child_list leer, also von allen kindern drin. *)
 
-
-      unfold NetHandler in H4.
-      repeat break_match ; simpl in *.
-
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      destruct H1.
-      subst. split. auto. break_match. simpl. auto. intuition.
-      split. auto. break_match. simpl. auto. auto.
-
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      split. auto. break_match.
-      subst. simpl in *. inversion H4. rewrite <- H8 in *. simpl in *. auto. auto.
-
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      destruct H1.
-      subst. split. auto. break_match. simpl. auto. intuition.
-      split. auto. break_match. simpl. auto. auto.
-
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      split. auto. break_match.
-      subst. simpl in *. inversion H4. rewrite <- H8 in *. simpl in *. auto. auto.
-
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
-      subst. simpl in *.
-      apply in_app_or in H0. destruct H0.
-      exists (Checker c). rewrite isass in *.
-      split ; auto.
-      break_match ; simpl in * ; auto. apply in_or_app. left. auto.
-      subst. simpl in *.
-      exists (pSrc p). rewrite isass in *.
-      split ; auto.
-      break_match ; simpl in * ; auto. apply in_or_app. right. auto.
-
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      split. auto. break_match.
-      subst. simpl in *. inversion H4. rewrite <- H8 in *. simpl in *. apply in_or_app. left. auto. auto.
-
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *.
-      subst. simpl in *.
-      apply in_app_or in H0. destruct H0.
-      exists (Checker c). rewrite isass in *.
-      split ; auto.
-      break_match ; simpl in * ; auto. apply in_or_app. left. auto.
-      subst. simpl in *.
-      exists (pSrc p). rewrite isass in *.
-      split ; auto.
-      break_match ; simpl in * ; auto. apply in_or_app. right. auto.
-
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\ In a0 (ass_list (nwState x' d))).
-      apply IHrefl_trans_1n_trace1 ; auto.
-      destruct H1.
-      exists x.
-      destruct H1.
-      split. auto. break_match.
-      subst. simpl in *. inversion H4. rewrite <- H8 in *. simpl in *. apply in_or_app. left. auto. auto.
+Lemma all_children_in_ass_list: forall net tr c,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (nwState net (Checker c)).(terminated) = true ->
+  exists perm, (nwState net (Checker c)).(ass_list) = (init_certificate (component_name c)) ++ list_of_lists perm net /\ Permutation perm (children (component_name c)).
+Proof.
+  intros.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + subst.
+    simpl in *.
+    inversion H0.
+  + subst.
+    simpl in *.
+    invc H1.
     - simpl in *.
-      unfold InputHandler in H3.
-      assert (exists d : Name,
-                           (component_name c = d \/ In d (children (component_name c))) /\
-                           In a0 (ass_list (nwState x' d))).
-      repeat break_match ; inversion H3 ; rewrite <- H5 in * ; subst ; simpl in * ; auto.
-      repeat break_match ; inversion H3 ; rewrite <- H5 in * ; 
-        subst ; simpl in * ; destruct H1 ; exists x ; destruct H1 ; split ; auto ; break_match ; simpl ; auto ;  rewrite <- e ; auto.
-Qed.
+      unfold NetHandler in H4.
+      repeat break_match ; inversion H4 ; subst ; simpl in *. 
+      rewrite <- e in *. apply IHrefl_trans_1n_trace1 in H0 ; auto.
+      destruct H0. exists x. destruct H0. split. rewrite H0.
+      apply Permutation
+      auto.
+Admitted. *)
+
+Lemma all_subtree_in_ass_list: forall net tr c,
+  (nwState net (Checker c)).(terminated) = true ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr ->
+  (forall d, descendand (component_name d) (component_name c) -> 
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+Proof.
+  intros.
+Admitted.
 
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
@@ -2080,7 +1979,7 @@ Proof.
     - unfold NetHandler in H4.
       simpl in *.
       induction g ; simpl in *.
-      
+      (* 
       
       
 
@@ -2111,7 +2010,7 @@ admit.
       rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
       apply IHrefl_trans_1n_trace1 ; auto.
       rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto.
+      apply IHrefl_trans_1n_trace1 ; auto. *)
 Admitted.
 
 Lemma is_in_isa : forall v2 v1 n,
