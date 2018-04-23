@@ -1918,6 +1918,52 @@ Qed.
 
 (*  *)
 
+Lemma all_subtree_terminated: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (forall (d : Name), descendand d (component_name c) -> 
+    (nwState net (d)).(terminated) = true).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + intros ; subst ; simpl in *. auto.  
+  + subst.
+    remember step_async_init as y in *.
+    induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+    { intuition.
+
+
+
+    assert (H0' := H0). remember x' as y'. remember x'' as y''.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in *. 
+      apply eqb_prop in Heqb ; auto.
+      apply (H4 c H2 (pDst p)) ; auto.
+      apply (H4 c H2 (pDst p)) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.
+      
+      destruct (pDst p). inversion e. subst. simpl in *.
+      clear e H2 H6. apply refl_trans_1n_n1_trace in H1.
+      assert (H1' := H1).
+      invc H1. invc H8 ; simpl in *.
+      { unfold NetHandler in H6.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in * ; clear H6.
+        apply app_inj_tail in H0. destruct H0. subst.
+        assert (pDst p0 = Checker c0).
+        inversion H6. destruct (pDst p0). inversion H0. subst. simpl in *.
+        apply eqb_prop in Heqb0 ; auto.
+        apply (H4 c0) ; auto. 
+      }
+      
+      apply (H4 c H2 d) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.      
+
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -2197,6 +2243,7 @@ Axiom everything_ends : forall c net tr,
   (nwState net2 (Checker c)).(terminated) = true}}.
 
 Axiom every_step_is_towards_an_end : forall c net tr,
+  in jedem zustand wird ein knoten fertig, der der keine kinder mehr hat
  .
 
 x1. wenn Zustand terminated erreicht (true), dann bleibt er immer true (vllt NetHandler anpassen daf\u00fcr, indem am Anfang abgefragt wird, ob schon terminated)
