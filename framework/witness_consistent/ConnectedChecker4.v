@@ -1951,6 +1951,9 @@ Proof.
   intros.
 Admitted.
 
+
+
+(* wenn ein pfad existiert mit ..., dann macht InputHandler und NetHandler nichts kaputt und es existiert wieder ein Pfad *)
 Lemma only_desc_in_ass_list: forall net tr c a,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
   In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d).
