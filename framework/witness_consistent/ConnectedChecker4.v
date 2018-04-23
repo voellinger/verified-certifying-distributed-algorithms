@@ -1776,7 +1776,7 @@ Proof.
 Qed.
 
 
-Lemma easier': forall x' p out d  l,
+Lemma Nethandler_nil_one: forall x' p out d  l,
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
   (l = [] \/ exists p, l = [p]).
 Proof.
@@ -1788,7 +1788,7 @@ Proof.
   auto.
 Qed. 
 
-Lemma easier: forall x' p out d nextDst msg,
+Lemma Nethandler_correct: forall x' p out d nextDst msg,
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
   (parent (pDst p) = nextDst) /\ (msg = (ass_list (nwState x' (pDst p)))).
 Proof.
@@ -1799,7 +1799,7 @@ Proof.
   auto.
 Qed.
 
-Lemma Input_handler_nil_one : forall inp0 x' h out d l,
+Lemma Inputhandler_nil_one : forall inp0 x' h out d l,
   InputHandler h inp0 (nwState x' h) = (out, d, l) ->
   (l = [] \/ exists p, l = [p]).
 Proof.
@@ -1812,7 +1812,7 @@ Proof.
   left. auto.
 Qed.
 
-Lemma Input_handler_correct: forall inp0 x' h out d nextDst msg,
+Lemma Inputhandler_correct: forall inp0 x' h out d nextDst msg,
   InputHandler h inp0 (nwState x' h) = (out, d, [(nextDst, msg)]) ->
   (parent h = nextDst) /\ (msg = (ass_list (nwState x' h))).
 Proof.
@@ -1838,7 +1838,7 @@ Proof.
     invc H1.
     - simpl in *.
       assert (H4' := H4).
-      apply easier' in H4'.
+      apply Nethandler_nil_one in H4'.
       destruct H4'.
       { subst.
         unfold NetHandler in H4.
@@ -1885,7 +1885,7 @@ Proof.
       }
     - simpl in *.
       assert (H3' := H3).
-      apply Input_handler_nil_one in H3'.
+      apply Inputhandler_nil_one in H3'.
       destruct H3'.
       { subst.
         unfold InputHandler in H3.
@@ -1903,7 +1903,7 @@ Proof.
         subst.
         assert (H3' := H3).
         destruct x.
-        apply Input_handler_correct in H3'.
+        apply Inputhandler_correct in H3'.
         destruct H3'.
         subst.
         unfold InputHandler in H3.
