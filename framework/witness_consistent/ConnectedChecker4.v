@@ -1811,6 +1811,21 @@ Proof.
   intros.
 Admitted.
 
+Lemma easier: forall x' p out d nextDst msg,
+  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
+  (parent (pDst p) = nextDst) /\ (msg = (ass_list (nwState x' (pDst p)))).
+Proof.
+  intros.
+  destruct p.
+  unfold NetHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H).
+  auto.
+Qed. (* 
+
+Definition children_parent (c : Name) : Prop :=
+  In c (children' v a g (parent' v a g c)) \/ c = root' v a g.
+
+  apply (parent_children_holds (parent pDst) v a g).
 
 Lemma child_gives_ass_list_to_parent : forall c x' tr1 p xs ys d l out,
   refl_trans_1n_trace step_async step_async_init x' tr1 ->
@@ -1828,7 +1843,8 @@ Proof.
   intros.
   simpl in *.
 
-
+  assert (parent (pSrc p) = (component_name c) \/ parent (pSrc p) <> component_name c) as new.
+  apply classic.
 
 
   apply refl_trans_1n_n1_trace in H0.
@@ -1845,7 +1861,7 @@ Proof.
     - admit.
     - unfold InputHandler in H.
       repeat break_match ; subst ; simpl in * ; auto.
-      
+      inversion H. subst. simpl in *.
 
 
    invc H0.
@@ -1967,7 +1983,7 @@ Admitted.
       inversion H11. 
 Admitted.
 *)
-      
+       *)
 
 
 Lemma only_child_in_ass_list: forall net tr c a,
