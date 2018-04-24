@@ -1925,15 +1925,20 @@ Lemma all_subtree_terminated: forall net tr,
     (nwState net (d)).(terminated) = true).
 Proof.
   intros net tr H.
+  unfold step_async_star in H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind.
   + intros ; subst ; simpl in *. auto.  
-  + subst.
+  + subst. intros.
     remember step_async_init as y in *.
     induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
     { intuition.
+      invc H0 ; simpl in *.
+      + unfold NetHandler in H5.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H5 ; subst ; intuition ; simpl in *.
+        
 
-
+(* 
 
     assert (H0' := H0). remember x' as y'. remember x'' as y''.
     invc H0 ; simpl in *.
@@ -1962,8 +1967,8 @@ Proof.
       
       apply (H4 c H2 d) ; auto.
       rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.      
-
+      apply (H4 c H2 d) ; auto.       *)
+Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -1984,7 +1989,6 @@ Lemma only_desc_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall a c,
   In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d)).
 Proof.
-
 
 
   intros net tr H.
@@ -2037,6 +2041,16 @@ Proof.
         assert (H4' := H4).
         destruct x.
         apply (Nethandler_correct x' p out d) in H4'.
+        destruct H4'. rewrite <- H0 in *. rewrite H5 in *.
+        break_match.
+        unfold NetHandler in H4.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; rewrite <- H6 in * ; subst ; simpl in * ; intuition.
+        rewrite <- e in *.
+        apply in_app_or in H2. destruct H2.
+        auto.
+        destruct p. simpl in *. inversion e. subst. simpl in *.
+
+        auto.
       }
 
  (*      unfold NetHandler in H4.
@@ -2234,7 +2248,7 @@ Proof.
 
   apply H ; auto.
 Qed.
-  
+
 
 
 Axiom everything_ends : forall c net tr,
@@ -2264,6 +2278,6 @@ M\u00f6gliche Verbesserungen:
   2. ansonsten nur eine Belegung je Variable nach oben reichen
   3. die erste if-abfrage im Nethandler streichen
   4. root braucht an niemanden senden, dann kann auch das erste Pattern weg
-  5. entweder einen terminated state und consistent state, oder nur outputs
+  5. child_list, terminated und consistent ghost-variable, nur noch outputs
 
 End ConnectedChecker.
