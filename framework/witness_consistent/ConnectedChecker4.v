@@ -1776,17 +1776,16 @@ Proof.
 Qed.
 
 
-Lemma Nethandler_nil_one: forall x' p out d  l,
-  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, l) ->
+Lemma Nethandler_nil_one: forall x' pDst pSrc pBody out d  l,
+  NetHandler pDst pSrc pBody (nwState x' pDst) = (out, d, l) ->
   (l = [] \/ exists p, l = [p]).
 Proof.
   intros.
-  destruct p.
   unfold NetHandler in H.
   repeat (break_match ; subst ; simpl in * ; inversion H ; auto).
   right. exists (parent pDst, ass_list (nwState x' pDst)).
   auto.
-Qed. 
+Qed.
 
 Lemma Nethandler_correct: forall x' p out d nextDst msg,
   NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
@@ -1982,10 +1981,10 @@ Proof.
   
 Admitted.
 
-Lemma only_ass_list_in_packets : forall x x' tr1 (term_comp : Name) (iolist : (Input + list Output)) (xs : list packet) (p : packet),
+(* Lemma only_ass_list_in_packets : forall x x' tr1 (term_comp : Name) (iolist : (Input + list Output)) (xs : list packet) (p : packet),
   step_async_star (params := Checker_MultiParams) step_async_init x tr1 ->
-  step_async x x' [(term_comp, iolist)] -> nwPackets x = xs ++ [p] -> exists pDst,
-  (p = mkPacket (Checker (name_component term_comp)) (Checker (name_component pDst)) ((nwState x' term_comp).(ass_list))).
+  step_async x x' [(term_comp, iolist)] -> nwPackets x = xs ++ [p] -> 
+  (p = mkPacket (Checker (name_component term_comp)) (parent (name_component term_comp)) ((nwState x' term_comp).(ass_list))).
 Proof.
   intros x x' tr1 term_comp iolist xs p H H0 H1.
   invc H0 ; simpl in *.
@@ -2020,15 +2019,34 @@ Proof.
   invc H ; simpl in *.
   unfold NetHandler in H5.
   repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5  ; subst ; simpl in * ; intuition.
-  exists (pDst p0).
+  exists (pDst p0). *)
   
   
   
 
 
+Lemma packets_work : forall x tr p,
+  refl_trans_1n_trace step_async step_async_init x tr ->
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  pDst = parent pSrc /\ pBody = ass_list (nwState x pSrc).
+Admitted.
 
-
-
+Lemma descendandp1 : forall pp p c,
+  pp = parent p ->
+  descendand c p ->
+  descendand c pp.
+Proof.
+  intros pp p c H H0.
+  unfold descendand in * ; intros.
+  repeat destruct H0.
+  assert (Walk v a (name_component c) (name_component pp) (x ++ [name_component pp]) (x0 ++ [E_ends (name_component p) (name_component pp)])).
+  apply (Walk_append v a (name_component c) (name_component p)) ; auto.
+  apply (W_step) ; auto.
+  apply W_null.
+  apply Component_prop_1.
+  apply Component_prop_1.
+  unfold parent in H.
+  unfold parent' in H.
 
 (* wenn ein pfad existiert mit ..., dann macht InputHandler und NetHandler nichts kaputt und es existiert wieder ein Pfad *)
 Lemma only_desc_in_ass_list: forall net tr,
@@ -2059,6 +2077,28 @@ Proof.
     simpl in *.
     invc H0.
     - simpl in *.
+      break_match.
+      assert (In p (nwPackets x')).
+      admit.
+      apply (packets_work x' tr1) in H0 ; auto.
+      destruct p ; simpl in *.
+      destruct H0.
+      subst. intuition.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      apply in_app_or in H2. destruct H2. intuition.
+        specialize (H5 a0 (name_component pSrc)). 
+        assert ((Checker (name_component pSrc)) = pSrc).
+        admit. rewrite H6 in H5. intuition. destruct H7. destruct H5.
+        exists x. split ; auto. rewrite cnnc in H5.
+        apply (descendandp1 (component_name c) pSrc) ; auto.
+
+
+      intuition.
+      
+      
+
+(* 
       assert (H4' := H4).
       apply Nethandler_nil_one in H4'.
       destruct H4'.
@@ -2108,7 +2148,7 @@ Proof.
 
         auto.
       }
-    -
+    - *)
  (*      unfold NetHandler in H4.
       repeat break_match ; simpl in *.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
