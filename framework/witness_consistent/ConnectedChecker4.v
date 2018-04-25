@@ -1982,6 +1982,52 @@ Proof.
   
 Admitted.
 
+Lemma only_ass_list_in_packets : forall x x' tr1 (term_comp : Name) (iolist : (Input + list Output)) (xs : list packet) (p : packet),
+  step_async_star (params := Checker_MultiParams) step_async_init x tr1 ->
+  step_async x x' [(term_comp, iolist)] -> nwPackets x = xs ++ [p] -> exists pDst,
+  (p = mkPacket (Checker (name_component term_comp)) (Checker (name_component pDst)) ((nwState x' term_comp).(ass_list))).
+Proof.
+  intros x x' tr1 term_comp iolist xs p H H0 H1.
+  invc H0 ; simpl in *.
+  assert (ys = []).
+  admit.
+  subst.
+  rewrite H4 in H1.
+  apply app_inj_tail in H1.
+  destruct H1.
+  subst.
+  exists (pDst p).
+  unfold NetHandler in H7.
+  repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
+  inversion H7.
+  
+
+
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+  + apply app_cons_not_nil in H1. intuition.
+  + invc H0 ; simpl in *.
+    exists (pDst p0).
+    unfold NetHandler in H9.
+    repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H9 ; subst ; simpl in * ; intuition.
+    rewrite H6 in H1.
+    assert (xs0 = xs).
+    admit.
+    subst.
+    apply app_inv_head in H1.
+    inversion H1. subst.
+    subst.
+  invc H ; simpl in *.
+  unfold NetHandler in H5.
+  repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5  ; subst ; simpl in * ; intuition.
+  exists (pDst p0).
+  
+  
+  
+
+
+
+
 
 
 (* wenn ein pfad existiert mit ..., dann macht InputHandler und NetHandler nichts kaputt und es existiert wieder ein Pfad *)
@@ -2009,9 +2055,6 @@ Proof.
     intros.
     inversion H1.
 
-      
-      
-
   + subst.
     simpl in *.
     invc H0.
@@ -2025,7 +2068,7 @@ Proof.
       unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
       specialize (H0 a0 (name_component (pDst p))).
       unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-      apply in_app_or in H2. destruct H2. 
+      apply in_app_or in H2. destruct H2.
       specialize (H0 a0 (name_component (pDst p))).
       unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
       simpl in *. break_match ; subst ; simpl in * ; intuition.
@@ -2033,8 +2076,21 @@ Proof.
 
       specialize (H0 a0 (name_component (pDst p))).
       unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-
-
+      subst.
+      destruct p.
+      simpl in *. subst.
+      assert (pSrc = n \/ pSrc <> n).
+      apply classic.
+      destruct H5.
+      subst. simpl in *. clear H4 e. elim H1 ; simpl in * ; intros.
+      remember step_async_init as y in *.
+      induction H1 using refl_trans_1n_trace_n1_ind. 
+        
+        
+      admit.
+      unfold beq_nat in Heqb0.
+      admit.
+      inversion Heqb0.
       }
       { destruct H0.
         subst.
@@ -2052,7 +2108,7 @@ Proof.
 
         auto.
       }
-
+    -
  (*      unfold NetHandler in H4.
       repeat break_match ; simpl in *.
       rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
