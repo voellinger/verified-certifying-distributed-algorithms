@@ -199,7 +199,7 @@ Fixpoint treeify_a (v : V_set) (a : A_set) (c : Connected v a) : A_list :=
   | C_eq v _ a _ _ _ co => treeify_a v a co
   end.
 
-Definition root_prop (root : Name) : Prop :=
+Definition root_prop (root : Name) (v : V_set) : Prop :=
   v (name_component root).
 
 
@@ -221,11 +221,60 @@ Definition parent_walk x y vl el w : Prop :=
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
 
-Lemma root_prop_holds : 
-  root_prop (root' v a g).
+Lemma parent_arcs : forall x y,
+  x = parent y -> v (name_component y) -> y <> root -> (a (A_ends (name_component x) (name_component y)) /\ a (A_ends (name_component y) (name_component x))).
+Proof.
+  intros x y H yin ynotroot.
+  unfold parent in *. unfold root in *. simpl in *.
+  induction g ; simpl in * ; auto.
+  + inversion yin.
+    subst. rewrite cnnc in ynotroot. intuition.
+  + break_match ; subst.
+      simpl in *.
+      split ; apply In_left.
+      apply E_right.
+      apply E_left.
+      intuition.
+      inversion yin.
+      inversion H0.
+      subst.
+      rewrite cnnc in n0. intuition.
+      subst. intuition.
+      apply In_right. auto.
+      inversion yin.
+      inversion H0.
+      subst.
+      rewrite cnnc in n0. intuition.
+      subst. intuition.
+      apply In_right. auto.
+  + intuition.
+    apply In_right. auto.
+    apply In_right. auto.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    intuition.
+Qed.
+
+Lemma root_prop_holds : forall v a g,
+  root_prop (root' v a g) v.
 Proof.
   induction g ; simpl ; auto.
   + apply Component_prop_1 ; auto.
+Qed.
+
+Lemma parent_root : forall v a g,
+  parent' v a g (root' v a g) = root' v a g.
+Proof.
+  intros v a g.
+  induction g ; simpl in * ; auto.
+  break_match.
+  assert (root_prop (root' v0 a0 g0) v0).
+  apply root_prop_holds.
+  unfold root_prop in H.
+  rewrite e in H.
+  simpl in H.
+  intuition.
+  auto.
 Qed.
 
 Lemma parent_prop_holds : forall (c : Name),
@@ -2031,12 +2080,32 @@ Lemma packets_work : forall x tr p,
   pDst = parent pSrc /\ pBody = ass_list (nwState x pSrc).
 Admitted.
 
+Lemma name_comp_name : forall n1 n2,
+  name_component n1 = name_component n2 -> n1 = n2.
+Proof.
+  intros n1 n2 H.
+  unfold name_component in *.
+  break_match.
+  break_match.
+  subst.
+  auto.
+Qed.
+
 Lemma descendandp1 : forall pp p c,
   pp = parent p ->
   descendand c p ->
   descendand c pp.
 Proof.
   intros pp p c H H0.
+  assert (p = root \/ p <> root) as pnoroot.
+  apply classic.
+  destruct pnoroot as [proot|pnoroot].
+    subst.
+    unfold parent.
+    rewrite parent_root.
+    unfold root in H0.
+    auto.
+  
   unfold descendand in * ; intros.
   repeat destruct H0.
   assert (Walk v a (name_component c) (name_component pp) (x ++ [name_component pp]) (x0 ++ [E_ends (name_component p) (name_component pp)])).
@@ -2045,8 +2114,27 @@ Proof.
   apply W_null.
   apply Component_prop_1.
   apply Component_prop_1.
-  unfold parent in H.
-  unfold parent' in H.
+  assert ((a (A_ends (name_component pp) (name_component p)) /\ a (A_ends (name_component p) (name_component pp)))).
+  apply (parent_arcs pp p) ; auto.
+  apply Component_prop_1.
+  destruct H1.
+  auto.
+  exists (x ++ [name_component pp]).
+  exists (x0 ++ [E_ends (name_component p) (name_component pp)]).
+  exists H1.
+  unfold parent_walk' in * ; simpl in * ; intros.
+  apply in_app_or in H2.
+  destruct H2.
+  + auto.
+  + inversion H2.
+    unfold parent in *.
+    inversion H3.
+    apply name_comp_name in H5.
+    apply name_comp_name in H6.
+    subst.
+    auto.
+    inversion H3.
+Qed.
 
 (* wenn ein pfad existiert mit ..., dann macht InputHandler und NetHandler nichts kaputt und es existiert wieder ein Pfad *)
 Lemma only_desc_in_ass_list: forall net tr,
