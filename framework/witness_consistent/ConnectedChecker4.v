@@ -2091,6 +2091,15 @@ Proof.
   auto.
 Qed.
 
+Lemma checker_name : forall p,
+  Checker (name_component p) = p.
+Proof.
+  intros p.
+  unfold name_component.
+  break_match.
+  auto.
+Qed.
+
 Lemma descendandp1 : forall pp p c,
   pp = parent p ->
   descendand c p ->
@@ -2167,7 +2176,9 @@ Proof.
     - simpl in *.
       break_match.
       assert (In p (nwPackets x')).
-      admit.
+      rewrite H3.
+      apply in_or_app.
+      right. simpl. auto.
       apply (packets_work x' tr1) in H0 ; auto.
       destruct p ; simpl in *.
       destruct H0.
@@ -2177,91 +2188,24 @@ Proof.
       apply in_app_or in H2. destruct H2. intuition.
         specialize (H5 a0 (name_component pSrc)). 
         assert ((Checker (name_component pSrc)) = pSrc).
-        admit. rewrite H6 in H5. intuition. destruct H7. destruct H5.
+        rewrite checker_name ; auto.
+        rewrite H6 in H5. intuition. destruct H7. destruct H5.
         exists x. split ; auto. rewrite cnnc in H5.
         apply (descendandp1 (component_name c) pSrc) ; auto.
-
-
+      apply in_app_or in H2. destruct H2. intuition.
+        specialize (H5 a0 (name_component pSrc)). 
+        assert ((Checker (name_component pSrc)) = pSrc).
+        rewrite checker_name ; auto. rewrite H6 in H5. intuition. destruct H7. destruct H5.
+        exists x. split ; auto. rewrite cnnc in H5.
+        apply (descendandp1 (component_name c) pSrc) ; auto.
       intuition.
-      
-      
-
-(* 
-      assert (H4' := H4).
-      apply Nethandler_nil_one in H4'.
-      destruct H4'.
-      {unfold NetHandler in H4.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; rewrite <- H6 in * ; subst ; simpl in * ; intuition.
-      specialize (H0 a0 (name_component (pDst p))).
-      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-      specialize (H0 a0 (name_component (pDst p))).
-      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-      apply in_app_or in H2. destruct H2.
-      specialize (H0 a0 (name_component (pDst p))).
-      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-      simpl in *. break_match ; subst ; simpl in * ; intuition.
-      
-
-      specialize (H0 a0 (name_component (pDst p))).
-      unfold name_component in H0. break_match. inversion e. apply H0 ; auto.
-      subst.
-      destruct p.
-      simpl in *. subst.
-      assert (pSrc = n \/ pSrc <> n).
-      apply classic.
-      destruct H5.
-      subst. simpl in *. clear H4 e. elim H1 ; simpl in * ; intros.
-      remember step_async_init as y in *.
-      induction H1 using refl_trans_1n_trace_n1_ind. 
-        
-        
-      admit.
-      unfold beq_nat in Heqb0.
-      admit.
-      inversion Heqb0.
-      }
-      { destruct H0.
-        subst.
-        assert (H4' := H4).
-        destruct x.
-        apply (Nethandler_correct x' p out d) in H4'.
-        destruct H4'. rewrite <- H0 in *. rewrite H5 in *.
-        break_match.
-        unfold NetHandler in H4.
-        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; rewrite <- H6 in * ; subst ; simpl in * ; intuition.
-        rewrite <- e in *.
-        apply in_app_or in H2. destruct H2.
-        auto.
-        destruct p. simpl in *. inversion e. subst. simpl in *.
-
-        auto.
-      }
-    - *)
- (*      unfold NetHandler in H4.
-      repeat break_match ; simpl in *.
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
-      apply in_app_or in H2. destruct H2. apply IHrefl_trans_1n_trace1 ; auto. 
-      destruct p. subst. simpl in *.
-      intuition. 
-admit.
-      apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. inversion H4. rewrite <- H6 in *. simpl in *. 
-      apply in_app_or in H0. destruct H0. apply IHrefl_trans_1n_trace1 ; auto. admit.
-      apply IHrefl_trans_1n_trace1 ; auto.      
     - simpl in *.
+      break_match.
+      rewrite <- e in *.
       unfold InputHandler in H3.
-      repeat break_match ; inversion H3 ; simpl in *.
-      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto.
-      rewrite <- e in *. rewrite <- H5 in *. simpl in *. apply IHrefl_trans_1n_trace1 ; auto.
-      apply IHrefl_trans_1n_trace1 ; auto. *)
-Admitted.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+      intuition.
+Qed.
 
 Lemma is_in_isa : forall v2 v1 n,
   In (assign_cons v2 v1) (init_certificate n) -> isa_aVarComponent v2 n.
