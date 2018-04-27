@@ -2176,26 +2176,8 @@ Lemma packets_work''' : forall x tr,
   In p (nwPackets x) -> (forall a0, let (pSrc, pDst, pBody) := p in
   In a0 pBody -> 
     exists d : Name, descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d)).
-Admitted.
-
-
-(* 
-Lemma only_desc_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall a c,
-  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d)).
-
-
-
-H2 : In a0 pBody
-H5 : In a0 (ass_list (nwState x' pSrc)) -> exists d : Name, descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d)
- *)
-
-(* Lemma packets_work''' : forall x tr,
-  refl_trans_1n_trace step_async step_async_init x tr -> forall p,
-  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
-  pBody = ass_list (nwState x pSrc) ++ ************STUFF*****************.    
 Proof.
-intros x tr H.
+  intros x tr H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
   + inversion H.
@@ -2204,21 +2186,45 @@ intros x tr H.
     destruct p.
     invc H0 ; simpl in *.
     - rewrite H3 in *. intuition.
-      assert (H0' := H0).
-      specialize (H0 p).
-      assert (let (pSrc, _, pBody) := p in pBody = ass_list (nwState x' pSrc)).
-      apply H0.
+      assert (H5' := H5).
+      specialize (H5 p).
+      assert (forall a0 : Assignment,
+     let (pSrc, _, pBody) := p in
+     In a0 pBody ->
+     exists d : Name,
+       descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d)).
+      apply H5.
       apply in_or_app. right. simpl. auto.
-      clear H0.
-      specialize (H0' {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
+      clear H5.
+      specialize (H6 a0).
+      specialize (H5' {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
       destruct p. simpl in *.
       unfold NetHandler in H4.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
-      apply (silly_lemma2 pSrc0 pDst0 (ass_list (nwState x' pSrc0))) in H2. intuition.
-      apply (silly_lemma2 pSrc0 pDst0 (ass_list (nwState x' pSrc0))) in H2. intuition.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; rewrite cnnc in * ; simpl in * ; intuition.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
+      inversion H5. subst. auto.
+      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H0. intuition.
       inversion H0. auto.
-      apply (silly_lemma2 pSrc0 pDst0 (ass_list (nwState x' pSrc0))) in H0. intuition.
-Admitted. *)
+      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H0. intuition.
+      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H2. intuition.
+      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H2. intuition.
+    - intuition.
+      unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+      specialize (H0 {| pSrc := h; pDst := pDst; pBody := pBody |}). intuition.
+      specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
+      inversion H4. auto.
+      specialize (H0 {| pSrc := h; pDst := pDst; pBody := pBody |}). intuition.
+      inversion H4. auto.
+      specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
+      specialize (H0 {| pSrc := h; pDst := pDst; pBody := pBody |}). intuition.
+      specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
+Qed.
+
+
 
 Lemma name_comp_name : forall n1 n2,
   name_component n1 = name_component n2 -> n1 = n2.
