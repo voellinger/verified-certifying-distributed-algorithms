@@ -2069,26 +2069,57 @@ Proof.
   unfold NetHandler in H5.
   repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5  ; subst ; simpl in * ; intuition.
   exists (pDst p0). *)
-  
-  
-  
 
 
-Lemma packets_work : forall x tr p,
-  refl_trans_1n_trace step_async step_async_init x tr ->
+Lemma silly_lemma : forall y (p : packet) xs ys, 
+  In p (xs ++ ys) -> In p (xs ++ y :: ys).
+Proof.
+  intros y p xs ys H.
+  apply in_app_or in H.
+  apply in_or_app.
+  simpl.
+  destruct H ; auto.
+Qed.
+
+Lemma silly_lemma2 : forall pSrc pDst pBody (p : packet) xs ys, 
+  In p (xs ++ ys) -> In p (xs ++ {| pSrc := pSrc; pDst := pDst; pBody := pBody |} :: ys).
+Proof.
+  intros src dst bod p xs ys H.
+  apply in_app_or in H.
+  apply in_or_app.
+  simpl.
+  destruct H ; auto.
+Qed.
+
+Lemma packets_work : forall x tr,
+  refl_trans_1n_trace step_async step_async_init x tr -> forall p,
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   pDst = parent pSrc /\ pBody = ass_list (nwState x pSrc).
 Proof.
-  intros x tr p H H0.
+  intros x tr H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
-  + inversion H0.
-  + invc H1 ; simpl in *.
+  + inversion H.
+  + destruct p.
+    invc H0 ; simpl in *.
     - break_match.
       rewrite H3 in *.
       assert (pDst = pSrc \/ pDst <> pSrc) as rootcase.
       apply classic.
       destruct rootcase as [rootcase|normalcase].
+        subst.
+        unfold NetHandler in H4.
+        destruct p ; simpl in *.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+          apply (silly_lemma2 pSrc pDst pBody0) in H2. specialize (H0 {| pSrc := pDst; pDst := pDst; pBody := pBody |}). intuition.
+          apply (silly_lemma2 pSrc pDst pBody0) in H0. intuition.
+          apply (silly_lemma2 pSrc pDst pBody0) in H0. intuition.
+          apply (silly_lemma2 pSrc pDst pBody0) in H0. intuition.
+          inversion H5. subst. rewrite H6. auto.
+          apply (silly_lemma2 pSrc pDst pBody0) in H5. intuition.
+          inversion H5. subst.
+          admit.
+          apply (silly_lemma2 pSrc pDst pBody0) in H5. intuition.
       admit.
       unfold NetHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
@@ -2125,7 +2156,20 @@ Proof.
         apply in_app_or in H5. destruct H5.
         apply in_or_app. left. auto.
         apply in_or_app. right. simpl. auto.
-        intuition.
+        intuition. destruct p0. simpl in *.
+        assert (pDst = pDst0). admit. intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto. intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto. intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto. intuition.
 Admitted.
 
 Lemma name_comp_name : forall n1 n2,
