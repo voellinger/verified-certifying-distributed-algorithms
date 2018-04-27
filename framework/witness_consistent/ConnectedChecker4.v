@@ -2078,6 +2078,54 @@ Lemma packets_work : forall x tr p,
   refl_trans_1n_trace step_async step_async_init x tr ->
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   pDst = parent pSrc /\ pBody = ass_list (nwState x pSrc).
+Proof.
+  intros x tr p H H0.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+  + inversion H0.
+  + invc H1 ; simpl in *.
+    - break_match.
+      rewrite H3 in *.
+      assert (pDst = pSrc \/ pDst <> pSrc) as rootcase.
+      apply classic.
+      destruct rootcase as [rootcase|normalcase].
+      admit.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
+        inversion H5. auto.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H5. destruct H5.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
+        inversion H5. intuition.
+        destruct p0. simpl in *.
+        assert (pDst = pDst0). admit. intuition.
+        assert (In {| pSrc := Net.pDst p0; pDst := pDst; pBody := pBody |} (xs ++ p0 :: ys)).
+        apply in_app_or in H5. destruct H5.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        intuition.
 Admitted.
 
 Lemma name_comp_name : forall n1 n2,
