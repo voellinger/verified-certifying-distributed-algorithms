@@ -2319,9 +2319,14 @@ Proof.
       rewrite H3.
       apply in_or_app.
       right. simpl. auto.
-      apply (packets_work' x' tr1) in H0 ; auto.
+      assert (H0' := H0).
+      apply (packets_work' x' tr1) in H0 ; auto. subst. intuition.
+      assert ((forall a0, let (pSrc, pDst, pBody) := p in
+  In a0 pBody -> 
+    exists d : Name, descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d))) as new.
+      apply (packets_work''' x' tr1 H p H0').
+      specialize (new a0).
       destruct p ; simpl in *.
-(*       destruct H0. *)
       subst. intuition.
       unfold NetHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
@@ -2329,15 +2334,18 @@ Proof.
         specialize (H5 a0 (name_component pSrc)). 
         assert ((Checker (name_component pSrc)) = pSrc).
         rewrite checker_name ; auto.
-        rewrite H6 in H5. intuition. destruct H7. destruct H5.
-        exists x. split ; auto. rewrite cnnc in H5.
+        rewrite H6 in H5. intuition. rewrite cnnc in *. destruct H7. destruct H7.
+        exists x. split ; auto.
         apply (descendandp1 (component_name c) pSrc) ; auto.
+        apply (packets_work'' x' tr1) in H0' ; auto.
+
       apply in_app_or in H2. destruct H2. intuition.
         specialize (H5 a0 (name_component pSrc)). 
         assert ((Checker (name_component pSrc)) = pSrc).
-        rewrite checker_name ; auto. rewrite H6 in H5. intuition. destruct H7. destruct H5.
+        rewrite checker_name ; auto. rewrite H6 in H5. intuition. destruct H7. destruct H7.
         exists x. split ; auto. rewrite cnnc in H5.
         apply (descendandp1 (component_name c) pSrc) ; auto.
+        apply (packets_work'' x' tr1) in H0' ; auto.
       intuition.
     - simpl in *.
       break_match.
