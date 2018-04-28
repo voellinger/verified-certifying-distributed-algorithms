@@ -1968,114 +1968,6 @@ Proof.
       }
 Qed.
 
-
-(*  *)
-
-Lemma all_subtree_terminated: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
-  (nwState net (Checker c)).(terminated) = true ->
-  (forall (d : Name), descendand d (component_name c) -> 
-    (nwState net (d)).(terminated) = true).
-Proof.
-  intros net tr H.
-  unfold step_async_star in H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind.
-  + intros ; subst ; simpl in *. auto.  
-  + subst. intros.
-    remember step_async_init as y in *.
-    induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
-    { intuition.
-      invc H0 ; simpl in *.
-      + unfold NetHandler in H5.
-        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H5 ; subst ; intuition ; simpl in *.
-        
-
-(* 
-
-    assert (H0' := H0). remember x' as y'. remember x'' as y''.
-    invc H0 ; simpl in *.
-    - unfold NetHandler in H6.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in *. 
-      apply eqb_prop in Heqb ; auto.
-      apply (H4 c H2 (pDst p)) ; auto.
-      apply (H4 c H2 (pDst p)) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.
-      
-      destruct (pDst p). inversion e. subst. simpl in *.
-      clear e H2 H6. apply refl_trans_1n_n1_trace in H1.
-      assert (H1' := H1).
-      invc H1. invc H8 ; simpl in *.
-      { unfold NetHandler in H6.
-        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in * ; clear H6.
-        apply app_inj_tail in H0. destruct H0. subst.
-        assert (pDst p0 = Checker c0).
-        inversion H6. destruct (pDst p0). inversion H0. subst. simpl in *.
-        apply eqb_prop in Heqb0 ; auto.
-        apply (H4 c0) ; auto. 
-      }
-      
-      apply (H4 c H2 d) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.       *)
-Admitted.
-
-Lemma all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
-  (nwState net (Checker c)).(terminated) = true ->
-  (forall d, descendand (component_name d) (component_name c) -> 
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
-Proof.
-  intros net tr H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
-  
-Admitted.
-
-(* Lemma only_ass_list_in_packets : forall x x' tr1 (term_comp : Name) (iolist : (Input + list Output)) (xs : list packet) (p : packet),
-  step_async_star (params := Checker_MultiParams) step_async_init x tr1 ->
-  step_async x x' [(term_comp, iolist)] -> nwPackets x = xs ++ [p] -> 
-  (p = mkPacket (Checker (name_component term_comp)) (parent (name_component term_comp)) ((nwState x' term_comp).(ass_list))).
-Proof.
-  intros x x' tr1 term_comp iolist xs p H H0 H1.
-  invc H0 ; simpl in *.
-  assert (ys = []).
-  admit.
-  subst.
-  rewrite H4 in H1.
-  apply app_inj_tail in H1.
-  destruct H1.
-  subst.
-  exists (pDst p).
-  unfold NetHandler in H7.
-  repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
-  inversion H7.
-  
-
-
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
-  + apply app_cons_not_nil in H1. intuition.
-  + invc H0 ; simpl in *.
-    exists (pDst p0).
-    unfold NetHandler in H9.
-    repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H9 ; subst ; simpl in * ; intuition.
-    rewrite H6 in H1.
-    assert (xs0 = xs).
-    admit.
-    subst.
-    apply app_inv_head in H1.
-    inversion H1. subst.
-    subst.
-  invc H ; simpl in *.
-  unfold NetHandler in H5.
-  repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5  ; subst ; simpl in * ; intuition.
-  exists (pDst p0). *)
-
-
 Lemma silly_lemma : forall y (p : packet) xs ys, 
   In p (xs ++ ys) -> In p (xs ++ y :: ys).
 Proof.
@@ -2122,6 +2014,22 @@ Proof.
     - unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
       inversion H0. subst. intuition.
+Qed.
+
+Lemma packets_work'wrap : forall x tr,
+  refl_trans_1n_trace step_async step_async_init x tr -> forall (pSrc pDst : Name) pBody,
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x) -> 
+  terminated (nwState x pSrc) = true.
+Proof.
+  intros.
+  assert (forall x tr,
+  refl_trans_1n_trace step_async step_async_init x tr -> forall p,
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  terminated (nwState x pSrc) = true).
+  apply (packets_work').
+  specialize (H1 x tr H).
+  specialize (H1 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
+  auto.
 Qed.
 
 Lemma packets_work'' : forall x tr,
@@ -2253,6 +2161,131 @@ Proof.
     auto.
     inversion H3.
 Qed.
+
+
+Lemma all_subtree_terminated: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (forall (d : Name), descendand d (component_name c) -> 
+    (nwState net (d)).(terminated) = true).
+Proof.
+  intros net tr H.
+  unfold step_async_star in H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + intros ; subst ; simpl in *. auto.  
+  + subst. intros.
+    remember step_async_init as y in *.
+    induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+    { intuition.
+      invc H0 ; simpl in *.
+      + unfold NetHandler in H5.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H5 ; subst ; intuition ; simpl in *.
+        
+
+(* 
+
+    assert (H0' := H0). remember x' as y'. remember x'' as y''.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in *. 
+      apply eqb_prop in Heqb ; auto.
+      apply (H4 c H2 (pDst p)) ; auto.
+      apply (H4 c H2 (pDst p)) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.
+      
+      destruct (pDst p). inversion e. subst. simpl in *.
+      clear e H2 H6. apply refl_trans_1n_n1_trace in H1.
+      assert (H1' := H1).
+      invc H1. invc H8 ; simpl in *.
+      { unfold NetHandler in H6.
+        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in * ; clear H6.
+        apply app_inj_tail in H0. destruct H0. subst.
+        assert (pDst p0 = Checker c0).
+        inversion H6. destruct (pDst p0). inversion H0. subst. simpl in *.
+        apply eqb_prop in Heqb0 ; auto.
+        apply (H4 c0) ; auto. 
+      }
+      
+      apply (H4 c H2 d) ; auto.
+      rewrite <- e in *. apply (H4 c H2 d) ; auto.
+      apply (H4 c H2 d) ; auto.       *)
+Admitted.
+
+Lemma all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (forall d, descendand (component_name d) (component_name c) -> 
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    inversion H.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - assert (H5' := H5).
+      specialize (H5' (name_component (pSrc p))).
+      rewrite checker_name in *.
+      assert (terminated (nwState x' (pSrc p)) = true).
+      destruct p. simpl in *.
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H6.
+      apply in_or_app. right. simpl. auto.
+      intuition.
+      assert (pDst  p = parent (pSrc p)).
+      apply (packets_work'''' x' tr1 H (pSrc p) (pDst p) (pBody p)) ; auto.
+      rewrite H6. destruct p.
+      apply in_or_app. right. simpl. auto.
+      assert (descendand (pSrc p) (pDst p)).
+      unfold descendand.
+      destruct p. simpl in *.
+      assert (pSrc = root \/ pSrc <> root).
+      apply classic.
+      destruct H10.
+      subst.
+      exists []. exists [].
+      unfold parent in *.
+      rewrite parent_root in *.
+      assert (Walk v a (name_component root) (name_component (root' v a g)) [] []).
+      apply W_null ; auto.
+      apply Component_prop_1.
+      exists H9. unfold parent_walk'. intuition. inversion H10.
+
+      exists [name_component pDst].
+      exists [E_ends (name_component pSrc) (name_component pDst)].
+      assert (Walk v a (name_component pSrc) (name_component pDst) [name_component pDst] [E_ends (name_component pSrc) (name_component pDst)]).
+      apply W_step ; auto.
+      apply W_null ; auto.
+      apply Component_prop_1.
+      apply Component_prop_1.
+      apply parent_arcs ; auto.
+      apply Component_prop_1.
+      exists H11.
+      unfold parent_walk'.
+      intros.
+      inversion H12.
+      inversion H13.
+      apply name_comp_name in H15.
+      apply name_comp_name in H16.
+      subst.
+      unfold parent in *. auto.
+      inversion H13.
+      rewrite cnnc in *.
+      specialize (H8 (p
+
+      unfold NetHandler in H7.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
+      
+    
+Admitted.
+
 
 Lemma packets_work''' : forall x tr a0,
   refl_trans_1n_trace step_async step_async_init x tr -> 
