@@ -2266,38 +2266,50 @@ Proof.
   + inversion H.
   + assert (H2' := H2).
     apply (packets_work' x'' (tr1 ++ tr2)) in H2' ; auto.
-    destruct p.
     invc H0 ; simpl in *.
     - rewrite H3 in *. intuition.
-      assert (H5' := H5).
-      specialize (H5 p).
-      assert (forall a0 : Assignment,
-     let (pSrc, _, pBody) := p in
-     In a0 pBody ->
-     exists d : Name,
-       descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d)).
-      apply H5.
+      assert (H0' := H0).
+      specialize (H0 p).
+      specialize (H0' p0).
+      assert (In p0 (xs ++ p0 :: ys)).
       apply in_or_app. right. simpl. auto.
-      clear H5.
-      specialize (H6 a0).
-      specialize (H5' {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
-      destruct p. simpl in *.
+      intuition. specialize (H6 a0).
+      
       unfold NetHandler in H4.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; rewrite cnnc in * ; simpl in * ; intuition.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
-      inversion H5. subst. intuition. apply in_app_or in H0.
-        destruct H0. admit. 
-        intuition. destruct H2. exists x. destruct H2. split ; auto.
-        apply (descendandp1 pDst0 pSrc0 x) ; auto. apply (packets_work'' x' tr1 H {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |}) ; auto.
- auto.
-      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H0. intuition.
-      inversion H0. auto.
-      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H0. intuition.
-      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H2. intuition.
-      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H2. intuition.
+      inversion H8. subst. intuition. apply in_app_or in H7.
+        destruct H7.
+
+      clear H4 H2' H8.
+      assert (H5' := H5). rewrite <- H3 in H5'.
+      apply (packets_work'''' x' tr1) in H5'. subst.
+      
+
+
+
+ apply H0 ; auto. admit. apply in_or_app. auto.
+
+
+
+
+        intuition. destruct H7. exists x. destruct H6. split ; auto.
+        apply (descendandp1 pDst0 pSrc0 x) ; auto. apply (packets_work'''' x' tr1 H pSrc0 pDst0 pBody0) ; auto. rewrite H3.
+        apply in_or_app. right. simpl. auto.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H8. specialize (H0 H8 a0). intuition.
+      inversion H8. subst. intuition. apply in_app_or in H8.
+        destruct H8. assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} :: ys)).
+        apply in_or_app. left. auto. intuition.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} :: ys)).
+        apply in_or_app. right. auto. intuition.
+      intuition.
+      apply eqb_false_iff in Heqb. intuition.
+      apply eqb_false_iff in Heqb. intuition.
+      apply (silly_lemma2 pSrc0 pDst0 pBody0) in H2. intuition.
     - intuition.
       unfold InputHandler in H3.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
