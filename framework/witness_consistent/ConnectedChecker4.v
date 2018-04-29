@@ -2274,16 +2274,43 @@ Proof.
   inversion H0.
 Qed.
 
+Lemma parent_diff : forall c,
+  c <> root' v a g ->
+  parent' v a g c <> c.
+Proof.
+  intros.
+  induction g ; subst ; simpl in * ; intuition.
+  break_match.
+  + subst.
+    inversion H0.
+    subst.
+    intuition.
+  + intuition.
+Qed.
+
+
 Lemma descendand_par : forall c p,
   p = parent c ->
   descendand c p.
 Proof.
   intros.
-  unfold descendand. unfold parent in H.
-  assert (H' := H).
-  assert (a (A_ends (name_component c) (name_component p))).
-  admit. (* child+parent = a' *)
+  assert (c = root \/ c <> root).
+  apply classic.
+  destruct H0.
+  subst. unfold root. unfold parent.
+  rewrite parent_root.
+  apply descendand_refl.
+
   subst.
+
+  unfold descendand. unfold parent.
+
+  assert (a (A_ends (name_component c) (name_component (parent' v a g c)))).
+
+  apply (parent_isin_a v a g) ; auto.
+  apply Component_prop_1.
+  apply Component_prop_1.
+  apply parent_diff ; auto.
   exists ([(name_component (parent' v a g c))]).
   exists ([E_ends (name_component c) (name_component (parent' v a g c))]).
   assert (Walk v a (name_component c) (name_component (parent' v a g c)) [(name_component (parent' v a g c))] [E_ends (name_component c) (name_component (parent' v a g c))]).
@@ -2291,15 +2318,15 @@ Proof.
   apply W_null ; auto.
   apply (parent_help2 v a g c) ; auto.
   apply Component_prop_1.
-  exists H.
+  exists H1.
   unfold parent_walk'.
   intros.
-  inversion H1.
-  inversion H2 ; subst ; auto.
-  apply name_comp_name in H5 ; auto.
-  apply name_comp_name in H4 ; auto.
-  subst. auto.
   inversion H2.
+  inversion H3 ; subst ; auto.
+  apply name_comp_name in H6 ; auto.
+  apply name_comp_name in H5 ; auto.
+  subst. auto.
+  inversion H3.
 Qed.
 
 Lemma all_subtree_terminated: forall net tr,
@@ -2354,18 +2381,6 @@ Proof.
       apply (H4 c H2 d) ; auto.       *)
 Admitted.
 
-Lemma terminated_child_list_null: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
-  (nwState net (Checker c)).(terminated) = true ->
-  child_list (nwState net (Checker c)) = []).
-Admitted.
-
-Lemma nearly_all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,    
-  descendand (component_name d) (component_name c) -> (~ In (component_name d) (child_list (nwState net (Checker c)))) ->
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
-Admitted.
-
 Lemma remove_src_before : forall d pSrc l1,
   In d (remove_src pSrc l1) ->
   In d l1.
@@ -2376,6 +2391,81 @@ Proof.
     inversion H.
   - simpl in *.
     break_match ; auto.
+Qed.
+
+Lemma terminated_child_list_null_null: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  children (Checker c) = [] -> 
+  child_list (nwState net (Checker c)) = []).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    auto.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      rewrite <- e in * ; auto.
+      rewrite <- e in *. apply H3 in H2. subst.
+      rewrite H2 in Heql0.
+      inversion Heql0.
+    - unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+Qed.
+
+Lemma terminated_child_list_null: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  child_list (nwState net (Checker c)) = []).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    inversion H.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      rewrite <- e in *.
+      apply (H3 c) ; auto.
+      apply eqb_false_iff in Heqb.
+      intuition.
+    - unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      apply (terminated_child_list_null_null x' tr1) ; auto.
+Qed.
+
+Lemma nearly_all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+  descendand (component_name d) (component_name c) -> (~ In (component_name d) (child_list (nwState net (Checker c)))) ->
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+Admitted.
+
+(* Lemma nearly_all_subtree_terminated': forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
+  (forall (d : Name), descendand d (component_name c) -> d <> component_name c -> 
+    (~ In d (child_list (nwState net (Checker c)))) ->
+    (nwState net (d)).(terminated) = true).
+Admitted. *)
+
+Lemma all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  (forall d, descendand (component_name d) (component_name c) -> 
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
+Proof.
+  intros.
+  apply (terminated_child_list_null net tr) in H0 ; auto.
+  apply (nearly_all_subtree_in_ass_list net tr H c d) ; auto.
+  rewrite H0.
+  intuition.
 Qed.
 
 Lemma only_children_in_child_list : forall x tr,
