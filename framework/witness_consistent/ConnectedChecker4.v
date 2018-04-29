@@ -2164,7 +2164,17 @@ Qed.
 
 Lemma descendand_refl : forall n,
   descendand n n.
-Admitted.
+Proof.
+  intros.
+  unfold descendand.
+  exists []. exists [].
+  assert (Walk v a (name_component n) (name_component n) [] []).
+  apply W_null ; auto.
+  apply Component_prop_1.
+  exists H. unfold parent_walk'.
+  intros.
+  inversion H0.
+Qed.
 
 Lemma descendand_par : forall n,
   descendand n (parent n).
