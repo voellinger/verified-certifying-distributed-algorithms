@@ -764,6 +764,104 @@ Proof.
     apply (IHc a'0) ; auto.
 Qed.
 
+Lemma parent_isin_a : forall (v : V_set) a c pare chil,
+  v (name_component pare) -> v (name_component chil) -> pare <> chil ->
+  pare = parent' v a c chil -> a (A_ends (name_component chil) (name_component pare)).
+Proof.
+  intros v a c.
+  induction c ; intros ; simpl in * ; subst ; auto ; intuition.
+  + simpl in *.
+    inversion H.
+    inversion H0.
+    subst. rewrite cnnc in *. intuition.
+  + repeat break_match ; subst ; simpl in *.
+    - apply In_left.
+      apply E_left.
+    - inversion H0.
+      inversion H2.
+      subst. rewrite cnnc in n0. intuition.
+      inversion H.
+      inversion H4.
+      subst.
+      rewrite cnnc in *.
+      assert (v0 (name_component (parent' v0 a0 c chil))).
+      apply (parent_help2 v0 a0 c chil) ; auto.
+      intuition.
+      subst.
+      apply In_right.
+      apply (IHc (parent' v0 a0 c chil) chil) ; auto.
+  + simpl in *.
+    apply In_right.
+    apply IHc ; auto.
+Qed.
+      
+      
+      
+     
+
+(* Lemma parent_child_is_treeify : forall (v : V_set) (a : A_set) (c : Connected v a) (a' : A_set) (t : Tree v a'),
+  eq_list_set (treeify_a v a c) a' ->
+  (forall child p, v (name_component child) -> v (name_component p) -> ((In child (children' v a c p) \/ (p = parent' v a c (child) /\ child <> root' v a c)) <-> (a' (A_ends (name_component child) (name_component p))))).
+Proof.
+  intros v a c.
+  induction c ; intros ; simpl in * ; subst ; auto ; intuition.
+  + subst.
+    simpl in *.
+    inversion H0.
+    subst.
+    rewrite cnnc in H4.
+    intuition.
+  + unfold eq_list_set in H.
+    apply <- H in H2.
+    inversion H2.
+  + simpl in *.
+    break_match.
+      - subst.
+        simpl in *.
+        destruct H3.
+        subst. simpl.
+        unfold eq_list_set in H.
+        apply H ; auto.
+        simpl ; auto.
+        inversion H0.
+          inversion H3.
+          subst.
+          unfold eq_list_set in H.
+          apply H ; auto.
+          simpl ; auto.
+
+          subst.
+          inversion H1.
+          inversion H4.
+          subst.
+          assert (a' (A_ends x x)).
+          unfold eq_list_set in H.
+          apply H. simpl ; auto.
+          assert (~ a' (A_ends x x)).
+          induction t.
+            inversion H5.
+            intuition.
+            rewrite <- e in *.
+            rewrite <- e0 in *.
+            intuition.
+          intuition.
+          subst.
+
+          assert ({a' : A_set & {t : Tree v0 a' & eq_list_set (treeify_a v0 a0 c) a'}}).
+          apply treeify_creates_tree.
+          destruct X.
+          destruct s.
+          assert (x0 (A_ends (name_component child) x)).
+          apply (IHc x0 x1 e child (Checker x)) ; auto.
+          unfold eq_list_set in *.
+          simpl in H. specialize (H (A_ends (name_component child) x)). destruct H.
+          apply H.
+          right. right.
+          apply <- e ; auto.
+      -
+  +    
+ *)
+
 (* Definition xor (p1 p2 : Prop) : Prop :=
  (~p1 /\ p2) \/ (p1 /\ ~ p2). *)
 
