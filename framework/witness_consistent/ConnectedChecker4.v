@@ -1285,7 +1285,7 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (child_list state)),
       [])
   else
-	match (child_list state) with
+	match (children me) with
   | [] => 
     ([true] , (mkData
             (checkerknowledge state)
@@ -2162,6 +2162,14 @@ Proof.
     inversion H3.
 Qed.
 
+Lemma descendand_refl : forall n,
+  descendand n n.
+Admitted.
+
+Lemma descendand_par : forall n,
+  descendand n (parent n).
+Admitted.
+
 
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
@@ -2214,6 +2222,65 @@ Proof.
       rewrite <- e in *. apply (H4 c H2 d) ; auto.
       apply (H4 c H2 d) ; auto.       *)
 Admitted.
+
+Lemma terminated_child_list_null: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  child_list (nwState net (Checker c)) = []).
+Admitted.
+
+Lemma nearly_all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,    
+  descendand (component_name d) (component_name c) -> (~ In (component_name d) (child_list (nwState net (Checker c)))) ->
+    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+Admitted.
+
+Lemma remove_src_before : forall d pSrc l1,
+  In d (remove_src pSrc l1) ->
+  In d l1.
+Proof.
+  intros.
+  induction l1.
+  - simpl in H.
+    inversion H.
+  - simpl in *.
+    break_match ; auto.
+Qed.
+
+Lemma only_children_in_child_list : forall x tr,
+  step_async_star (params := Checker_MultiParams) step_async_init x tr -> (forall (c : Component) (d : Name),
+  In d (child_list (nwState x (Checker c))) ->
+  (Checker c) = parent d).
+Proof.
+  intros x tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    unfold children in H.
+    apply (parent_children_holds) in H.
+    unfold parent.
+    auto.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      rewrite <- e in *.
+      apply (H3 c d) ; auto.
+      rewrite <- e in *.
+      apply (H3 c d) ; auto.
+      destruct p. subst. simpl in *. intuition.
+      rewrite Heql0.
+      repeat break_match.
+      simpl in H2.
+      simpl. auto.
+      simpl. auto.
+      simpl. apply remove_src_before in H2. auto.
+    - unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+Qed.
+
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -2278,11 +2345,34 @@ Proof.
       unfold parent in *. auto.
       inversion H13.
       rewrite cnnc in *.
-      specialize (H8 (p
 
+
+      assert ((l = [] \/ exists p, l = [p])).
+      apply Nethandler_nil_one in H7.
+      destruct H7. auto. destruct H7. right. exists x. auto.
+      destruct H11. admit.
+      destruct H11. destruct x.
+      assert ((parent (pDst p) = n) /\ (m = (ass_list (nwState x' (pDst p))) ++ pBody p)).
+      apply (Nethandler_correct x' p out d0 n m). subst. auto.
+      destruct H12. destruct p ; simpl in *.
+      subst.
       unfold NetHandler in H7.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
-      
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
+      rewrite <- e0 in *. subst. intuition. clear H2 H7.
+        specialize (H5 c). intuition. apply (H9 d) ; auto.
+      rewrite <- e0 in *.
+        specialize (H5 c). intuition. apply (H9 d) ; auto.
+      rewrite <- e0 in *.
+
+
+Lemma Inputhandler_nil_one : forall inp0 x' h out d l,
+  InputHandler h inp0 (nwState x' h) = (out, d, l) ->
+  (l = [] \/ exists p, l = [p]).
+
+
+Lemma Inputhandler_correct: forall inp0 x' h out d nextDst msg,
+  InputHandler h inp0 (nwState x' h) = (out, d, [(nextDst, msg)]) ->
+  (parent h = nextDst) /\ (msg = (ass_list (nwState x' h))).
     
 Admitted.
 
