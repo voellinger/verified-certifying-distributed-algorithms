@@ -2176,10 +2176,33 @@ Proof.
   inversion H0.
 Qed.
 
-Lemma descendand_par : forall n,
-  descendand n (parent n).
-Admitted.
-
+Lemma descendand_par : forall c p,
+  p = parent c ->
+  descendand c p.
+Proof.
+  intros.
+  unfold descendand. unfold parent in H.
+  assert (H' := H).
+  assert (a (A_ends (name_component c) (name_component p))).
+  admit. (* child+parent = a' *)
+  subst.
+  exists ([(name_component (parent' v a g c))]).
+  exists ([E_ends (name_component c) (name_component (parent' v a g c))]).
+  assert (Walk v a (name_component c) (name_component (parent' v a g c)) [(name_component (parent' v a g c))] [E_ends (name_component c) (name_component (parent' v a g c))]).
+  apply W_step ; auto.
+  apply W_null ; auto.
+  apply (parent_help2 v a g c) ; auto.
+  apply Component_prop_1.
+  exists H.
+  unfold parent_walk'.
+  intros.
+  inversion H1.
+  inversion H2 ; subst ; auto.
+  apply name_comp_name in H5 ; auto.
+  apply name_comp_name in H4 ; auto.
+  subst. auto.
+  inversion H2.
+Qed.
 
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
