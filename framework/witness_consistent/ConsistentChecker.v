@@ -70,7 +70,8 @@ Record Data := mkData{
   ass_list : Certificate;
   terminated : bool;
   consistent : bool;
-  child_list : list Name
+  child_list : list Name;
+  children_d : list Name
 }.
 
 (* initialization of the network *)
@@ -80,7 +81,8 @@ Definition init_Data (me: Name) :=
          (certificate (init_Checkerinput me))
          false
          true
-         (children me).
+         (children me)
+         [].
 
 
 (* This input starts a checker *)
@@ -103,7 +105,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)),
+            (child_list state)
+            (children_d state)),
       [])
   else
 	match (children me) with
@@ -114,7 +117,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (true)
             (check_ass_list (ass_list state))
-            (child_list state)),
+            (child_list state)
+            (children_d state)),
       [(parent me, (ass_list state))])
   | _ =>
     ([] , (mkData
@@ -123,7 +127,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)),
+            (child_list state)
+            (children_d state)),
       [])
   end.
 
@@ -137,7 +142,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)),
+            (child_list state)
+            (children_d state)),
       [])
   else
   match (child_list state) with
@@ -148,7 +154,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)),
+            (child_list state)
+            (children_d state)),
       [])
   | [c] =>
     ([check_ass_list ((ass_list state) ++ child_cert)] , (mkData
@@ -157,7 +164,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             ((ass_list state) ++ child_cert)
             (true)
             (check_ass_list ((ass_list state) ++ child_cert))
-            ([])),
+            ([])
+            (src :: (children_d state))),
       [(parent me, (ass_list state ++ child_cert))])
   | _ =>
     ([] , (mkData
@@ -166,7 +174,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             ((ass_list state) ++ child_cert)
             (terminated state)
             (consistent state)
-            (remove_src src (child_list state))),
+            (remove_src src (child_list state))
+            (src :: (children_d state))),
       [])
   end.
 
@@ -1073,12 +1082,73 @@ H0 : ~ In (component_name d) (children (Checker c))
     (forall e, In e (nwState net dd).(ass_list) -> In e (nwState net d).(ass_list))).
 Admitted. *)
 
+(* Lemma children_d_different: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+    (In d (children_d (nwState net c))) ->
+     c <> d).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
+      apply (H4 (pDst p) (pDst p)) ; auto.
+      apply (H4 d d) ; auto.
+      apply (H4 (pDst p) (pDst p)) ; auto.
+      apply (H4 d d) ; auto.
+      destruct p. simpl in *. subst.  *)
+
 Lemma nearly_all_subtree_terminated': forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
-  (forall (d : Name), descendand d c -> d <> c -> 
-    (~ In d (child_list (nwState net c))) ->
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+    (In d (children_d (nwState net c))) ->
     (nwState net d).(terminated) = true).
-Admitted.
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      apply eqb_prop in Heqb ; auto.
+      apply eqb_prop in Heqb ; auto.
+      apply (H3 (pDst p) (pDst p) ) ; auto.
+      apply (H3 c (pDst p)) ; auto.
+      assert (terminated (nwState x' (pSrc p)) = true).
+      destruct p. simpl in *.
+        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto. 
+        destruct p. simpl in *. subst. apply eqb_false_iff in Heqb. intuition.
+      apply (H3 (pDst p) (pDst p) ) ; auto.
+      apply (H3 c (pDst p)) ; auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d) ; auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d) ; auto.
+      destruct p. simpl in *. rewrite <- H0 in *.
+        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d ) ; auto.
+      destruct p. simpl in *. rewrite <- H0 in *.
+        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d ) ; auto.
+    - specialize (H3 c d).
+      unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+Qed.
 
 (* Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
@@ -1168,12 +1238,21 @@ Proof.
         subst.
       unfold NetHandler in H7.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
-      rewrite <- e0 in *. (* 
-        assert (terminated (nwState x' pSrc) = true). *)
-        admit.
-(*         apply in_or_app ; right.
-        apply (H9 d H0 d) ; auto. *)
-
+      rewrite <- e0 in *.
+      assert (d = c \/ d <> c).
+      apply classic.
+      destruct H0.
+      subst. apply in_or_app. auto.
+      assert (In pSrc (child_list (nwState x' (Checker c)))).
+      admit.
+      rewrite Heql in *. inversion H8. subst.
+      assert (forall c,
+  (forall (d : Name), descendand d c -> d <> c -> 
+    (~ In d (child_list (nwState x' c))) ->
+    (nwState x' d).(terminated) = true)).
+      apply (nearly_all_subtree_terminated' x' tr1) ; auto.
+      specialize (H8 (Checker c) (Checker d)) ; intuition.
+      
 
 
       rewrite <- e0 in *.
