@@ -70,8 +70,8 @@ Record Data := mkData{
   ass_list : Certificate;
   terminated : bool;
   consistent : bool;
-  child_list : list Name;
-  children_d : list Name
+  child_todo : list Name;
+  child_done : list Name
 }.
 
 (* initialization of the network *)
@@ -105,8 +105,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)
-            (children_d state)),
+            (child_todo state)
+            (child_done state)),
       [])
   else
 	match (children me) with
@@ -117,8 +117,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (true)
             (check_ass_list (ass_list state))
-            (child_list state)
-            (children_d state)),
+            (child_todo state)
+            (child_done state)),
       [(parent me, (ass_list state))])
   | _ =>
     ([] , (mkData
@@ -127,8 +127,8 @@ Definition InputHandler (me : Name) (c : Input) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)
-            (children_d state)),
+            (child_todo state)
+            (child_done state)),
       [])
   end.
 
@@ -142,11 +142,11 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)
-            (children_d state)),
+            (child_todo state)
+            (child_done state)),
       [])
   else
-  match (child_list state) with
+  match (child_todo state) with
   | [] =>
     ([] , (mkData
             (checkerknowledge state)
@@ -154,8 +154,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             (ass_list state)
             (terminated state)
             (consistent state)
-            (child_list state)
-            (children_d state)),
+            (child_todo state)
+            (child_done state)),
       [])
   | [c] =>
     ([check_ass_list ((ass_list state) ++ child_cert)] , (mkData
@@ -165,7 +165,7 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             (true)
             (check_ass_list ((ass_list state) ++ child_cert))
             ([])
-            (src :: (children_d state))),
+            (src :: (child_done state))),
       [(parent me, (ass_list state ++ child_cert))])
   | _ =>
     ([] , (mkData
@@ -174,8 +174,8 @@ Definition NetHandler (me : Name) (src: Name) (child_cert : Msg) (state: Data) :
             ((ass_list state) ++ child_cert)
             (terminated state)
             (consistent state)
-            (remove_src src (child_list state))
-            (src :: (children_d state))),
+            (remove_src src (child_todo state))
+            (src :: (child_done state))),
       [])
   end.
 
@@ -968,63 +968,10 @@ Proof.
   auto.
 Qed.
 
-
-Lemma all_subtree_terminated: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
-  (nwState net (Checker c)).(terminated) = true ->
-  (forall (d : Name), descendand d (component_name c) -> 
-    (nwState net (d)).(terminated) = true).
-Proof.
-  intros net tr H.
-  unfold step_async_star in H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind.
-  + intros ; subst ; simpl in *. auto.  
-  + subst. intros.
-    remember step_async_init as y in *.
-    induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
-    { intuition.
-      invc H0 ; simpl in *.
-      + unfold NetHandler in H5.
-        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H5 ; subst ; intuition ; simpl in *.
-        
-
-(* 
-
-    assert (H0' := H0). remember x' as y'. remember x'' as y''.
-    invc H0 ; simpl in *.
-    - unfold NetHandler in H6.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in *. 
-      apply eqb_prop in Heqb ; auto.
-      apply (H4 c H2 (pDst p)) ; auto.
-      apply (H4 c H2 (pDst p)) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.
-      
-      destruct (pDst p). inversion e. subst. simpl in *.
-      clear e H2 H6. apply refl_trans_1n_n1_trace in H1.
-      assert (H1' := H1).
-      invc H1. invc H8 ; simpl in *.
-      { unfold NetHandler in H6.
-        repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H6 ; subst ; intuition ; simpl in * ; clear H6.
-        apply app_inj_tail in H0. destruct H0. subst.
-        assert (pDst p0 = Checker c0).
-        inversion H6. destruct (pDst p0). inversion H0. subst. simpl in *.
-        apply eqb_prop in Heqb0 ; auto.
-        apply (H4 c0) ; auto. 
-      }
-      
-      apply (H4 c H2 d) ; auto.
-      rewrite <- e in *. apply (H4 c H2 d) ; auto.
-      apply (H4 c H2 d) ; auto.       *)
-Admitted.
-
-Lemma terminated_child_list_null_null: forall net tr,
+Lemma terminated_child_todo_null_null: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   children (Checker c) = [] -> 
-  child_list (nwState net (Checker c)) = []).
+  child_todo (nwState net (Checker c)) = []).
 Proof.
   intros net tr H.
   remember step_async_init as y in *.
@@ -1043,12 +990,13 @@ Proof.
       inversion Heql0.
     - unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      
 Qed.
 
-Lemma terminated_child_list_null: forall net tr,
+Lemma terminated_child_todo_null: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
-  child_list (nwState net (Checker c)) = []).
+  child_todo (nwState net (Checker c)) = []).
 Proof.
   intros net tr H.
   remember step_async_init as y in *.
@@ -1067,7 +1015,7 @@ Proof.
       intuition.
     - unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
-      apply (terminated_child_list_null_null x' tr1) ; auto.
+      apply (terminated_child_todo_null_null x' tr1) ; auto.
 Qed.
 
 (* Lemma descendand_but_no_child
@@ -1077,14 +1025,14 @@ H0 : ~ In (component_name d) (children (Checker c))
 
 (* Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  In d (children c) -> (~ In d (child_list (nwState net c))) ->
+  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
     forall dd : Name, descendand dd d ->
     (forall e, In e (nwState net dd).(ass_list) -> In e (nwState net d).(ass_list))).
 Admitted. *)
 
-Lemma children_d_terminated: forall net tr,
+Lemma child_done_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-    (In d (children_d (nwState net c))) ->
+    (In d (child_done (nwState net c))) ->
     (nwState net d).(terminated) = true).
 Proof.
   intros net tr H.
@@ -1128,9 +1076,9 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
 Qed.
 
-Lemma children_d_in_ass_list: forall net tr,
+Lemma child_done_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-    (In d (children_d (nwState net c))) ->
+    (In d (child_done (nwState net c))) ->
     (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
 Proof.
   intros net tr H.
@@ -1143,33 +1091,87 @@ Proof.
 Admitted.
 
 
-Lemma children_d_children_list_children: forall net tr,
+Lemma child_done_children_list_children: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
-  Permutation ((nwState net c).(children_d) ++ (nwState net c).(child_list)) (children c)).
+  Permutation ((nwState net c).(child_done) ++ (nwState net c).(child_todo)) (children c)).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    
 Admitted.
 
-Lemma children_d_when_terminated: forall net tr,
+Lemma child_done_when_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
-    (nwState net c).(terminated) = true -> Permutation (children_d (nwState net c)) (children c)).
+    (nwState net c).(terminated) = true -> Permutation (child_done (nwState net c)) (children c)).
 Proof.
   intros.
   assert (forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
-  child_list (nwState net (Checker c)) = [])).
-  apply terminated_child_list_null.
+  child_todo (nwState net (Checker c)) = [])).
+  apply terminated_child_todo_null.
   specialize (H1 net tr H (name_component c)).
   simpl in *. rewrite checker_name in *. intuition.
-  assert (Permutation ((nwState net c).(children_d) ++ (nwState net c).(child_list)) (children c)).
-  apply (children_d_children_list_children net tr) ; auto.
+  assert (Permutation ((nwState net c).(child_done) ++ (nwState net c).(child_todo)) (children c)).
+  apply (child_done_children_list_children net tr) ; auto.
   rewrite H2 in H1. rewrite app_nil_r in H1.
   auto.
 Qed.
 
+Lemma all_subtree_terminated: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
+  (nwState net c).(terminated) = true ->
+  (forall (d : Name), descendand d c -> 
+    (nwState net d).(terminated) = true).
+Proof.
+  intros net tr H.
+  unfold step_async_star in H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + intros ; subst ; simpl in *. auto.  
+  + subst. intros.
+    invc H0 ; simpl in *.
+    - destruct p. simpl in *.
+      assert (terminated (nwState x' pSrc) = true).
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H4. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H4. apply in_or_app. simpl. auto.
+      subst.
+      unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition; simpl in * ; inversion H5 ; subst ; intuition ; simpl in *. 
+      apply (H6 c) ; auto.
+      apply (H6 c) ; auto.
+      apply (H6 c) ; auto.
+      apply (H6 (parent pSrc)) ; auto.
+      apply (H6 c) ; auto.
+      apply (H6 (parent pSrc)) ; auto.
+      apply (H6 c) ; auto.
+      clear H5 H2. admit.
+      (* es gibt nur noch einen in der child_todo, 
+        (das ist pSrc) entweder d war vom pSrc-zweig, 
+        oder von einem anderen und ist dadurch schon drin *)
+      apply (H6 c) ; auto.
+      apply (H6 (parent pSrc)) ; auto.
+      apply (H6 c) ; auto.
+    - intuition.
+      specialize (H0 c).
+      unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      
+Admitted.
+
 
 (* Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  In d (children c) -> (~ In d (child_list (nwState net c))) ->
+  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
     (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
 Proof.
   intros net tr H.
@@ -1200,19 +1202,19 @@ Proof.
     inversion H.
   + subst. simpl in *.
     assert (H2' := H2).
-    apply (terminated_child_list_null x'' (tr1 ++ tr2)) in H2 ; auto.
+    apply (terminated_child_todo_null x'' (tr1 ++ tr2)) in H2 ; auto.
 (*     assert ((forall c d,
-  In d (children c) -> (~ In d (child_list (nwState x'' c))) ->
+  In d (children c) -> (~ In d (child_todo (nwState x'' c))) ->
     (forall e, In e (nwState x'' d).(ass_list) -> In e (nwState x'' c).(ass_list)))) as new.
     apply (nearly_all_subtree_in_ass_list x'' (tr1 ++ tr2)) ; auto.
    *)  
     (* assert (forall c,
   (forall (d : Name), descendand d c -> d <> c -> 
-    (~ In d (child_list (nwState x'' c))) ->
+    (~ In d (child_todo (nwState x'' c))) ->
     (nwState x'' d).(terminated) = true)) as newnew.
     apply (nearly_all_subtree_terminated' x'' (tr1 ++ tr2)) ; auto.
      *)unfold component_name in *.
-    assert (~ In (Checker d) (child_list (nwState x'' (Checker c)))).
+    assert (~ In (Checker d) (child_todo (nwState x'' (Checker c)))).
     intuition.
     rewrite H2 in *. inversion H5.
 
@@ -1260,12 +1262,12 @@ Proof.
       apply classic.
       destruct H0.
       subst. apply in_or_app. auto.
-      assert (In pSrc (child_list (nwState x' (Checker c)))).
+      assert (In pSrc (child_todo (nwState x' (Checker c)))).
       admit.
       rewrite Heql in *. inversion H8. subst.
       assert (forall c,
   (forall (d : Name), descendand d c -> d <> c -> 
-    (~ In d (child_list (nwState x' c))) ->
+    (~ In d (child_todo (nwState x' c))) ->
     (nwState x' d).(terminated) = true)).
       apply (nearly_all_subtree_terminated' x' tr1) ; auto.
       specialize (H8 (Checker c) (Checker d)) ; intuition.
@@ -1282,9 +1284,9 @@ Proof.
       apply (H9 c H2' d) ; auto.
 Admitted.
 
-Lemma only_children_in_child_list : forall x tr,
+Lemma only_children_in_child_todo : forall x tr,
   step_async_star (params := Checker_MultiParams) step_async_init x tr -> (forall (c : Component) (d : Name),
-  In d (child_list (nwState x (Checker c))) ->
+  In d (child_todo (nwState x (Checker c))) ->
   (Checker c) = parent d).
 Proof.
   intros x tr H.
@@ -1597,6 +1599,6 @@ M\u00f6gliche Verbesserungen:
   2. ansonsten nur eine Belegung je Variable nach oben reichen
   3. die erste if-abfrage im Nethandler streichen
   4. root braucht an niemanden senden, dann kann auch das erste Pattern weg
-  5. child_list, terminated und consistent ghost-variable, nur noch outputs *)
+  5. child_todo, terminated und consistent ghost-variable, nur noch outputs *)
 
 End Consistency_Checker.
