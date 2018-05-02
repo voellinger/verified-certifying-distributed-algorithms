@@ -1146,6 +1146,44 @@ Proof.
       intuition. specialize (H8 c).
       unfold NetHandler in H7.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
+        rewrite <- e0 in *. intuition. apply (H9 d ) ; auto.
+        rewrite <- e0 in *. intuition. apply (H9 d ) ; auto.
+        apply eqb_false_iff in Heqb. intuition.
+        rewrite <- e0 in *. intuition. apply (H9 d ) ; auto.
+        rewrite <- e0 in *. intuition. apply (H9 d ) ; auto.
+        rewrite <- e0 in *. intuition. subst.
+        assert ((nwState x' (Checker c)).(terminated) = true ->
+  (forall (d : Name), descendand d (component_name c) -> 
+    (nwState x' (d)).(terminated) = true)).
+        apply (all_subtree_terminated x' tr1) ; auto.
+        intuition. specialize (H10 (Checker d)) ; intuition.
+        apply eqb_false_iff in Heqb. intuition.
+        intuition. apply (H9 d ) ; auto.
+        intuition. apply (H9 d ) ; auto.
+        intuition. apply (H9 d ) ; auto.
+        destruct H8. destruct x.
+        specialize (H0 n m). intuition.
+        assert (pBody = ass_list (nwState x' pSrc)).
+        admit.
+        subst.
+      unfold NetHandler in H7.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition.
+      rewrite <- e0 in *. (* 
+        assert (terminated (nwState x' pSrc) = true). *)
+        admit.
+(*         apply in_or_app ; right.
+        apply (H9 d H0 d) ; auto. *)
+
+
+
+      rewrite <- e0 in *.
+        apply eqb_false_iff in Heqb.
+        assert ((nwState x' (Checker c)).(terminated) = true ->
+  (forall (d : Name), descendand d (component_name c) -> 
+    (nwState x' (d)).(terminated) = true)).
+        apply (all_subtree_terminated x' tr1) ; auto.
+        intuition. specialize (H8 (Checker d)). intuition.
+      apply (H9 c H2' d) ; auto.
 Admitted.
 
 Lemma only_children_in_child_list : forall x tr,
