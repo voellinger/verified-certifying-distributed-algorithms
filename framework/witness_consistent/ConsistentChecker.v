@@ -1076,6 +1076,37 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
 Qed.
 
+Lemma pbody_is_asslist : forall x' tr,
+  step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
+  (
+  forall pSrc pDst pBody,
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
+  pBody = (nwState x' pSrc).(ass_list)).
+Proof.
+  intros x' tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    inversion H.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *. (* 
+    - assert ((nwState x' (Net.pSrc p)).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H (Net.pSrc p) (Net.pDst p) (Net.pBody p)) ; auto.
+      rewrite H4. destruct p. simpl in *.
+      apply in_or_app. simpl. auto.
+      unfold NetHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      rewrite H4 in *. apply (silly_lemma packet p) in H2. apply (H3 (Net.pDst p) pDst pBody) ; auto.
+      rewrite H4 in *. apply (silly_lemma packet p) in H2. apply (H3 (Net.pDst p) pDst pBody) ; auto.
+      inversion H6. auto. *)
+      
+
+      
+      
+Admitted.
+
 Lemma child_done_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
     (In d (child_done (nwState net c))) ->
@@ -1088,8 +1119,68 @@ Proof.
     simpl in *.
     intuition.
   + subst. simpl in *.
-Admitted.
+    intuition.
 
+
+    assert (H2' := H2).
+    apply (child_done_terminated x'' (tr1 ++ tr2)) in H2' ; auto.
+    invc H0 ; simpl in *.
+    - assert (forall n m , l = [(n, m)] -> (parent (pDst p) = n) /\ (m = (ass_list (nwState x' (pDst p))) ++ pBody p)) as new.
+      intros. subst.
+      apply (Nethandler_correct x' p out d0) ; auto.
+
+      destruct p. simpl in *.
+      assert (pBody = (nwState x' pSrc).(ass_list)) as newnewnew.
+      apply (pbody_is_asslist x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H5. apply in_or_app. simpl. auto.
+
+
+      assert ((nwState x' pSrc).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H5. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H5. apply in_or_app. simpl. auto.
+      assert (l = [] \/ exists p, l = [p]).
+      apply (Nethandler_nil_one x' pDst pSrc pBody out d0 l) ; auto.
+
+
+      destruct H8.
+      subst.
+      
+      unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
+      apply (H4 (parent pSrc) d) ; auto.
+      apply (H4 (parent pSrc) d) ; auto.
+      subst. apply in_or_app. auto.
+      apply in_or_app. left. apply (H4 (parent pSrc) d) ; auto.
+      apply (H4 c (parent pSrc)) ; auto.
+      apply (H4 c (parent pSrc)) ; auto.
+      assert ((terminated (nwState x' (parent pSrc))) = true).
+      apply (child_done_terminated x' tr1 H c (parent pSrc)) ; auto.
+      apply eqb_false_iff in Heqb. intuition.
+      apply (H4 c d) ; auto.
+      apply (H4 c d) ; auto.
+      apply (H4 c d) ; auto.
+      destruct H8. destruct x. subst.
+      specialize (new n m). intuition.
+      subst.
+      unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
+      subst. apply in_or_app. auto.
+      apply in_or_app. left.
+      apply (H4 (parent pSrc) d) ; auto.
+      apply in_app_or in H3. destruct H3.
+      apply (H4 c (parent pSrc)) ; auto.
+      assert ((terminated (nwState x' (parent pSrc))) = true).
+      apply (child_done_terminated x' tr1 H c (parent pSrc)) ; auto.
+      apply eqb_false_iff in Heqb. intuition.
+      apply (H4 c d) ; auto.
+    - specialize (H4 c d).
+      intuition.
+      unfold InputHandler in H5.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+Qed.
 
 Lemma child_done_children_list_children: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
