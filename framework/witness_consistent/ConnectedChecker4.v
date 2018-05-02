@@ -2442,10 +2442,25 @@ Proof.
       apply (terminated_child_list_null_null x' tr1) ; auto.
 Qed.
 
+(* Lemma descendand_but_no_child
+H : descendand (component_name d) (component_name c)
+H0 : ~ In (component_name d) (children (Checker c))
+ *)
 Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  descendand (component_name d) (component_name c) -> (~ In (component_name d) (child_list (nwState net (Checker c)))) ->
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+  In d (children c) -> (~ In d (child_list (nwState net c))) ->
+    (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    inversion H.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
 Admitted.
 
 (* Lemma nearly_all_subtree_terminated': forall net tr,
