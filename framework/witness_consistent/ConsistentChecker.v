@@ -1082,29 +1082,7 @@ H0 : ~ In (component_name d) (children (Checker c))
     (forall e, In e (nwState net dd).(ass_list) -> In e (nwState net d).(ass_list))).
 Admitted. *)
 
-(* Lemma children_d_different: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-    (In d (children_d (nwState net c))) ->
-     c <> d).
-Proof.
-  intros net tr H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
-  + subst.
-    simpl in *.
-    intuition.
-  + subst. simpl in *.
-    intuition.
-    invc H0 ; simpl in *.
-    - unfold NetHandler in H6.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
-      apply (H4 (pDst p) (pDst p)) ; auto.
-      apply (H4 d d) ; auto.
-      apply (H4 (pDst p) (pDst p)) ; auto.
-      apply (H4 d d) ; auto.
-      destruct p. simpl in *. subst.  *)
-
-Lemma nearly_all_subtree_terminated': forall net tr,
+Lemma children_d_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
     (In d (children_d (nwState net c))) ->
     (nwState net d).(terminated) = true).
