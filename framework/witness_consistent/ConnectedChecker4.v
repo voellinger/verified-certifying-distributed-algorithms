@@ -2446,6 +2446,21 @@ Qed.
 H : descendand (component_name d) (component_name c)
 H0 : ~ In (component_name d) (children (Checker c))
  *)
+
+(* Lemma nearly_all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+  In d (children c) -> (~ In d (child_list (nwState net c))) ->
+    forall dd : Name, descendand dd d ->
+    (forall e, In e (nwState net dd).(ass_list) -> In e (nwState net d).(ass_list))).
+Admitted. *)
+
+Lemma nearly_all_subtree_terminated': forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
+  (forall (d : Name), descendand d c -> d <> c -> 
+    (~ In d (child_list (nwState net c))) ->
+    (nwState net d).(terminated) = true).
+Admitted.
+
 Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
   In d (children c) -> (~ In d (child_list (nwState net c))) ->
@@ -2456,19 +2471,14 @@ Proof.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
   + subst.
     simpl in *.
-    inversion H.
+    intuition.
   + subst. simpl in *.
     intuition.
     invc H0 ; simpl in *.
     - unfold NetHandler in H5.
 Admitted.
 
-(* Lemma nearly_all_subtree_terminated': forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
-  (forall (d : Name), descendand d (component_name c) -> d <> component_name c -> 
-    (~ In d (child_list (nwState net (Checker c)))) ->
-    (nwState net (d)).(terminated) = true).
-Admitted. *)
+
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -2476,9 +2486,27 @@ Lemma all_subtree_in_ass_list: forall net tr,
   (forall d, descendand (component_name d) (component_name c) -> 
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
 Proof.
-  intros.
-  apply (terminated_child_list_null net tr) in H0 ; auto.
-  apply (nearly_all_subtree_in_ass_list net tr H c d) ; auto.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    inversion H.
+  + subst. simpl in *.
+    assert (H2' := H2).
+    apply (terminated_child_list_null x'' (tr1 ++ tr2)) in H2 ; auto.
+    assert ((forall c d,
+  In d (children c) -> (~ In d (child_list (nwState x'' c))) ->
+    (forall e, In e (nwState x'' d).(ass_list) -> In e (nwState x'' c).(ass_list)))).
+    apply (nearly_all_subtree_in_ass_list x'' (tr1 ++ tr2)) ; auto.
+    specialize (H5 (Checker c) (Checker d)).
+    assert ((component_name d) <> (component_name c) -> 
+    (~ In (component_name d) (child_list (nwState x'' (Checker c)))) ->
+    (nwState x'' (component_name d)).(terminated) = true).
+    apply (nearly_all_subtree_terminated' x'' (tr1 ++ tr2)) ; auto.
+    
+
+  apply (nearly_all_subtree_in_ass_list net tr H (component_name c) (component_name d)) ; auto.
   rewrite H0.
   intuition.
 Qed.
