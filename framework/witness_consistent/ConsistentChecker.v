@@ -1128,6 +1128,45 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
 Qed.
 
+Lemma children_d_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+    (In d (children_d (nwState net c))) ->
+    (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+Admitted.
+
+
+Lemma children_d_children_list_children: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  Permutation ((nwState net c).(children_d) ++ (nwState net c).(child_list)) (children c)).
+Admitted.
+
+Lemma children_d_when_terminated: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+    (nwState net c).(terminated) = true -> Permutation (children_d (nwState net c)) (children c)).
+Proof.
+  intros.
+  assert (forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  (nwState net (Checker c)).(terminated) = true ->
+  child_list (nwState net (Checker c)) = [])).
+  apply terminated_child_list_null.
+  specialize (H1 net tr H (name_component c)).
+  simpl in *. rewrite checker_name in *. intuition.
+  assert (Permutation ((nwState net c).(children_d) ++ (nwState net c).(child_list)) (children c)).
+  apply (children_d_children_list_children net tr) ; auto.
+  rewrite H2 in H1. rewrite app_nil_r in H1.
+  auto.
+Qed.
+
+
 (* Lemma nearly_all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
   In d (children c) -> (~ In d (child_list (nwState net c))) ->
