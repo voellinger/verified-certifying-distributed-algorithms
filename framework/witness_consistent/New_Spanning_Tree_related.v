@@ -150,6 +150,65 @@ Definition parent_walk x y vl el w : Prop :=
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
 
+Fixpoint descendands' (v : V_set) (a : A_set) (c : Connected v a) (ancestor : Name) : list Name :=
+  match c with
+  | C_isolated _ => [ancestor]
+  | C_leaf v a co x y _ _ => if (Name_eq_dec ancestor (component_name x)) then (component_name y) :: [(component_name x)] else (component_name y) :: (descendands' v a co ancestor)
+  | C_edge v a co x y _ _ _ _ _ => descendands' v a co ancestor
+  | C_eq v v' a a' _ _ co => descendands' v a co ancestor
+  end.
+
+Definition descendands (ancestor : Name) : list Name :=
+  descendands' v a g ancestor.
+
+(* Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
+  v0 x2 ->
+  (v0 y -> False) ->
+  v0 (name_component des) ->
+  Walk (V_union (V_single y) v0) (A_union (E_set x2 y) a0) (name_component des) x2 x x0 ->
+  Walk v0 a0 (name_component des) x2 x x0.
+Proof.
+  intros.
+  induction H2.
+
+  induction x.
+  inversion H2.
+  subst.
+  apply W_null ; auto.
+  inversion H2.
+  subst.
+  apply W_step ; auto.
+  
+  
+  induction c0.
+  + inversion H0. inversion H2. subst. apply W_null ; auto. *)
+
+Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
+  (descendand des anc <-> In des (descendands anc)).
+Proof.
+  intros.
+  unfold descendand. unfold descendands. unfold parent_walk'. split ; intros.
+  repeat destruct H1.
+  induction g ; intros ; simpl in * ; intuition.
+  + inversion H. inversion H0.
+    subst. inversion H3. apply name_comp_name in H3. subst. auto.
+  + break_match ; intuition.
+    - subst.
+      inversion H.
+      inversion H2. subst.
+      rewrite cnnc. simpl. auto.
+      intuition.
+      subst. simpl in H5. simpl in x1.
+      
+      
+  
+  + subst.
+    exists []. exists [].
+    assert (Walk (V_single x) A_empty (name_component des) (name_component des) [] []).
+    apply W_null ; auto.
+    exists H1.
+    unfold parent_walk'. intros. inversion H2.
+
 Lemma parent_arcs : forall x y,
   x = parent y -> v (name_component y) -> y <> root -> (a (A_ends (name_component x) (name_component y)) /\ a (A_ends (name_component y) (name_component x))).
 Proof.
