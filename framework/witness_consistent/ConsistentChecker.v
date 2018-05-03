@@ -1285,6 +1285,33 @@ Lemma all_subtree_in_ass_list: forall net tr,
   (forall d, descendand (component_name d) (component_name c) -> 
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
 Proof.
+  intros.
+  assert (H0' := H0).
+  apply (terminated_child_todo_null net tr) in H0' ; auto.
+  assert (Permutation (child_done (nwState net (Checker c)))  (children (Checker c))).
+  assert (Permutation ((nwState net (Checker c)).(child_done) ++ (nwState net (Checker c)).(child_todo)) (children (Checker c))).
+  apply (child_done_children_list_children net tr) ; auto.
+  rewrite H0' in *. rewrite app_nil_r in H3. auto.
+  assert (forall d, Permutation (children (Checker c)) (child_done (nwState net (Checker c)))  -> In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
+  apply Permutation_in.
+  apply Permutation_sym in H3.
+  assert (forall d : Name, In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
+  intros.
+  apply (H4 d0) ; auto.
+  clear H4.
+  assert (forall d : Name, In d (children (Checker c)) -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+  intros.
+  apply (child_done_in_ass_list net tr H (Checker c) d0) ; auto.
+  clear H5.
+  unfold descendand in *. unfold children in *.
+  clear H3. clear H0'.
+  induction g ; simpl in * ; intuition.
+  + 
+
+
+
+
+
   intros net tr H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
