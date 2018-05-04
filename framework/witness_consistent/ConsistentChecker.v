@@ -1250,10 +1250,27 @@ Proof.
       apply (Permutation_trans H2 H5) ; auto.
       apply comp_index_name in Heqb1. subst.
       specialize (H2 (parent n0)). rewrite Heql0 in *.
-      assert (Permutation (n0 :: child_done (nwState x' (parent n0)) ++ l1) (child_done (nwState x' (parent n0)) ++ n0 :: l1)).
-      apply (Permutation_cons_app (child_done (nwState x' (parent n0))) ) ; auto.
-      apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
-      apply (Permutation_trans H2 H5) ; auto.
+      apply Permutation_sym. apply Permutation_sym in H2.
+      apply (Permutation_trans H2) ; auto.
+      apply Permutation_sym.
+      assert (Permutation (n0 :: child_done (nwState x' (parent n0)) ++ n :: l1) (child_done (nwState x' (parent n0)) ++ n0 :: n :: l1)).
+      apply (Permutation_middle).
+      apply (Permutation_trans H5) ; auto.
+      apply Permutation_app_head. apply perm_swap.
+      specialize (H2 (parent pSrc)). rewrite Heql0 in *.
+      apply Permutation_sym. apply Permutation_sym in H2.
+      apply (Permutation_trans H2) ; auto.      
+      apply Permutation_sym.
+      assert (Permutation (pSrc :: child_done (nwState x' (parent pSrc)) ++ n :: n0 :: remove_src pSrc l1) (child_done (nwState x' (parent pSrc)) ++ pSrc :: n :: n0 :: remove_src pSrc l1)).
+      apply (Permutation_middle).
+      apply (Permutation_trans H5) ; auto.
+      apply Permutation_app_head.
+      assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
+      admit.
+      assert (NoDup (child_todo (nwState x' (parent pSrc)))).
+      admit.
+      
+      apply Permutation_swap.
 Admitted.
 
 Lemma child_done_when_terminated: forall net tr,

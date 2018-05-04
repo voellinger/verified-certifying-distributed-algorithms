@@ -165,7 +165,7 @@ Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand anc
 Definition descendand'' (descendand ancestor : Name) : bool :=
   descendand' v a g descendand ancestor.
 
-Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
+(* Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
   v0 x2 ->
   (v0 y -> False) ->
   v0 (name_component des) ->
@@ -173,7 +173,7 @@ Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
   Walk v0 a0 (name_component des) x2 x x0.
 Proof.
   intros.
-Admitted.
+Admitted. *)
 (*   induction x.
   inversion H2.
   subst.
@@ -185,7 +185,7 @@ Admitted.
   
   induction c0.
   + inversion H0. inversion H2. subst. apply W_null ; auto. *)
-
+(* 
 Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
   (descendand des anc <-> (descendand'' des anc = true)).
 Proof.
@@ -215,7 +215,7 @@ Proof.
     assert (Walk (V_single x) A_empty (name_component des) (name_component des) [] []).
     apply W_null ; auto.
     exists H1.
-    unfold parent_walk'. intros. inversion H2.
+    unfold parent_walk'. intros. inversion H2. *)
 
 Lemma parent_arcs : forall x y,
   x = parent y -> v (name_component y) -> y <> root -> (a (A_ends (name_component x) (name_component y)) /\ a (A_ends (name_component y) (name_component x))).
