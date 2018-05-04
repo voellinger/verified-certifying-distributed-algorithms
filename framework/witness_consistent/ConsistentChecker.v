@@ -1200,6 +1200,38 @@ Proof.
   subst. auto.
 Qed.
 
+Lemma remove_removes_one : forall p l,
+ In p l -> NoDup l -> Permutation (p :: remove_src p l) l.
+Proof.
+  intros p l H H0.
+  induction l.
+  inversion H.
+  simpl in H. destruct H.
+  subst.
+  simpl.
+  break_match. auto. 
+  assert ((component_index (name_component p) =? component_index (name_component p)) = true).
+  apply Nat.eqb_refl.
+  rewrite H in Heqb. inversion Heqb.
+  intuition.
+  assert (H0' := H0).
+  apply NoDup_cons_iff in H0'.
+  destruct H0'.
+  intuition.
+  simpl in *.
+  assert (p = a0 \/ p <> a0).
+  apply classic.
+  destruct H1.
+  subst. intuition.
+  break_match.
+  apply comp_index_name in Heqb.
+  intuition.
+  apply (perm_skip a0) in H4.
+  apply Permutation_sym in H4. apply Permutation_sym.
+  apply (Permutation_trans H4) ; auto.
+  apply perm_swap.
+Qed.
+
 Lemma child_done_children_list_children: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   Permutation ((nwState net c).(child_done) ++ (nwState net c).(child_todo)) (children c)).
@@ -1259,7 +1291,7 @@ Proof.
       apply Permutation_app_head. apply perm_swap.
       specialize (H2 (parent pSrc)). rewrite Heql0 in *.
       apply Permutation_sym. apply Permutation_sym in H2.
-      apply (Permutation_trans H2) ; auto.      
+      apply (Permutation_trans H2) ; auto.
       apply Permutation_sym.
       assert (Permutation (pSrc :: child_done (nwState x' (parent pSrc)) ++ n :: n0 :: remove_src pSrc l1) (child_done (nwState x' (parent pSrc)) ++ pSrc :: n :: n0 :: remove_src pSrc l1)).
       apply (Permutation_middle).
@@ -1269,8 +1301,28 @@ Proof.
       admit.
       assert (NoDup (child_todo (nwState x' (parent pSrc)))).
       admit.
-      
-      apply Permutation_swap.
+      assert (Permutation (pSrc :: n :: n0 :: remove_src pSrc l1) (n :: pSrc :: n0 :: remove_src pSrc l1)).
+      apply perm_swap.
+      assert (Permutation (pSrc :: n0 :: remove_src pSrc l1) (n0 :: pSrc :: remove_src pSrc l1)).
+      apply perm_swap.
+      assert (Permutation (pSrc :: remove_src pSrc l1) l1).
+      rewrite Heql0 in *.
+      assert (In pSrc l1).
+      simpl in H6. destruct H6.
+      subst.
+      assert ((component_index (name_component pSrc) =? component_index (name_component pSrc)) = true).
+      apply Nat.eqb_refl. rewrite H6 in Heqb0. inversion Heqb0.
+      destruct H6. rewrite H6 in *.
+      assert ((component_index (name_component pSrc) =? component_index (name_component pSrc)) = true).
+      apply Nat.eqb_refl. rewrite H10 in Heqb1. inversion Heqb1. auto.
+      apply NoDup_cons_iff in H7.
+      destruct H7.
+      apply NoDup_cons_iff in H11.
+      destruct H11.
+      apply remove_removes_one ; auto.
+      apply (Permutation_trans H8) ; auto.
+      apply perm_skip.
+      apply (Permutation_trans H9) ; auto.
 Admitted.
 
 Lemma child_done_when_terminated: forall net tr,
