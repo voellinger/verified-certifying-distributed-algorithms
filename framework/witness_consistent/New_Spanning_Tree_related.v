@@ -150,18 +150,22 @@ Definition parent_walk x y vl el w : Prop :=
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
 
-Fixpoint descendands' (v : V_set) (a : A_set) (c : Connected v a) (ancestor : Name) : list Name :=
+Function eqn n1 n2 : bool :=
+  if (Name_eq_dec n1 n2) then true else false.
+
+Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
   match c with
-  | C_isolated _ => [ancestor]
-  | C_leaf v a co x y _ _ => if (Name_eq_dec ancestor (component_name x)) then (component_name y) :: [(component_name x)] else (component_name y) :: (descendands' v a co ancestor)
-  | C_edge v a co x y _ _ _ _ _ => descendands' v a co ancestor
-  | C_eq v v' a a' _ _ co => descendands' v a co ancestor
+  | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
+  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || descendand' v a co (component_name x) ancestor
+                             else descendand' v a co descendand ancestor
+  | C_edge v a co x y _ _ _ _ _ => descendand' v a co descendand ancestor
+  | C_eq v v' a a' _ _ co => descendand' v a co descendand ancestor
   end.
 
 Definition descendands (ancestor : Name) : list Name :=
   descendands' v a g ancestor.
 
-(* Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
+Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
   v0 x2 ->
   (v0 y -> False) ->
   v0 (name_component des) ->
@@ -169,9 +173,8 @@ Definition descendands (ancestor : Name) : list Name :=
   Walk v0 a0 (name_component des) x2 x x0.
 Proof.
   intros.
-  induction H2.
-
-  induction x.
+Admitted.
+(*   induction x.
   inversion H2.
   subst.
   apply W_null ; auto.
@@ -199,7 +202,9 @@ Proof.
       rewrite cnnc. simpl. auto.
       intuition.
       subst. simpl in H5. simpl in x1.
-      
+      apply Walk_in_smaller in x1 ; auto.
+      intuition.
+      simpl. right. left. simpl in H3.
       
   
   + subst.
