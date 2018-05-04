@@ -1182,6 +1182,24 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
 Qed.
 
+Lemma comp_index_name : forall pSrc n,
+  component_index (name_component pSrc) =? component_index (name_component n) = true <->
+  pSrc = n.
+Proof.
+  intros pSrc n.
+  split ; intros.
+  assert (pSrc = n \/ pSrc <> n).
+  apply classic.
+  destruct H0.
+  auto.
+  unfold name_component in *. repeat break_match.
+  subst. unfold component_index in *. repeat break_match.
+  subst.
+  apply Nat.eqb_eq in H. subst. intuition.
+  apply <- Nat.eqb_eq ; auto.
+  subst. auto.
+Qed.
+
 Lemma child_done_children_list_children: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   Permutation ((nwState net c).(child_done) ++ (nwState net c).(child_todo)) (children c)).
@@ -1216,12 +1234,26 @@ Proof.
       unfold NetHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
       specialize (H2 (parent pSrc)). rewrite Heql0 in H2. auto.
-      
-
-      assert (l = [] \/ exists p, l = [p]).
-      (* apply (Nethandler_nil_one x' pDst pSrc pBody out d l) ; auto. *)
-      
-      
+      assert (n = pSrc). admit.
+      specialize (H2 (parent pSrc)). rewrite Heql0 in H2. subst.
+      rewrite app_nil_r. 
+      assert (Permutation (pSrc :: child_done (nwState x' (parent pSrc))) (child_done (nwState x' (parent pSrc)) ++ [pSrc])).
+      apply Permutation_cons_append.
+      apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
+      apply (Permutation_trans H2 H5) ; auto.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      apply comp_index_name in Heqb0. subst.
+      specialize (H2 (parent n)). rewrite Heql0 in H2. auto.
+      assert (Permutation (n :: child_done (nwState x' (parent n)) ++ n0 :: l1) (child_done (nwState x' (parent n)) ++ n :: n0 :: l1)).
+      apply (Permutation_cons_app (child_done (nwState x' (parent n))) ) ; auto.
+      apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
+      apply (Permutation_trans H2 H5) ; auto.
+      apply comp_index_name in Heqb1. subst.
+      specialize (H2 (parent n0)). rewrite Heql0 in *.
+      assert (Permutation (n0 :: child_done (nwState x' (parent n0)) ++ l1) (child_done (nwState x' (parent n0)) ++ n0 :: l1)).
+      apply (Permutation_cons_app (child_done (nwState x' (parent n0))) ) ; auto.
+      apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
+      apply (Permutation_trans H2 H5) ; auto.
 Admitted.
 
 Lemma child_done_when_terminated: forall net tr,

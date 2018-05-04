@@ -156,14 +156,14 @@ Function eqn n1 n2 : bool :=
 Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
   match c with
   | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
-  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || descendand' v a co (component_name x) ancestor
+  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || (eqn ancestor (component_name y)) || descendand' v a co (component_name x) ancestor
                              else descendand' v a co descendand ancestor
   | C_edge v a co x y _ _ _ _ _ => descendand' v a co descendand ancestor
   | C_eq v v' a a' _ _ co => descendand' v a co descendand ancestor
   end.
 
-Definition descendands (ancestor : Name) : list Name :=
-  descendands' v a g ancestor.
+Definition descendand'' (descendand ancestor : Name) : bool :=
+  descendand' v a g descendand ancestor.
 
 Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
   v0 x2 ->
@@ -187,24 +187,27 @@ Admitted.
   + inversion H0. inversion H2. subst. apply W_null ; auto. *)
 
 Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
-  (descendand des anc <-> In des (descendands anc)).
+  (descendand des anc <-> (descendand'' des anc = true)).
 Proof.
   intros.
-  unfold descendand. unfold descendands. unfold parent_walk'. split ; intros.
+  unfold descendand. unfold descendand''. unfold parent_walk'. split ; intros.
   repeat destruct H1.
   induction g ; intros ; simpl in * ; intuition.
   + inversion H. inversion H0.
-    subst. inversion H3. apply name_comp_name in H3. subst. auto.
-  + break_match ; intuition.
-    - subst.
-      inversion H.
-      inversion H2. subst.
-      rewrite cnnc. simpl. auto.
-      intuition.
-      subst. simpl in H5. simpl in x1.
-      apply Walk_in_smaller in x1 ; auto.
-      intuition.
-      simpl. right. left. simpl in H3.
+    subst. apply name_comp_name in H3. subst. rewrite cnnc. unfold eqn. break_match. auto.
+    intuition.
+  + inversion H.
+    inversion H2. subst.
+    simpl in *.
+    inversion H0. inversion H3. subst. simpl in *. rewrite cnnc in *.
+    break_match.
+      apply name_comp_name in H6.
+      subst.
+      unfold eqn. destruct (Name_eq_dec anc anc). intuition. intuition. intuition.
+    subst. rewrite cnnc in *.
+    break_match. 
+      inversion H. inversion H4. subst.
+       
       
   
   + subst.

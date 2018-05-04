@@ -91,7 +91,7 @@ Qed.
 Fixpoint remove_src (src : Name) (child_list : list Name) : list Name :=
   match child_list with
   | [] => []
-  | hd :: tl => if (component_index (name_component src) == component_index (name_component hd)) then tl else (remove_src src tl)
+  | hd :: tl => if (component_index (name_component src) == component_index (name_component hd)) then tl else hd :: (remove_src src tl)
   end.
 
 Fixpoint is_always (test_case : Assignment) (vl : list Assignment) : bool :=
@@ -118,6 +118,9 @@ Proof.
     inversion H.
   - simpl in *.
     break_match ; auto.
+    simpl in H. destruct H.
+    auto.
+    auto.
 Qed.
 
 Lemma is_consistent_one_lesss : forall a0 cert,
