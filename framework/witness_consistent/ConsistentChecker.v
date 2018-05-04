@@ -1107,6 +1107,14 @@ Proof.
       
 Admitted.
 
+Lemma pSrc_in_child_todo : forall x' tr,
+  step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
+  (
+  forall pSrc pDst pBody,
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
+  In pSrc (nwState x' (parent pSrc)).(child_todo)).
+Admitted.
+
 Lemma child_done_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
     (In d (child_done (nwState net c))) ->
@@ -1250,6 +1258,7 @@ Proof.
       apply (Nethandler_correct x' p out d) ; auto.
 
       destruct p. simpl in *.
+
       assert (pBody = (nwState x' pSrc).(ass_list)) as newnewnew.
       apply (pbody_is_asslist x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
@@ -1261,12 +1270,16 @@ Proof.
       assert (pDst = parent pSrc).
       apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
-      
+
       subst.
       unfold NetHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
       specialize (H2 (parent pSrc)). rewrite Heql0 in H2. auto.
-      assert (n = pSrc). admit.
+      assert (n = pSrc).
+      assert (In pSrc (nwState x' (parent pSrc)).(child_todo)) as newnew.
+      apply (pSrc_in_child_todo x' tr1 H pSrc (parent pSrc) (nwState x' pSrc).(ass_list)) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      rewrite Heql0 in newnew. simpl in newnew. destruct newnew. auto. intuition.
       specialize (H2 (parent pSrc)). rewrite Heql0 in H2. subst.
       rewrite app_nil_r. 
       assert (Permutation (pSrc :: child_done (nwState x' (parent pSrc))) (child_done (nwState x' (parent pSrc)) ++ [pSrc])).
@@ -1298,7 +1311,8 @@ Proof.
       apply (Permutation_trans H5) ; auto.
       apply Permutation_app_head.
       assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
-      admit.
+      apply (pSrc_in_child_todo x' tr1 H pSrc (parent pSrc) (nwState x' pSrc).(ass_list)) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
       assert (NoDup (child_todo (nwState x' (parent pSrc)))).
       admit.
       assert (Permutation (pSrc :: n :: n0 :: remove_src pSrc l1) (n :: pSrc :: n0 :: remove_src pSrc l1)).
@@ -1323,6 +1337,8 @@ Proof.
       apply (Permutation_trans H8) ; auto.
       apply perm_skip.
       apply (Permutation_trans H9) ; auto.
+    - unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.      
 Admitted.
 
 Lemma child_done_when_terminated: forall net tr,
