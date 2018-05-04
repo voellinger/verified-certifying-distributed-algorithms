@@ -1194,7 +1194,34 @@ Proof.
     intuition.
   + subst. simpl in *.
     intuition.
-    
+    invc H0 ; simpl in *.
+    - assert (forall n m , l = [(n, m)] -> (parent (pDst p) = n) /\ (m = (ass_list (nwState x' (pDst p))) ++ pBody p)) as new.
+      intros. subst.
+      apply (Nethandler_correct x' p out d) ; auto.
+
+      destruct p. simpl in *.
+      assert (pBody = (nwState x' pSrc).(ass_list)) as newnewnew.
+      apply (pbody_is_asslist x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+
+
+      assert ((nwState x' pSrc).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      
+      subst.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      specialize (H2 (parent pSrc)). rewrite Heql0 in H2. auto.
+      
+
+      assert (l = [] \/ exists p, l = [p]).
+      (* apply (Nethandler_nil_one x' pDst pSrc pBody out d l) ; auto. *)
+      
+      
 Admitted.
 
 Lemma child_done_when_terminated: forall net tr,
