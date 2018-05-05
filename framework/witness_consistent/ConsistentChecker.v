@@ -1148,9 +1148,10 @@ Lemma pSrc_in_child_todo : forall x' tr,
   (
   forall pSrc pDst pBody,
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
+  pSrc <> pDst ->
   In pSrc (nwState x' (parent pSrc)).(child_todo)).
 Proof.
-  intros net tr H pSrc pDst pBody H2.
+  intros net tr H pSrc pDst pBody H2 psrcpdst.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
   + subst.
@@ -1186,8 +1187,9 @@ Proof.
       rewrite e in *. rewrite Heql0 in *. rewrite H4 in *.
       assert (In pSrc []). apply H3.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto. inversion H6.
-      inversion H6. subst.
-      rewrite e in *. 
+      inversion H6. (* subst. intuition. *)
+      rewrite e in *. rewrite Heql0 in *.
+      assert (pSrc = pSrc0). admit. subst. intuition.
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
@@ -1315,6 +1317,122 @@ Proof.
   apply perm_swap.
 Qed.
 
+Lemma no_v_no_children : forall v0 a0 c y x,
+  ~ v0 y ->
+  ~ In (component_name y) (children' v0 a0 c (component_name x)).
+Proof.
+  intros.
+  induction c ; intros ; simpl in *.
+  + intuition.
+  + assert (~ v0 y).
+    intuition.
+    apply H.
+    apply In_right. auto. apply IHc in H0.
+    assert (y <> y0).
+    intuition. apply H.
+    apply In_left. auto. subst. apply In_single.
+    unfold not. intros.
+    break_match.
+      - simpl in H2.
+        destruct H2. inversion e. inversion H2. subst. intuition.
+        intuition.
+      - intuition.
+  + intuition.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
+Lemma NoDup_children: forall name,
+  NoDup (children name).
+Proof.
+  intros.
+  unfold children.
+  induction g ; intros ; simpl in * ; intuition.
+  + break_match ; subst.
+    - assert (~ In (component_name y) (children' v0 a0 c (component_name x))).
+      apply no_v_no_children ; auto.
+      apply NoDup_cons ; auto.
+    - auto.
+Qed.
+
+Lemma remove_src_before': forall (d pSrc : Name) (l1 : list Name),
+  ~ In d l1 ->
+  ~ In d (remove_src pSrc l1).
+Proof.
+  intros.
+  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
+  inversion H0.
+  subst.
+  intuition.
+  intuition.
+Qed.
+
+Lemma NoDup_remove_src : forall pSrc l1,
+  NoDup l1 ->
+  NoDup (remove_src pSrc l1).
+Proof.
+  intros.
+  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
+  + apply NoDup_cons_iff in H. destruct H ; auto.
+  + apply NoDup_cons_iff in H. destruct H ; intuition.
+    apply NoDup_cons_iff. split ; auto.
+    apply remove_src_before' ; auto.
+Qed.
+
+Lemma Nodup_child_todo: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
+  NoDup (child_todo (nwState net c))).
+Proof.
+  intros net tr H.
+remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+    apply NoDup_children.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - destruct p. simpl in *.
+
+      assert (pBody = (nwState x' pSrc).(ass_list)) as newnewnew.
+      apply (pbody_is_asslist x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+
+
+      assert ((nwState x' pSrc).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+
+      subst.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      specialize (H2 (parent pSrc)). rewrite Heql0 in *.
+      assert (H2' := H2).
+      apply NoDup_cons_iff in H2'.
+      destruct H2'.
+      assert (H2'' := H6).
+      apply NoDup_cons_iff in H2''.
+      destruct H2''.
+      repeat break_match ; auto.
+      assert (~ In n l1).
+      intuition.
+      apply NoDup_cons_iff ; auto.
+      assert (NoDup (remove_src pSrc l1)).
+      apply NoDup_remove_src ; auto.
+      apply NoDup_cons_iff ; split ; auto.
+      intuition. apply H5. simpl in H10. destruct H10 ; simpl ; auto.
+      right. apply (remove_src_before n pSrc) ; auto.
+      apply NoDup_cons_iff ; split ; auto.
+      intuition. apply H7.
+      apply (remove_src_before n0 pSrc) ; auto.
+    - unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+Qed.
+
 Lemma child_done_children_list_children: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   Permutation ((nwState net c).(child_done) ++ (nwState net c).(child_todo)) (children c)).
@@ -1350,10 +1468,15 @@ Proof.
       unfold NetHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
       specialize (H2 (parent pSrc)). rewrite Heql0 in H2. auto.
+      assert (pSrc = (parent pSrc) \/ pSrc <> (parent pSrc)) as psrcpdst.
+      apply classic.
+      destruct psrcpdst as [psrc|pdst].
+      subst. rewrite <- psrc in *. rewrite <- psrc in *.
+      apply eqb_false_iff in Heqb. intuition.
       assert (n = pSrc).
       assert (In pSrc (nwState x' (parent pSrc)).(child_todo)) as newnew.
       apply (pSrc_in_child_todo x' tr1 H pSrc (parent pSrc) (nwState x' pSrc).(ass_list)) ; auto.
-      rewrite H3. apply in_or_app. simpl. auto.
+      rewrite H3. apply in_or_app. simpl. right. auto.
       rewrite Heql0 in newnew. simpl in newnew. destruct newnew. auto. intuition.
       specialize (H2 (parent pSrc)). rewrite Heql0 in H2. subst.
       rewrite app_nil_r. 
@@ -1386,10 +1509,18 @@ Proof.
       apply (Permutation_trans H5) ; auto.
       apply Permutation_app_head.
       assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
+
+      assert (pSrc = (parent pSrc) \/ pSrc <> (parent pSrc)) as psrcpdst.
+      apply classic.
+      destruct psrcpdst as [psrc|pdst].
+      subst. rewrite <- psrc in *. rewrite <- psrc in *.
+      apply eqb_false_iff in Heqb. intuition.
+
+
       apply (pSrc_in_child_todo x' tr1 H pSrc (parent pSrc) (nwState x' pSrc).(ass_list)) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
       assert (NoDup (child_todo (nwState x' (parent pSrc)))).
-      admit.
+      apply (Nodup_child_todo x' tr1) ; auto.
       assert (Permutation (pSrc :: n :: n0 :: remove_src pSrc l1) (n :: pSrc :: n0 :: remove_src pSrc l1)).
       apply perm_swap.
       assert (Permutation (pSrc :: n0 :: remove_src pSrc l1) (n0 :: pSrc :: remove_src pSrc l1)).
@@ -1414,7 +1545,7 @@ Proof.
       apply (Permutation_trans H9) ; auto.
     - unfold InputHandler in H3.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.      
-Admitted.
+Qed.
 
 Lemma child_done_when_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
