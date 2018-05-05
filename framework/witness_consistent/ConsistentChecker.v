@@ -1112,6 +1112,15 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
 Qed.
 
+Lemma not_parent_in_packets : forall x' tr,
+  step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
+  (
+  forall pSrc pDst pBody pDst2 pBody2,
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
+  ~ In {| pSrc := pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x')).
+Proof.
+Admitted.
+
 Lemma pbody_is_asslist : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
@@ -1127,49 +1136,8 @@ Proof.
     inversion H.
   + subst. simpl in *.
     intuition.
-    
-(*     assert (pSrc = pDst \/ pSrc <> pDst).
-    apply classic.
-    destruct H4 as [pp|pp].
-    subst.
     invc H0 ; simpl in *. 
-    - assert (forall n m , l = [(n, m)] -> (parent (Net.pDst p) = n) /\ (m = (ass_list (nwState x' (Net.pDst p))) ++ Net.pBody p)) as new.
-      intros. subst.
-      apply (Nethandler_correct x' p out d) ; auto.
-
-      destruct p. simpl in *.
-
-      assert ((nwState x' pSrc).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst0 pBody0) ; auto.
-      rewrite H4. apply in_or_app. simpl. auto.
-      assert (pDst0 = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst0 pBody0) ; auto.
-      rewrite H4. apply in_or_app. simpl. auto.
-
-      subst.
-      unfold NetHandler in H5.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
-      apply (H3 (parent pSrc) (parent pSrc) pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-      apply (H3 (parent pSrc) (parent pSrc) pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-      inversion H6. subst. auto.
-
-      admit. (* ass_list (nwState x' pSrc0) = ass_list (nwState x' (parent pSrc0)) ++ pBody0  *)
-      apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-      
-   *)
-
-
-
-    invc H0 ; simpl in *. 
-    - (* assert (forall n m , l = [(n, m)] -> (parent (Net.pDst p) = n) /\ (m = (ass_list (nwState x' (Net.pDst p))) ++ Net.pBody p)) as new.
-      intros. subst.
-      apply (Nethandler_correct x' p out d) ; auto.
-      assert (l = [] \/ exists p, l = [p]) as nil_one.
-      apply (Nethandler_nil_one x' (Net.pDst p) (Net.pSrc p) (Net.pBody p) out d l) ; auto.
- *)
-
-
-      destruct p. simpl in *.
+    - destruct p. simpl in *.
 
       assert ((nwState x' pSrc0).(terminated) = true).
       apply (packets_work'wrap x' tr1 H pSrc0 pDst0 pBody0) ; auto.
@@ -1179,43 +1147,41 @@ Proof.
       rewrite H4. apply in_or_app. simpl. auto.
 
       subst.
-
-
       unfold NetHandler in H5.
-      repeat break_match. 
-        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
-        apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
-        apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-        simpl in *.
-        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
-        inversion H6. subst. auto.
-        
-      
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
       apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       inversion H6. subst. auto.
-      
-      assert (pBody0 = ass_list (nwState x' pSrc0)).
-        apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto. subst.
-      assert (pBody = ass_list (nwState x' (parent pSrc0))).
-        apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
-
-      assert (pBody = ass_list (nwState x' pSrc0)).
-         apply (H3 pSrc0 (parent pSrc0) pBody) ; auto. apply in_or_app. simpl. auto.
-
-      admit. (* ass_list (nwState x' pSrc0) = ass_list (nwState x' (parent pSrc0)) ++ pBody0  *)
-      apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-      
-
-      apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto.
-      apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto.
-      apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto.
-      apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto.
-      break_match. subst. 
-apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto.
-Admitted.
+      assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
+      rewrite H4. apply in_or_app. simpl. auto.
+      apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H2.
+      assert (In {| pSrc := pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
+      rewrite H4.
+      apply in_or_app. simpl. 
+      assert (pDst = parent pSrc0). admit. subst.
+      assert (pBody = pBody0). admit. subst.
+      auto. intuition.
+      assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
+      rewrite H4. apply in_or_app. simpl. auto.
+      apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H6.
+      assert (In {| pSrc := pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
+      rewrite H4.
+      apply in_or_app. simpl. 
+      assert (pDst = parent pSrc0). admit. subst.
+      assert (pBody = pBody0). admit. subst.
+      auto. intuition.
+      apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+      apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+      inversion H6. subst. intuition.
+      apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
+      apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+    - 
+      specialize (H3 pSrc pDst pBody).
+      unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      inversion H0. subst. intuition.
+      inversion H0. subst. intuition.
+Qed.
 
 Lemma pSrc_in_child_todo : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
