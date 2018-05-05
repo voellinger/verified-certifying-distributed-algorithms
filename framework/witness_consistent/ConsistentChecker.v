@@ -1161,12 +1161,12 @@ Proof.
 
 
     invc H0 ; simpl in *. 
-    - assert (forall n m , l = [(n, m)] -> (parent (Net.pDst p) = n) /\ (m = (ass_list (nwState x' (Net.pDst p))) ++ Net.pBody p)) as new.
+    - (* assert (forall n m , l = [(n, m)] -> (parent (Net.pDst p) = n) /\ (m = (ass_list (nwState x' (Net.pDst p))) ++ Net.pBody p)) as new.
       intros. subst.
       apply (Nethandler_correct x' p out d) ; auto.
       assert (l = [] \/ exists p, l = [p]) as nil_one.
       apply (Nethandler_nil_one x' (Net.pDst p) (Net.pSrc p) (Net.pBody p) out d l) ; auto.
-
+ *)
 
 
       destruct p. simpl in *.
@@ -1180,16 +1180,25 @@ Proof.
 
       subst.
 
-      destruct nil_one as [nil|one].
-      admit.
-      destruct one as [x one]. destruct x.
-      specialize (new n m one). destruct new.
-      assert (pSrc <> pDst). admit.
+
       unfold NetHandler in H5.
+      repeat break_match. 
+        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
+        apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
+        apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+        simpl in *.
+        simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
+        inversion H6. subst. auto.
+        
+      
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; rewrite H4 in *.
-      (* apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-       *) inversion H6. subst. auto.
+      apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+      inversion H6. subst. auto.
+      
+      assert (pBody0 = ass_list (nwState x' pSrc0)).
+        apply (H3 pSrc0 (parent pSrc0) pBody0) ; auto. apply in_or_app. simpl. auto. subst.
       assert (pBody = ass_list (nwState x' (parent pSrc0))).
         apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
 
