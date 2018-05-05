@@ -1117,7 +1117,7 @@ Lemma not_parent_in_packets : forall x' tr,
   (
   forall pSrc pDst pBody pDst2 pBody2,
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
-  ~ In {| pSrc := pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x')).
+  ~ In {| pSrc := parent pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x')).
 Proof.
 Admitted.
 
@@ -1155,28 +1155,22 @@ Proof.
       assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
       rewrite H4. apply in_or_app. simpl. auto.
       apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H2.
-      assert (In {| pSrc := pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
+      assert (In {| pSrc := parent pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
       rewrite H4.
-      apply in_or_app. simpl. 
-      assert (pDst = parent pSrc0). admit. subst.
-      assert (pBody = pBody0). admit. subst.
-      auto. intuition.
+      apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto. intuition.
+
       assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
       rewrite H4. apply in_or_app. simpl. auto.
       apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H6.
-      assert (In {| pSrc := pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
+      assert (In {| pSrc := parent pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
       rewrite H4.
-      apply in_or_app. simpl. 
-      assert (pDst = parent pSrc0). admit. subst.
-      assert (pBody = pBody0). admit. subst.
-      auto. intuition.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto. intuition.
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       inversion H6. subst. intuition.
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
-    - 
-      specialize (H3 pSrc pDst pBody).
+    - specialize (H3 pSrc pDst pBody).
       unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
       inversion H0. subst. intuition.
