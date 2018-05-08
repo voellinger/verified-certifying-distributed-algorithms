@@ -1185,14 +1185,16 @@ Lemma pSrc_in_child_todo : forall x' tr,
   pSrc <> pDst ->
   In pSrc (nwState x' (parent pSrc)).(child_todo)).
 Proof.
-  intros net tr H pSrc pDst pBody H2 psrcpdst.
+  intros net tr H.
   remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody H2 psrcpdst ; simpl in *.
   + subst.
     simpl in *.
     intuition.
   + subst. simpl in *.
     intuition.
+    assert (pDst = parent pSrc) as pDst'.
+    apply (packets_work'''' x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
     invc H0 ; simpl in * ; intuition.
     - (* unfold NetHandler in H5.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition. admit. admit.
@@ -1204,26 +1206,51 @@ Proof.
       destruct p. simpl in *.
 
       assert (pBody0 = (nwState x' pSrc0).(ass_list)) as newnewnew.
-      apply (pbody_is_asslist x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+      apply (pbody_is_asslist x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       assert ((nwState x' pSrc0).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+      apply (packets_work'wrap x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
-      assert (pDst0 = parent pSrc0).
-      apply (packets_work'''' x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+      assert (pDst = parent pSrc0).
+      apply (packets_work'''' x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
 
       subst.
       unfold NetHandler in H5.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
-      rewrite H4 in *. rewrite <- e. apply H3.
+      rewrite H4 in *. rewrite <- e. apply (H3 pSrc (parent pSrc) pBody) ; auto.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
+      specialize (H3 pSrc (parent pSrc) pBody).
       rewrite e in *. rewrite Heql0 in *. rewrite H4 in *.
-      assert (In pSrc []). apply H3.
+      assert (In pSrc []). apply H3 ; auto.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto. inversion H6.
-      inversion H6. (* subst. intuition. *)
-      rewrite e in *. rewrite Heql0 in *.
-      assert (pSrc = pSrc0). admit. subst. intuition.
+      inversion H6. subst. intuition.
+      assert (H3' := H3).
+      specialize (H3' pSrc (parent pSrc) pBody).
+      rewrite e in *. rewrite Heql0 in *. rewrite H4 in *.
+      assert (In {| pSrc := pSrc; pDst := (parent pSrc0); pBody := pBody |}
+        (xs ++ {| pSrc := pSrc0; pDst := parent pSrc0; pBody := ass_list (nwState x' pSrc0) |} :: ys)).
+      apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto. intuition.
+      specialize (H3 pSrc0 (parent pSrc0) (ass_list (nwState x' pSrc0))).
+      assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := ass_list (nwState x' pSrc0) |}
+       (xs ++ {| pSrc := pSrc0; pDst := parent pSrc0; pBody := ass_list (nwState x' pSrc0) |} :: ys)).
+      apply in_or_app. simpl. auto.
+      intuition. rewrite Heql0 in *.
+      assert (pSrc0 = parent pSrc0 \/ pSrc0 <> parent pSrc0).
+      apply classic.
+      destruct H3.
+      subst. rewrite <- H3 in *. rewrite <- H3 in *. subst.
+      (* pSrc and (parent pSrc) in the list of x'' *)
+      admit.
+      intuition. inversion H10 ; intuition. inversion H8 ; intuition.
+      subst. (* pSrc and (parent pSrc) in the list of x'' *)
+      admit.
+      assert ([] = (remove_src pSrc0 (n0 :: l1))).
+      simpl.
+      fold (remove_src pSrc0 (n0 :: l1)).
+      fold (remove_src pSrc0 (n :: l1)) in *.
+      
+      repeat break_match.
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
