@@ -1177,6 +1177,48 @@ Proof.
       inversion H0. subst. intuition.
 Qed.
 
+Lemma cinc: forall pSrc0 pSrc,
+  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = true ->
+  pSrc0 = pSrc.
+Proof.
+  intros.
+  apply beq_nat_true in H.
+  unfold component_index in *.
+  unfold name_component in *.
+  destruct pSrc. destruct pSrc0.
+  destruct c0. destruct c. subst.
+  auto.
+Qed.
+
+Lemma cinc': forall pSrc0 pSrc,
+  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = false ->
+  pSrc0 <> pSrc.
+Proof.
+  intros.
+  apply beq_nat_false in H.
+  destruct pSrc. destruct pSrc0.
+  destruct c0. destruct c. simpl in *.
+  intuition. apply H.
+  inversion H0. auto.
+Qed.
+
+Lemma remove_src_still_in : forall pSrc pSrc0 x,
+  pSrc <> pSrc0 ->
+  In pSrc x ->
+  In pSrc (remove_src pSrc0 x).
+Proof.
+  intros.
+  induction x.
+  inversion H0.
+  simpl in *.
+  destruct H0 ; repeat break_match ; intuition.
+  subst.
+  apply cinc in Heqb.
+  subst.
+  intuition.
+  simpl. left. auto.
+Qed.
+
 Lemma pSrc_in_child_todo : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
@@ -1217,13 +1259,16 @@ Proof.
 
       subst.
       unfold NetHandler in H5.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
+      (* repeat break_match ; simpl in * ; simpl in * ; intuition ; inversion H5 ; simpl in * ; intuition.
+      admit. admit. admit. admit. admit. admit. subst. simpl in *. intuition.
+ *)
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; clear H5.
       rewrite H4 in *. rewrite <- e. apply (H3 pSrc (parent pSrc) pBody) ; auto.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
       specialize (H3 pSrc (parent pSrc) pBody).
       rewrite e in *. rewrite Heql0 in *. rewrite H4 in *.
       assert (In pSrc []). apply H3 ; auto.
-      apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto. inversion H6.
+      apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto. inversion H5.
       inversion H6. subst. intuition.
       assert (H3' := H3).
       specialize (H3' pSrc (parent pSrc) pBody).
@@ -1242,15 +1287,41 @@ Proof.
       subst. rewrite <- H3 in *. rewrite <- H3 in *. subst.
       (* pSrc and (parent pSrc) in the list of x'' *)
       admit.
-      intuition. inversion H10 ; intuition. inversion H8 ; intuition.
+      intuition. inversion H9 ; intuition. inversion H7 ; intuition.
       subst. (* pSrc and (parent pSrc) in the list of x'' *)
       admit.
-      assert ([] = (remove_src pSrc0 (n0 :: l1))).
-      simpl.
-      fold (remove_src pSrc0 (n0 :: l1)).
-      fold (remove_src pSrc0 (n :: l1)) in *.
-      
-      repeat break_match.
+      assert ((remove_src pSrc0 (n :: n0 :: l1)) = if component_index (name_component pSrc0) =? component_index (name_component n)
+   then n0 :: l1
+   else
+    n
+    :: (if component_index (name_component pSrc0) =? component_index (name_component n0)
+        then l1
+        else n0 :: remove_src pSrc0 l1)).
+      simpl. auto.
+      rewrite <- H5 in *.
+      assert (H3' := H3).
+      specialize (H3 pSrc (parent pSrc) pBody).
+      specialize (H3' pSrc0 (parent pSrc0) (ass_list (nwState x' pSrc0))).
+      rewrite <- e in *.
+      rewrite H4 in *. rewrite Heql0 in *.
+      assert (pSrc = pSrc0 \/ pSrc <> pSrc0).
+      apply classic.
+      destruct H6. subst. (* pSrc0 zweimal in nwPackets x' drin *)
+      admit.
+      assert (In pSrc (n :: n0 :: l1)).
+      apply H3 ; auto.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+      apply remove_src_still_in ; auto.
+      apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
+      apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
+      apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
+      apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
+      inversion H6. subst. clear H7 n H6 new.
+
+      apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
+      apply in_app_or in H6. destruct H6 ; apply in_or_app ; simpl ; auto.
+      apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
+      apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
