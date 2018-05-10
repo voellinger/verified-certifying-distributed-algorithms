@@ -1237,6 +1237,7 @@ Proof.
     intuition.
     assert (pDst = parent pSrc) as pDst'.
     apply (packets_work'''' x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
+    subst.
     invc H0 ; simpl in * ; intuition.
     - (* unfold NetHandler in H5.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition. admit. admit.
@@ -1259,9 +1260,9 @@ Proof.
 
       subst.
       unfold NetHandler in H5.
-      (* repeat break_match ; simpl in * ; simpl in * ; intuition ; inversion H5 ; simpl in * ; intuition.
-      admit. admit. admit. admit. admit. admit. subst. simpl in *. intuition.
- *)
+(*       repeat break_match ; simpl in * ; simpl in * ; intuition ; inversion H5 ; simpl in * ; intuition.
+      admit. admit. admit. admit. admit. admit. subst. simpl in *. intuition. *)
+
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition ; clear H5.
       rewrite H4 in *. rewrite <- e. apply (H3 pSrc (parent pSrc) pBody) ; auto.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
@@ -1317,11 +1318,25 @@ Proof.
       apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
       inversion H6. subst. clear H7 n H6 new.
+      rewrite H4 in *. assert (H3' := H3).
+(*       specialize (H3' pSrc0 (parent pSrc0) (ass_list (nwState x' pSrc0))).
+      assert (pSrc0 = parent pSrc0 -> False). admit.
+      assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := ass_list (nwState x' pSrc0) |}
+        (xs ++ {| pSrc := pSrc0; pDst := parent pSrc0; pBody := ass_list (nwState x' pSrc0) |} :: ys)).
+      admit. rewrite Heql0 in *. intuition. *)
+      specialize (H3 (parent pSrc0) (parent (parent pSrc0)) (ass_list (nwState x' (parent pSrc0)))).
+      apply H3 ; auto. admit.
+
 
       apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
       apply in_app_or in H6. destruct H6 ; apply in_or_app ; simpl ; auto.
       apply (H3 pSrc (parent pSrc) pBody) ; auto. rewrite H4 in *.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
+  - unfold InputHandler in H4.
+    specialize (H3 pSrc (parent pSrc) pBody).
+    repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+    inversion H0. subst. symmetry in H5. intuition.
+    inversion H0. subst. intuition. admit. (* Heqb is False *)
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
