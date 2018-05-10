@@ -150,6 +150,17 @@ Definition parent_walk x y vl el w : Prop :=
 Definition descendand (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
 
+Definition descendan (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : Prop :=
+  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a c w.
+
+Lemma descendand_descedan :
+  descendand = descendan v a g.
+Proof.
+  unfold descendand. unfold descendan.
+  auto.
+Qed.
+
+
 Function eqn n1 n2 : bool :=
   if (Name_eq_dec n1 n2) then true else false.
 

@@ -1018,18 +1018,6 @@ Proof.
       apply (terminated_child_todo_null_null x' tr1) ; auto.
 Qed.
 
-(* Lemma descendand_but_no_child
-H : descendand (component_name d) (component_name c)
-H0 : ~ In (component_name d) (children (Checker c))
- *)
-
-(* Lemma nearly_all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
-    forall dd : Name, descendand dd d ->
-    (forall e, In e (nwState net dd).(ass_list) -> In e (nwState net d).(ass_list))).
-Admitted. *)
-
 Lemma child_done_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
     (In d (child_done (nwState net c))) ->
@@ -1201,8 +1189,6 @@ intros net tr H.
       apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
       apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
-    
-      
 Admitted.
 
 Lemma pbody_is_asslist : forall x' tr,
@@ -1875,37 +1861,78 @@ Proof.
 Admitted. *)
 
 
+Lemma parent_exists: forall c d,
+  descendand d c ->
+  c <> d ->
+  (exists (e : Name), descendand e c /\ In d (children e)).
+Proof.
+Admitted.
+
+Lemma descendand_trans : forall c d (P : Name -> Prop),
+  descendand d c ->
+  P d ->
+  (forall e d : Name,
+    descendand e c ->
+    In d (children e) ->
+    P d -> P e) ->
+  P c.
+Proof.
+  intros c d prop H H0 H1.
+  assert (c = d \/ c <> d).
+  apply classic.
+  destruct H2. subst. auto.
+  assert (exists (e : Name), descendand e c /\ In d (children e)).
+  apply (parent_exists c d) ; auto.
+  rewrite descendand_descedan in *.
+  induction g ; simpl in * ; intuition.
+  + unfold descendan in H.
+    repeat destruct H.
+    assert (x1' := x2). apply W_endx_inv in x1'. inversion x1'.
+    assert (x1'' := x2). apply W_endy_inv in x1''. inversion x1''.
+    subst. intuition. unfold name_component in *. simpl in *. repeat break_match. subst. intuition.
+  + 
+    assert (x1' := x1). apply W_endx_inv in x1'.
+    assert (x1'' := x1). apply W_endy_inv in x1''.
+    
+Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
-  (forall d, descendand (component_name d) (component_name c) -> 
+  (forall d, descendand (component_name d) (component_name c) ->
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
 Proof.
   intros.
   assert (H0' := H0).
   apply (terminated_child_todo_null net tr) in H0' ; auto.
-  assert (Permutation (child_done (nwState net (Checker c)))  (children (Checker c))).
+  assert (Permutation (child_done (nwState net (Checker c))) (children (Checker c))).
   assert (Permutation ((nwState net (Checker c)).(child_done) ++ (nwState net (Checker c)).(child_todo)) (children (Checker c))).
   apply (child_done_children_list_children net tr) ; auto.
   rewrite H0' in *. rewrite app_nil_r in H3. auto.
-  assert (forall d, Permutation (children (Checker c)) (child_done (nwState net (Checker c)))  -> In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
+  assert (forall d, Permutation (children (Checker c)) (child_done (nwState net (Checker c))) -> In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
   apply Permutation_in.
   apply Permutation_sym in H3.
   assert (forall d : Name, In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
   intros.
   apply (H4 d0) ; auto.
   clear H4.
-  assert (forall d : Name, In d (children (Checker c)) -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net (Checker c)).(ass_list))).
+  assert (forall d' d : Name, descendand d' (Checker c) -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
   intros.
-  apply (child_done_in_ass_list net tr H (Checker c) d0) ; auto.
-  clear H5.
-  unfold descendand in *. unfold children in *.
-  clear H3. clear H0'.
-  induction g ; simpl in * ; intuition.
-  + 
-Admitted.
-
+  apply (child_done_in_ass_list net tr H d' d0) ; auto.
+  assert (terminated (nwState net d') = true).
+  apply (all_subtree_terminated net tr H (Checker c)) ; auto.
+  destruct d'.
+  apply (terminated_child_todo_null net tr) in H8 ; auto.
+  assert (Permutation (child_done (nwState net (Checker c0))) (children (Checker c0))).
+  assert (Permutation ((nwState net (Checker c0)).(child_done) ++ (nwState net (Checker c0)).(child_todo)) (children (Checker c0))).
+  apply (child_done_children_list_children net tr) ; auto.
+  rewrite H8 in *. rewrite app_nil_r in H9. auto.
+  assert (forall d, Permutation (children (Checker c0)) (child_done (nwState net (Checker c0))) -> In d (children (Checker c0)) -> In d (child_done (nwState net (Checker c0)))).
+  apply Permutation_in.
+  apply Permutation_sym in H9. apply H10 ; auto.
+  apply (descendand_trans (Checker c) (Checker d)) ; auto.
+  intros. apply (H4 e0 d0) ; auto.
+Qed.
 
 
 Lemma packets_work''' : forall x tr a0,
