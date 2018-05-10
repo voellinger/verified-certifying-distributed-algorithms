@@ -1159,11 +1159,12 @@ Lemma not_parent_in_packets : forall x' tr,
   (
   forall pSrc pDst pBody pDst2 pBody2,
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
-  ~ In {| pSrc := parent pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x')).
+  In {| pSrc := parent pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x') -> 
+  (pSrc = parent pSrc /\ pDst = pDst2 /\ pBody = pBody2)).
 Proof.
 intros net tr H.
   remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody H2 psrcpdst ; simpl in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody pDst2 pBody2 H2 H3 ; simpl in *.
   + subst.
     simpl in *.
     intuition.
@@ -1176,28 +1177,31 @@ intros net tr H.
     - destruct p. simpl in *.
       assert ((nwState x' pSrc0).(terminated) = true).
       apply (packets_work'wrap x' tr1 H pSrc0 pDst pBody0) ; auto.
-      rewrite H6. apply in_or_app. simpl. auto.
+      rewrite H5. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc0).
       apply (packets_work'''' x' tr1 H pSrc0 pDst pBody0) ; auto.
-      rewrite H6. apply in_or_app. simpl. auto.
+      rewrite H5. apply in_or_app. simpl. auto.
 
       subst.
-      unfold NetHandler in H7.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition ; rewrite H6 in *.
-      apply (H5 pSrc (parent pSrc) pBody H2 psrcpdst) ; auto.
+      unfold NetHandler in H6.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition ; rewrite H5 in * ; clear H6.
+      apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
-      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
-      apply (H5 pSrc (parent pSrc) pBody H2 psrcpdst) ; auto.
+      apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
-      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
-      inversion H8. inversion H4. subst. rewrite <- H9 in *.
-      apply (H5 pSrc0 (parent pSrc0) pBody0 (parent pSrc0) pBody0) ; auto.
-      apply in_or_app. simpl. auto. apply in_or_app. simpl. auto.
+      inversion H7. inversion H3. subst. auto.
+      inversion H7. subst. rewrite H6 in *.
+      admit.
+      inversion H3. subst. admit.
+      apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
-      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
-      
-      
-      apply in_or_app. simpl. auto.
+      apply in_or_app. simpl. apply in_app_or in H7. destruct H7 ; auto.
+      apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
+      apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
+    
       
 Admitted.
 
@@ -1232,11 +1236,18 @@ Proof.
       apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply (H3 (parent pSrc0) pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       inversion H6. subst. auto.
+
       assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
       rewrite H4. apply in_or_app. simpl. auto.
-      apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H2.
+      apply (not_parent_in_packets x' tr1 H _ _ _ pDst pBody) in H2 ; auto.
       assert (In {| pSrc := parent pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
       rewrite H4.
+      apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto. intuition.
+      subst.
+      assert (NoDup (nwPackets x')).
+      apply (NoDup_packets x' tr1) ; auto. rewrite H4 in *.
+      apply NoDup_remove in H2. rewrite <- H8 in *. destruct H2. intuition.
+      rewrite H4 in *.
       apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto. intuition.
 
       assert (In {| pSrc := pSrc0; pDst := parent pSrc0; pBody := pBody0 |} (nwPackets x')).
@@ -1245,6 +1256,15 @@ Proof.
       assert (In {| pSrc := parent pSrc0; pDst := pDst; pBody := pBody |} (nwPackets x')).
       rewrite H4.
       apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto. intuition.
+      subst.
+      assert (NoDup (nwPackets x')).
+      apply (NoDup_packets x' tr1) ; auto. rewrite H4 in *.
+      apply NoDup_remove in H6. rewrite <- H8 in *. destruct H6. intuition.
+      rewrite H4 in *.
+      apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto. intuition.
+
+
+
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply (H3 pSrc pDst pBody) ; auto. apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       inversion H6. subst. intuition.
