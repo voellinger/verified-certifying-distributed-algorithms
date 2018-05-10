@@ -1112,6 +1112,48 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
 Qed.
 
+Lemma NoDup_packets : forall x' tr,
+  step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
+  NoDup (nwPackets x').
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in * ; intuition.
+    - destruct p. simpl in *.
+      assert ((nwState x' pSrc).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+
+      subst.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition ; rewrite H3 in *.
+      apply NoDup_remove_1 in H2 ; auto.
+      apply NoDup_remove_1 in H2 ; auto.
+      apply NoDup_remove in H2. destruct H2.
+      apply NoDup_cons ; auto. intuition.
+      assert ((nwState x' (parent pSrc)).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H (parent pSrc) (parent (parent pSrc)) (ass_list (nwState x' (parent pSrc)) ++ pBody)) ; auto.
+      rewrite H3. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
+      apply eqb_false_iff in Heqb. intuition.
+      apply NoDup_remove_1 in H2 ; auto.
+    - unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+      apply NoDup_cons ; auto.
+      intuition.
+      assert ((nwState x' h).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H h (parent h) (ass_list (nwState x' h))) ; auto.
+      apply eqb_false_iff in Heqb. intuition.
+Qed.
+
 Lemma not_parent_in_packets : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
@@ -1119,6 +1161,44 @@ Lemma not_parent_in_packets : forall x' tr,
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x') ->
   ~ In {| pSrc := parent pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x')).
 Proof.
+intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody H2 psrcpdst ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    assert (pDst = parent pSrc) as pDst'.
+    apply (packets_work'''' x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
+    subst.
+    invc H0 ; simpl in * ; intuition.
+    - destruct p. simpl in *.
+      assert ((nwState x' pSrc0).(terminated) = true).
+      apply (packets_work'wrap x' tr1 H pSrc0 pDst pBody0) ; auto.
+      rewrite H6. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc0).
+      apply (packets_work'''' x' tr1 H pSrc0 pDst pBody0) ; auto.
+      rewrite H6. apply in_or_app. simpl. auto.
+
+      subst.
+      unfold NetHandler in H7.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H7 ; subst ; simpl in * ; intuition ; rewrite H6 in *.
+      apply (H5 pSrc (parent pSrc) pBody H2 psrcpdst) ; auto.
+      apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
+      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
+      apply (H5 pSrc (parent pSrc) pBody H2 psrcpdst) ; auto.
+      apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
+      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
+      inversion H8. inversion H4. subst. rewrite <- H9 in *.
+      apply (H5 pSrc0 (parent pSrc0) pBody0 (parent pSrc0) pBody0) ; auto.
+      apply in_or_app. simpl. auto. apply in_or_app. simpl. auto.
+      apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
+      apply in_or_app. simpl. apply in_app_or in H4. destruct H4 ; auto.
+      
+      
+      apply in_or_app. simpl. auto.
+      
 Admitted.
 
 Lemma pbody_is_asslist : forall x' tr,
