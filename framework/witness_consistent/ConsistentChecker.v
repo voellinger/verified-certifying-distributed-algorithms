@@ -1799,7 +1799,7 @@ Qed.
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
   (nwState net c).(terminated) = true ->
-  (forall (d : Name), descendand d c -> 
+  (forall (d : Name), descendand d c = true -> 
     (nwState net d).(terminated) = true).
 Proof.
   intros net tr H.
@@ -1860,15 +1860,15 @@ Admitted. *)
 
 
 Lemma parent_exists: forall c d,
-  descendand d c ->
+  descendand d c = true ->
   c <> d ->
-  (exists (e : Name), descendand e c /\ In d (children e)).
+  (exists (e : Name), descendand e c = true /\ In d (children e)).
 Proof.
 Admitted.
 
 Lemma descendand_edge : forall v0 a0 c0 x y n v1 v2 n0 n1 d c, 
-  descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = 
-            descendand' v0 a0 c0 d c.
+  descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = true <->
+            descendand' v0 a0 c0 d c  = true.
 Proof.
   intros.
   unfold descendand'.
@@ -1876,10 +1876,10 @@ Proof.
 Admitted.
 
 Lemma descendand_trans : forall c d (P : Name -> Prop),
-  descendand d c ->
+  descendand d c = true ->
   P d ->
   (forall e d : Name,
-    descendand e c ->
+    descendand e c = true ->
     In d (children e) ->
     P d -> P e) ->
   P c.
@@ -1888,41 +1888,16 @@ Proof.
   assert (c = d \/ c <> d).
   apply classic.
   destruct H2. subst. auto.
-  assert (exists (e : Name), descendand e c /\ In d (children e)).
+  assert (exists (e : Name), descendand e c = true /\ In d (children e)).
   apply (parent_exists c d) ; auto.
   unfold descendand in *.
   induction g ; simpl in * ; intuition.
-  + unfold descendand' in H.
-    repeat destruct H.
-    assert (x1' := x2). apply W_endx_inv in x1'. inversion x1'.
-    assert (x1'' := x2). apply W_endy_inv in x1''. inversion x1''.
-    subst. intuition. unfold name_component in *. simpl in *. repeat break_match. subst. intuition.
-  + (* 
-    assert (x1' := x1). apply W_endx_inv in x1'.
-    assert (x1'' := x1). apply W_endy_inv in x1''. *)
-    admit.
-  + assert (forall d c, descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = 
-            descendand' v0 a0 c0 d c).
-    apply descendand_edge ; auto.
-    assert (H4' := H4).
-    specialize (H4' d c). rewrite H4' in H.
-    apply IHc0 ; auto.
-    intros.
-    apply (H1 e d0) ; intuition.
-    rewrite (H4 e c). auto.
-    destruct H3.
-    exists x0.
-    destruct H3 ; intuition.
-    rewrite <- (H4 x0 c) ; auto.
-  + rewrite <- e in *.
-    rewrite <- e0 in *.
-    intuition.
 Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
-  (forall d, descendand (component_name d) (component_name c) ->
+  (forall d, descendand (component_name d) (component_name c) = true ->
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
 Proof.
   intros.
@@ -1939,7 +1914,7 @@ Proof.
   intros.
   apply (H4 d0) ; auto.
   clear H4.
-  assert (forall d' d : Name, descendand d' (Checker c) -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
+  assert (forall d' d : Name, descendand d' (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
   intros.
   apply (child_done_in_ass_list net tr H d' d0) ; auto.
   assert (terminated (nwState net d') = true).
@@ -1961,8 +1936,8 @@ Qed.
 Lemma packets_work''' : forall x tr a0,
   refl_trans_1n_trace step_async step_async_init x tr -> 
   (((forall p, In p (nwPackets x) -> ((let (pSrc, pDst, pBody) := p in
-  (In a0 pBody -> exists d : Name, descendand d pSrc /\ In a0 (init_certificate d))))) /\
-  forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a0 (init_certificate d))).
+  (In a0 pBody -> exists d : Name, descendand d pSrc = true /\ In a0 (init_certificate d))))) /\
+  forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) = true /\ In a0 (init_certificate d))).
 Proof.
   intros x tr a0 H.
   remember step_async_init as y in *.
@@ -1971,16 +1946,8 @@ Proof.
     inversion H.
     exists (component_name c).
     split ; auto.
-    unfold descendand.
-    exists nil. exists nil.
-    assert (Walk v a (name_component (component_name c)) (name_component (component_name c)) [] []).
-    apply W_null ; auto.
-    apply (Component_prop_1) ; auto.
-    exists H0.
-    unfold parent_walk.
-    unfold parent_walk'.
-    intros.
-    inversion H1.
+    apply descendand_refl.
+    apply Component_prop_1.
   + intuition.
     assert (H2' := H2).
     apply (packets_work' x'' (tr1 ++ tr2)) in H2' ; auto.
@@ -2012,9 +1979,13 @@ Proof.
         intuition.
         specialize (H3 {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |}).
         assert (In {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} (xs ++ {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} :: ys)).
-        apply in_or_app. right. simpl. auto. intuition. apply H8 in H0.
-        destruct H0. exists x. destruct H0. split ; auto.
-        apply (descendandp1 pDst0 pSrc0 x) ; auto.
+        apply in_or_app. right. simpl. auto. intuition. rewrite cnnc in H2. intuition.
+        specialize (H3 {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |}).
+        assert (In {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} (xs ++ {| pSrc := pSrc0; pDst := pDst0; pBody := pBody0 |} :: ys)).
+        apply in_or_app. right. simpl. auto. intuition. intuition.
+        destruct H3. exists x. destruct H3. split ; auto.
+        unfold descendand in *.
+        apply (descendandp1 v a g pDst0 pSrc0 x) ; auto.
         apply (packets_work'''' x' tr1 H pSrc0 pDst0 pBody0) ; auto.
         rewrite H5. apply in_or_app. right. simpl. auto.
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H7. specialize (H3 {| pSrc := pDst0; pDst := parent pDst0; pBody := pBody |} ). intuition.
@@ -2027,8 +1998,8 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
       specialize (H3 {| pSrc := h; pDst := parent h; pBody := pBody |}). intuition.
       specialize (H3 {| pSrc := pSrc; pDst := parent pSrc; pBody := pBody |}). intuition.
-      inversion H6. subst. specialize (H4 (name_component h)).
-        apply H4. rewrite checker_name. auto.
+      inversion H6. subst. specialize (H4 (name_component h)). unfold component_name in *. rewrite cnnc in H4.
+        apply H4. auto.
       specialize (H3 {| pSrc := h; pDst := parent h; pBody := pBody |}). intuition.
       inversion H6. subst. intuition.
       specialize (H3 {| pSrc := pSrc; pDst := parent pSrc; pBody := pBody |}). intuition.
@@ -2045,25 +2016,25 @@ Proof.
       apply (packets_work' x' tr1) in H0 ; auto. subst. intuition.
       assert (let (pSrc, pDst, pBody) := p in
   In a0 pBody -> 
-    exists d : Name, descendand d (component_name (name_component pSrc)) /\ In a0 (init_certificate d)) as new.
+    exists d : Name, descendand d (component_name (name_component pSrc)) = true /\ In a0 (init_certificate d)) as new.
       specialize (H3 p). intuition.
       destruct p ; simpl in *.
-      subst. intuition.
-      unfold NetHandler in H6.
+      subst. rewrite cnnc in *. intuition.
+      unfold NetHandler in H6.  
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H6 ; subst ; simpl in * ; intuition.
       apply in_app_or in H2. destruct H2. intuition.
         specialize (H4 (name_component pSrc)).
         rewrite checker_name in H4.
         intuition. rewrite cnnc in *. destruct H7. destruct H7.
         exists x. split ; auto.
-        apply (descendandp1 (component_name c) pSrc) ; auto.
+        apply (descendandp1 v a g (Checker c) pSrc) ; auto.
         apply (packets_work'' x' tr1) in H0' ; auto.
 
       apply in_app_or in H2. destruct H2. intuition.
         specialize (H4 (name_component pSrc)).
         rewrite checker_name in H4. intuition. destruct H7. destruct H7.
         exists x. split ; auto. rewrite cnnc in *.
-        apply (descendandp1 (component_name c) pSrc) ; auto.
+        apply (descendandp1 v a g (component_name c) pSrc) ; auto.
         apply (packets_work'' x' tr1) in H0' ; auto.
       intuition.
       simpl in *.
@@ -2077,14 +2048,14 @@ Qed.
 
 Lemma only_desc_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall a c,
-  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a (init_certificate d)).
+  In a (ass_list (nwState net (Checker c))) -> exists d : Name, descendand d (component_name c) = true /\ In a (init_certificate d)).
 Proof.
   intros.
   assert (forall x tr a0,
   refl_trans_1n_trace step_async step_async_init x tr -> 
   (((forall p, In p (nwPackets x) -> ((let (pSrc, pDst, pBody) := p in
-  (In a0 pBody -> exists d : Name, descendand d pSrc /\ In a0 (init_certificate d))))) /\
-  forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) /\ In a0 (init_certificate d)))).
+  (In a0 pBody -> exists d : Name, descendand d pSrc = true /\ In a0 (init_certificate d))))) /\
+  forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) = true /\ In a0 (init_certificate d)))).
   apply packets_work'''.
   specialize (H1 net tr a0). apply H1 ; auto.
 Qed.
@@ -2114,6 +2085,32 @@ Proof.
       auto.
 Qed.
 
+Lemma root_is_ancestor : forall (v : V_set) a g d,
+  v (name_component d) ->
+  descendand' v a g d (root' v a g) = true.
+Proof.
+  intros v a g.
+  induction g ; simpl in * ;  intuition.
+  + inversion H. subst. rewrite cnnc. unfold eqn. break_match. auto. intuition.
+  + inversion H. inversion H0. subst. rewrite cnnc in *. unfold eqn. repeat break_match ; intuition ; simpl in *.
+    unfold eqn. repeat break_match ; intuition ; simpl in *.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
+Lemma root_is_ancestor2 : forall (v : V_set) a g x,
+  descendand' v a g x (root' v a g) = true ->
+(exists
+       (vl : V_list) (el : E_list) (w : Walk v a (name_component x)
+                                          (name_component (root' v a g)) vl el),
+       parent_walk' (name_component x) (name_component (root' v a g)) vl el v a g w).
+Proof.
+  intros v a g.
+  induction g ; simpl in * ;  intuition.
+  + inversion H. subst.
+Admitted.
+
+
 
 Theorem root_ends_true_witness_consistent: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr ->
@@ -2125,8 +2122,9 @@ Proof.
   apply Witness_consistent_root_subtree_consistent.
   unfold root_subtree_consistent.
   intros.
-  assert (forall d, descendand (component_name d) (root) -> 
+  assert (forall d, descendand (component_name d) (root) = true -> 
     (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker (name_component root))).(ass_list))).
+  destruct root.
   apply (all_subtree_in_ass_list net tr) ; auto.
   rename H3 into Hd.
   assert (forall (c : Name), exists vl el w, parent_walk (name_component c) (name_component root) vl el w) as pwtr.
@@ -2139,13 +2137,16 @@ Proof.
      In e (ass_list (nwState net (Checker (name_component d1)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d1)) ; auto.
+  rewrite cnnc. unfold descendand. unfold root. apply root_is_ancestor. apply Component_prop_1.
   assert (forall e : Assignment,
      In e (ass_list (nwState net (Checker (name_component d2)))) ->
      In e (ass_list (nwState net (Checker (name_component root))))).
   apply (Hd (name_component d2)) ; auto.
+  rewrite cnnc. unfold descendand. unfold root. apply root_is_ancestor. apply Component_prop_1.
   assert (is_consistent (nwState net (Checker (name_component root))).(ass_list)).
   apply (Drei_zwei net tr) ; auto.
-  unfold is_consistent in H5.
+
+  unfold is_consistent in H3.
   clear Hd.
 
   apply has_var_exists_val in H1.
@@ -2198,7 +2199,12 @@ Proof.
   specialize (H v2 x x0).
   subst.
   unfold descendand_r in *.
+  rewrite cnnc in *.
+  unfold descendand in *.
+  unfold root in *.
 
+  apply root_is_ancestor2 in H0.
+  apply root_is_ancestor2 in H1.
   apply H ; auto.
 Qed.
 
