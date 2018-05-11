@@ -153,8 +153,10 @@ Definition descendand' (v : V_set) (a : A_set) (c : Connected v a) (des ancestor
 Definition descendand (des ancestor : Name) : Prop :=
   descendand' v a g des ancestor.
 
-
-
+(* Function descendand2' (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : bool :=
+  if (Name_eq_dec des ancestor) then 
+    true else 
+    (eqb (Name_eqb des (parent des)) false) && descendand2' v a c (parent des) ancestor. *)
 
 Function eqn n1 n2 : bool :=
   if (Name_eq_dec n1 n2) then true else false.
@@ -162,8 +164,12 @@ Function eqn n1 n2 : bool :=
 Fixpoint des' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
   match c with
   | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
-  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || (eqn ancestor (component_name y)) || des' v a co (component_name x) ancestor
-                             else des' v a co descendand ancestor
+  | C_leaf v a co x y _ _ => 
+      if (Name_eq_dec descendand (component_name y)) then
+        (eqn ancestor (component_name x)) || 
+        (eqn ancestor (component_name y)) || 
+        (des' v a co (component_name x) ancestor) else
+         des' v a co descendand ancestor
   | C_edge v a co x y _ _ _ _ _ => des' v a co descendand ancestor
   | C_eq v v' a a' _ _ co => des' v a co descendand ancestor
   end.
@@ -171,26 +177,53 @@ Fixpoint des' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor :
 Definition des'' (descendand ancestor : Name) : bool :=
   des' v a g descendand ancestor.
 
-(* Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
-  v0 x2 ->
-  (v0 y -> False) ->
-  v0 (name_component des) ->
-  Walk (V_union (V_single y) v0) (A_union (E_set x2 y) a0) (name_component des) x2 x x0 ->
-  Walk v0 a0 (name_component des) x2 x x0.
+Axiom finite_sets : forall (v : V_set) (y : Vertex), {v y} + {~ v y}.
+
+
+Lemma W_backstep :
+ forall v a (x y z : Vertex) (vl : V_list) (el : E_list),
+ Walk v a x z (y :: vl) el -> {el' : E_list &  Walk v a y z vl el'}.
 Proof.
-  intros.
-Admitted. *)
-(*   induction x.
-  inversion H2.
-  subst.
-  apply W_null ; auto.
-  inversion H2.
-  subst.
-  apply W_step ; auto.
-  
-  
-  induction c0.
-  + inversion H0. inversion H2. subst. apply W_null ; auto. *)
+        intros; inversion H.
+        split with el0; trivial.
+Qed.
+
+
+Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
+  v0 x ->
+  (v0 y -> False) ->
+  v0 des ->
+  Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) des x vl el ->
+  {vl : V_list & {el : E_list & Walk v0 a0 des x vl el}}.
+Proof.
+  intros v0 a0 c0.
+(*   induction H2.
+  + exists []. exists []. apply W_null. auto.
+  + assert ({v0 y0} + {~ v0 y0}).
+    apply finite_sets.
+    destruct H3.
+    intuition.
+    admit.
+    assert (y0 = y). admit. subst.
+    assert (x0 = x). admit. subst. *)
+
+
+  induction c0 ; simpl in * ; intuition.
+  + inversion H. inversion H1. subst. exists []. exists []. apply W_null. apply In_single.
+  + specialize (IHc0 x y des). 
+    assert ({y = des} + {y <> des}).
+    apply V_eq_dec.
+    destruct H3.
+    subst.
+    admit.
+    assert (v0 des).
+    inversion H1. inversion H3. subst. intuition. auto.
+    inversion H2.
+    admit.
+    subst.
+    apply W_backstep in H2.
+    
+
 (* 
 Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
   (descendand des anc <-> (des'' des anc = true)).
