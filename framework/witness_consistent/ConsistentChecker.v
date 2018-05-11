@@ -1864,7 +1864,23 @@ Lemma parent_exists: forall c d,
   c <> d ->
   (exists (e : Name), descendand e c = true /\ In d (children e)).
 Proof.
-Admitted.
+  intros.
+  unfold descendand in *. unfold children in *.
+  induction g ; intuition ; simpl in *.
+  + unfold eqn in *. repeat break_match ; subst ; intuition.
+    simpl in H. inversion H. simpl in H. inversion H.
+  + unfold eqn in *. unfold component_name in *.
+    repeat break_match ; subst ; simpl in * ; intuition.
+    inversion e0. subst. intuition.
+    exists (Checker x). repeat break_match ; subst ; intuition. 
+      apply descendand_refl ; auto.
+    destruct H1. exists x0. repeat break_match ; subst ; intuition.
+    destruct H1. exists x0. repeat break_match ; subst ; intuition.
+    exists (Checker x). repeat break_match ; subst ; intuition.
+    destruct H1. exists x0. repeat break_match ; subst ; intuition.
+    inversion e0. subst ; auto.
+    apply children_help in H3. simpl in H3. intuition.
+Qed.
 
 Lemma descendand_edge : forall v0 a0 c0 x y n v1 v2 n0 n1 d c, 
   descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = true <->
@@ -1907,12 +1923,34 @@ Proof.
         destruct H3. exists x0. intuition. break_match ; subst ; intuition.
         inversion H5 ; intuition. subst. apply descendand_inv1 in H. simpl in H. intuition.
       apply descendand_inv2 in H. simpl in H. intuition.
-      assert (H' := H). apply descendand_inv2 in H'.
-        destruct H3. admit. (* apply (H1 c (Checker y)) ; intuition.
-        break_match. subst. auto. destruct c. simpl in H'. apply (descendand_refl v0 a0 c0 c) ; auto.
+
+      (* assert (H' := H). apply descendand_inv2 in H'.
+        destruct H3. 
+(* break_match ; subst ; intuition. break_match ; subst ; intuition. inversion e. subst. intuition.
+        assert (~ In (Checker y) (children' v0 a0 c0 (Checker y))).
+        apply (children_not_reflexive v0 a0 c0 (Checker y)). intuition.
+        repeat break_match ; subst ; intuition.
+        apply (H1 c (Checker y)) ; auto.
+        repeat break_match ; subst ; intuition. destruct c. apply descendand_refl. simpl in H'. auto.
+        repeat break_match ; subst ; intuition. *)
+
+
+
+ repeat break_match ; subst ; intuition.
+        inversion e0. subst. intuition.
+        assert (~ In (Checker y) (children' v0 a0 c0 (Checker y))).
+        apply (children_not_reflexive v0 a0 c0 (Checker y)).
+        intuition. clear H4 H2 n2 H5.
+        apply (H1 c (Checker y)) ; auto.
+        repeat break_match ; subst ; intuition. destruct c. apply descendand_refl. simpl in H'. auto.
+        repeat break_match ; subst ; intuition.
+ admit.  *)(* apply (H1 c (Checker y)) ; intuition ; repeat break_match ; intuition.
+           destruct c. apply descendand_refl. apply descendand_inv2 in H. simpl in H. auto.
+           break_match. subst. auto. destruct c. simpl in H'. apply (descendand_refl v0 a0 c0 c) ; auto.
         break_match ; subst ; intuition. break_match ; subst. destruct H5.
         repeat break_match ; subst ; intuition.
-        inversion e0. subst. intuition.  *)
+        inversion e0. subst. intuition.  *) admit.
+        
       assert (H' := H). apply descendand_inv2 in H'.
         destruct H3. repeat break_match ; subst ; intuition.
         inversion e0. subst. intuition.
