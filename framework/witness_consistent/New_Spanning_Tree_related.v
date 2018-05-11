@@ -189,33 +189,31 @@ Proof.
 Qed.
 
 
-Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
+(* Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
   v0 x ->
   (v0 y -> False) ->
   v0 des ->
   Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) des x vl el ->
   {vl1 : V_list & {vl2 : V_list & {el1 : E_list & {el2 : E_list & {w: Walk v0 a0 des x vl1 el1 & vl = vl1 ++ vl2 /\ el = el1 ++ el2}}}}}.
 Proof.
-  intros v0 a0 c0.
-  induction c0 ; simpl in * ; intuition.
-  + inversion H. inversion H1. subst. exists []. exists vl. exists []. exists el.
-    assert (Walk (V_single des) A_empty des des [] []).
-    apply W_null. apply In_single.
-    exists H3. simpl. auto.
-  + apply V_union_single_dec in H ; auto.
-    apply V_union_single_dec in H1 ; auto.
-    assert (y <> y0 /\ ~v0 y0).
-    unfold not. split ; intros.
-    subst. apply H0. apply In_left. apply In_single.
-    apply H0. apply In_right. auto.
-    destruct H3. clear H0.
-    destruct H.
-    destruct H1. subst.
-    admit. subst.
+  intros.
+  induction H2.
+  + exists []. exists []. exists []. exists [].
+    assert (Walk v0 a0 x0 x0 [] []).
+    apply W_null ; auto.
+    exists H2. simpl. auto.
+  + apply V_union_single_dec in v1 ; auto.
+    assert (H2' := H2).
+    apply W_endx_inv in H2'.
+    apply V_union_single_dec in H2' ; auto.
+    destruct H2'.
+    subst.
+    intuition ; subst. intuition.
     admit.
-    destruct H1. subst.
-    admit.
-    specialize (IHc0 x0 y0 des vl el). intuition.
+    intuition ; subst. intuition.
+    destruct H3. repeat destruct s.
+    exists (
+    admit. *)
     
 
 
@@ -226,18 +224,33 @@ Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
   Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) des x vl el ->
   {vl : V_list & {el : E_list & Walk v0 a0 des x vl el}}.
 Proof.
-  intros v0 a0 c0.
-(*   induction H2.
+  intros.
+  induction H2.
   + exists []. exists []. apply W_null. auto.
-  + assert ({v0 y0} + {~ v0 y0}).
-    apply finite_sets.
-    destruct H3.
-    intuition.
+  + clear v1.
+    assert (H2' := H2).
+    apply W_endx_inv in H2'.
+    apply V_union_single_dec in H2' ; auto.
+    destruct H2'.
+    subst.
+    assert (x = x0).
+    inversion a1.
+    inversion H3 ; subst ; auto.
+    apply Connected_Isa_Graph in c0.
+    apply (G_ina_inv2 v0 a0) in H3 ; auto ; intuition.
+    subst.
     admit.
-    assert (y0 = y). admit. subst.
-    assert (x0 = x). admit. subst. *)
+    intuition.
+    destruct H3. repeat destruct s.
+    exists (y0 :: x1).
+    exists ((E_ends x0 y0) :: x2).
+    apply W_step ; auto.
+    inversion a1 ; auto.
+    inversion H3 ; subst ; intuition.
+Qed.
+        
 
-
+  intros v0 a0 c0.
   induction c0 ; simpl in * ; intuition.
   + inversion H. inversion H1. subst. exists []. exists []. apply W_null. apply In_single.
   + specialize (IHc0 x y des). 
