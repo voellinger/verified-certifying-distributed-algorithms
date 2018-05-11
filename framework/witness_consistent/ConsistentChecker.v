@@ -2090,7 +2090,7 @@ Lemma root_is_ancestor : forall (v : V_set) a g d,
   descendand' v a g d (root' v a g) = true.
 Proof.
   intros v a g.
-  induction g ; simpl in * ;  intuition.
+  induction g ; simpl in * ; intuition.
   + inversion H. subst. rewrite cnnc. unfold eqn. break_match. auto. intuition.
   + inversion H. inversion H0. subst. rewrite cnnc in *. unfold eqn. repeat break_match ; intuition ; simpl in *.
     unfold eqn. repeat break_match ; intuition ; simpl in *.
@@ -2106,8 +2106,42 @@ Lemma root_is_ancestor2 : forall (v : V_set) a g x,
        parent_walk' (name_component x) (name_component (root' v a g)) vl el v a g w).
 Proof.
   intros v a g.
-  induction g ; simpl in * ;  intuition.
-  + inversion H. subst.
+  induction g ; simpl in * ; intuition ; unfold eqn in *.
+  + repeat break_match ; subst ; intuition ; simpl in *.
+    exists []. exists [].
+    assert (Walk (V_single x) A_empty x x [] []).
+    apply W_null ; auto. apply In_single.
+    exists H0. unfold parent_walk'. intros. inversion H1. inversion H.
+  + destruct (root' v0 a0 g0).
+    repeat break_match ; subst ; intuition ; simpl in * ; unfold component_name in *.
+      inversion e0. inversion e1. subst. assert (v1' := v1). apply n in v1'. intuition.
+      inversion e0. subst. unfold parent_walk'. simpl. exists ([x]). exists ([E_ends y x]).
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y x [x] [E_ends y x]).
+        apply W_step ; auto. apply W_null ; auto. apply In_right ; auto.
+        apply In_left. apply In_single. apply In_left. apply E_left.
+        exists H0. intros. break_match ; subst ; intuition. simpl in *.
+        inversion H1 ; intuition. inversion H2. rewrite cnnc. auto.
+        inversion H1 ; intuition. inversion H2 ; subst ; simpl in *. unfold name_component in *.
+        repeat break_match ; intuition. inversion H2.
+      inversion e0. subst. unfold parent_walk'. simpl. exists []. exists [].
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y y [] []).
+        apply W_null ; auto. apply In_left. apply In_single.
+        exists H0. intros. inversion H1.
+      specialize (IHg (Checker x)). intuition. simpl in *. repeat destruct H0.
+        exists (x :: x0). exists (E_ends y x :: x1).
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y c (x :: x0) (E_ends y x :: x1)).
+        apply W_step ; auto.
+        apply (Walk_subgraph v0 _ a0 _) ; auto.
+        unfold V_included. unfold Included ; intros. apply In_right ; auto.
+        unfold A_included. unfold Included ; intros. apply In_right ; auto.
+        apply In_left. apply In_single.
+        apply In_left. apply E_left.
+        exists H1. unfold parent_walk' ; intros ; simpl in *.
+        break_match ; subst ; simpl in *. destruct H2. inversion H2. rewrite cnnc. auto.
+        assert (v0 y). admit. intuition.
+        destruct H2. inversion H2 ; subst. rewrite cnnc in n2. intuition.
+        unfold parent_walk' in H0. apply (H0 c1 c2) ; auto.
+      
 Admitted.
 
 
