@@ -147,34 +147,29 @@ Definition parent_walk' (x y : Component) (vl : V_list) (el : E_list) v a g (w :
 Definition parent_walk x y vl el w : Prop :=
   parent_walk' x y vl el v a g w.
 
-Definition descendand (des ancestor : Name) : Prop :=
-  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a g w.
-
-Definition descendan (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : Prop :=
+Definition descendand' (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : Prop :=
   exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a c w.
 
-Lemma descendand_descedan :
-  descendand = descendan v a g.
-Proof.
-  unfold descendand. unfold descendan.
-  auto.
-Qed.
+Definition descendand (des ancestor : Name) : Prop :=
+  descendand' v a g des ancestor.
+
+
 
 
 Function eqn n1 n2 : bool :=
   if (Name_eq_dec n1 n2) then true else false.
 
-Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
+Fixpoint des' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
   match c with
   | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
-  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || (eqn ancestor (component_name y)) || descendand' v a co (component_name x) ancestor
-                             else descendand' v a co descendand ancestor
-  | C_edge v a co x y _ _ _ _ _ => descendand' v a co descendand ancestor
-  | C_eq v v' a a' _ _ co => descendand' v a co descendand ancestor
+  | C_leaf v a co x y _ _ => if (Name_eq_dec descendand (component_name y)) then (eqn ancestor (component_name x)) || (eqn ancestor (component_name y)) || des' v a co (component_name x) ancestor
+                             else des' v a co descendand ancestor
+  | C_edge v a co x y _ _ _ _ _ => des' v a co descendand ancestor
+  | C_eq v v' a a' _ _ co => des' v a co descendand ancestor
   end.
 
-Definition descendand'' (descendand ancestor : Name) : bool :=
-  descendand' v a g descendand ancestor.
+Definition des'' (descendand ancestor : Name) : bool :=
+  des' v a g descendand ancestor.
 
 (* Lemma Walk_in_smaller : forall x2 y des v0 a0 (c0 : Connected v0 a0) x x0,
   v0 x2 ->
@@ -198,10 +193,10 @@ Admitted. *)
   + inversion H0. inversion H2. subst. apply W_null ; auto. *)
 (* 
 Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
-  (descendand des anc <-> (descendand'' des anc = true)).
+  (descendand des anc <-> (des'' des anc = true)).
 Proof.
   intros.
-  unfold descendand. unfold descendand''. unfold parent_walk'. split ; intros.
+  unfold descendand. unfold des''. unfold parent_walk'. split ; intros.
   repeat destruct H1.
   induction g ; intros ; simpl in * ; intuition.
   + inversion H. inversion H0.

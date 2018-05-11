@@ -73,6 +73,9 @@ Proof.
   auto.
 Qed.
 
+Fixpoint Name_eqb (n1 n2 : Name) : bool :=
+  if (Name_eq_dec n1 n2) then true else false.
+
 Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
 Notation "a == b" := (beq_nat a b) (at level 70).
 
