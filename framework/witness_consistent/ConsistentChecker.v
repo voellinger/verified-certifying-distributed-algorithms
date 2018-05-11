@@ -1890,8 +1890,43 @@ Proof.
   destruct H2. subst. auto.
   assert (exists (e : Name), descendand e c = true /\ In d (children e)).
   apply (parent_exists c d) ; auto.
-  unfold descendand in *.
+  unfold descendand in *. unfold children in *.
   induction g ; simpl in * ; intuition.
+  + repeat destruct H3. inversion H4.
+  + unfold component_name in *. unfold eqn in *.
+    repeat break_match ; subst ; intuition ; simpl in *.
+      inversion e0. subst. intuition.
+      apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
+        apply descendand_refl ; auto.
+      apply H4 ; auto. intros. apply (H1 e d0) ; auto.
+        break_match ; subst ; intuition.
+        break_match ; subst ; intuition.
+        destruct H3. break_match. destruct H3. subst.
+        break_match ; subst ; intuition. inversion e. subst. intuition.
+        apply children_help in H5. simpl in H5. intuition.
+        destruct H3. exists x0. intuition. break_match ; subst ; intuition.
+        inversion H5 ; intuition. subst. apply descendand_inv1 in H. simpl in H. intuition.
+      apply descendand_inv2 in H. simpl in H. intuition.
+      assert (H' := H). apply descendand_inv2 in H'.
+        destruct H3. admit. (* apply (H1 c (Checker y)) ; intuition.
+        break_match. subst. auto. destruct c. simpl in H'. apply (descendand_refl v0 a0 c0 c) ; auto.
+        break_match ; subst ; intuition. break_match ; subst. destruct H5.
+        repeat break_match ; subst ; intuition.
+        inversion e0. subst. intuition.  *)
+      assert (H' := H). apply descendand_inv2 in H'.
+        destruct H3. repeat break_match ; subst ; intuition.
+        inversion e0. subst. intuition.
+        apply children_help in H6. simpl in H6. intuition.
+        destruct H6. subst. apply descendand_inv1 in H. simpl in H. intuition.
+        apply H4. intros. apply (H1 e d0) ; auto.
+        break_match ; subst ; intuition.
+        break_match ; subst ; intuition.
+        exists (Checker x) ; intuition.
+        apply H4. intros. apply (H1 e d0) ; auto.
+        break_match ; subst ; intuition.
+        apply descendand_inv1 in H3. simpl in H3. intuition.
+        break_match ; subst ; intuition.
+        exists x0 ; intuition.
 Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr,
