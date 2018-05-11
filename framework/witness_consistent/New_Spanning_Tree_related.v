@@ -157,10 +157,10 @@ Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand anc
       if (Name_eq_dec descendand (component_name y)) then
         (eqn ancestor (component_name x)) || 
         (eqn ancestor (component_name y)) || 
-        (des' v a co (component_name x) ancestor) else
-         des' v a co descendand ancestor
-  | C_edge v a co x y _ _ _ _ _ => des' v a co descendand ancestor
-  | C_eq v v' a a' _ _ co => des' v a co descendand ancestor
+        (descendand' v a co (component_name x) ancestor) else
+         descendand' v a co descendand ancestor
+  | C_edge v a co x y _ _ _ _ _ => descendand' v a co descendand ancestor
+  | C_eq v v' a a' _ _ co => descendand' v a co descendand ancestor
   end.
 
 Definition descendand (descendand ancestor : Name) : bool :=
@@ -833,65 +833,109 @@ Axiom c_arcs : forall (p c : Name),
 Axiom p_arcs : forall (c : Name),
   {a (A_ends (name_component c) (name_component (parent c)))} + {c = root}. *)
 
-
-
-Lemma descendandp1 : forall pp p c,
-  pp = parent p ->
-  descendand c p ->
-  descendand c pp.
+Lemma descendand_inv1 : forall v a g c p,
+  descendand' v a g c p = true ->
+  v (name_component c).
 Proof.
-  intros pp p c H H0.
-  assert (p = root \/ p <> root) as pnoroot.
-  apply classic.
-  destruct pnoroot as [proot|pnoroot].
-    subst.
-    unfold parent.
-    rewrite parent_root.
-    unfold root in H0.
-    auto.
-  
-  unfold descendand in * ; intros.
-  repeat destruct H0.
-  assert (Walk v a (name_component c) (name_component pp) (x ++ [name_component pp]) (x0 ++ [E_ends (name_component p) (name_component pp)])).
-  apply (Walk_append v a (name_component c) (name_component p)) ; auto.
-  apply (W_step) ; auto.
-  apply W_null.
-  apply Component_prop_1.
-  apply Component_prop_1.
-  assert ((a (A_ends (name_component pp) (name_component p)) /\ a (A_ends (name_component p) (name_component pp)))).
-  apply (parent_arcs pp p) ; auto.
-  apply Component_prop_1.
-  destruct H1.
-  auto.
-  exists (x ++ [name_component pp]).
-  exists (x0 ++ [E_ends (name_component p) (name_component pp)]).
-  exists H1.
-  unfold parent_walk' in * ; simpl in * ; intros.
-  apply in_app_or in H2.
-  destruct H2.
-  + auto.
-  + inversion H2.
-    unfold parent in *.
-    inversion H3.
-    apply name_comp_name in H5.
-    apply name_comp_name in H6.
-    subst.
-    auto.
-    inversion H3.
+  intros.
+  induction g0 ; simpl in * ; subst ; intuition.
+  + unfold eqn in H. unfold component_name in H. unfold name_component.
+    repeat break_match ; subst.
+    inversion e0. apply In_single.
+    simpl in H. inversion H.
+    simpl in H. inversion H.
+    simpl in H. inversion H.
+  + unfold eqn in H. unfold component_name in H. unfold name_component.
+    repeat break_match ; subst.
+    inversion e. inversion e1. subst. intuition.
+    inversion e. apply In_left. apply In_single.
+    inversion e. apply In_left. apply In_single.
+    inversion e. apply In_left. apply In_single.
+    apply In_right. intuition.
 Qed.
 
-Lemma descendand_refl : forall n,
-  descendand n n.
+
+Lemma descendand_inv2 : forall (v : V_set) a g c p,
+  descendand' v a g c p = true ->
+  v (name_component p).
 Proof.
-  intros.
-  unfold descendand.
-  exists []. exists [].
-  assert (Walk v a (name_component n) (name_component n) [] []).
-  apply W_null ; auto.
-  apply Component_prop_1.
-  exists H. unfold parent_walk'.
-  intros.
-  inversion H0.
+  intros v a g.
+  induction g ; simpl in * ; intuition.
+  + subst. intuition.
+    unfold eqn in H. unfold component_name in H. unfold name_component.
+    repeat break_match ; subst.
+    inversion e. apply In_single.
+    simpl in H. inversion H.
+    simpl in H. inversion H.
+    simpl in H. inversion H.
+  + intuition.
+    unfold eqn in H. unfold component_name in H. unfold name_component.
+    repeat break_match.
+    subst. inversion e0. inversion e1. subst. intuition.
+    subst. inversion e0. subst. apply In_right. auto.
+    subst. inversion e0. apply In_left. apply In_single.
+    inversion e. subst.
+    simpl in *. apply In_right. subst.
+    apply (IHg (Checker x) (Checker c0)) ; auto.
+    apply In_right. unfold name_component in IHg. specialize (IHg c p). break_match. inversion Heqn0. subst. apply IHg ; intuition.
+  + rewrite <- e in *.
+    apply (IHg c p) ; auto.
+Qed.
+
+Lemma descendand_refl : forall (v : V_set) a g c,
+  v c ->
+  descendand' v a g (Checker c) (Checker c) = true.
+Proof.
+  intros c H.
+  induction g0 ; simpl in * ; intuition.
+  + inversion H. subst. unfold component_name.
+    unfold eqn. break_match ; subst ; intuition.
+  + inversion H. inversion H0. subst. unfold component_name.
+    unfold eqn. break_match ; subst ; intuition.
+    subst. unfold component_name.
+    unfold eqn. break_match ; subst ; intuition.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
+
+
+Lemma descendand_par : forall (v : V_set) a g c,
+  v (name_component c) ->
+  descendand' v a g c (parent' v a g c) = true.
+Proof.
+  intros c H.
+  induction g0 ; simpl in * ; intuition.
+  + inversion H. subst. unfold component_name.
+    unfold eqn. repeat break_match ; subst ; intuition.
+    unfold name_component in n. break_match. intuition.
+  + inversion H. inversion H0. subst. unfold component_name.
+    unfold eqn. repeat break_match ; subst ; intuition.
+    unfold name_component in n. break_match. intuition.
+    subst. unfold component_name in *.
+    unfold eqn. repeat break_match ; subst ; intuition.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
+Lemma descendandp1 : forall (v : V_set) a g pp p c,
+  pp = parent' v a g p ->
+  descendand' v a g c p = true ->
+  descendand' v a g c pp = true.
+Proof.
+  intros v a g.
+  unfold descendand in *. unfold parent.
+  induction g ; simpl in * ; subst ; intuition.
+  + unfold component_name in *.
+    unfold eqn in *.
+    repeat break_match ; subst ; intuition.
+  + unfold component_name in *.
+    unfold eqn in *.
+    repeat break_match ; subst ; intuition ; simpl in *.
+    apply (descendand_par _ _ _ (Checker x)) ; auto.
+    apply (IHg (parent' v0 a0 g0 p) p (Checker x)) ; auto.
+    apply descendand_inv2 in H0. simpl in H0. intuition.
+    apply (IHg (parent' v0 a0 g0 p) p c) ; auto.
 Qed.
 
 Lemma parent_diff : forall c,
@@ -907,48 +951,4 @@ Proof.
     intuition.
   + intuition.
 Qed.
-
-
-Lemma descendand_par : forall c p,
-  p = parent c ->
-  descendand c p.
-Proof.
-  intros.
-  assert (c = root \/ c <> root).
-  apply classic.
-  destruct H0.
-  subst. unfold root. unfold parent.
-  rewrite parent_root.
-  apply descendand_refl.
-
-  subst.
-
-  unfold descendand. unfold parent.
-
-  assert (a (A_ends (name_component c) (name_component (parent' v a g c)))).
-
-  apply (parent_isin_a v a g) ; auto.
-  apply Component_prop_1.
-  apply Component_prop_1.
-  apply parent_diff ; auto.
-  exists ([(name_component (parent' v a g c))]).
-  exists ([E_ends (name_component c) (name_component (parent' v a g c))]).
-  assert (Walk v a (name_component c) (name_component (parent' v a g c)) [(name_component (parent' v a g c))] [E_ends (name_component c) (name_component (parent' v a g c))]).
-  apply W_step ; auto.
-  apply W_null ; auto.
-  apply (parent_help2 v a g c) ; auto.
-  apply Component_prop_1.
-  exists H1.
-  unfold parent_walk'.
-  intros.
-  inversion H2.
-  inversion H3 ; subst ; auto.
-  apply name_comp_name in H6 ; auto.
-  apply name_comp_name in H5 ; auto.
-  subst. auto.
-  inversion H3.
-Qed.
-
-
-
 End New_Spanning_Tree.
