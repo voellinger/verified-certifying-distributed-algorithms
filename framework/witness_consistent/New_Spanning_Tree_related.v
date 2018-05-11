@@ -267,29 +267,30 @@ Proof.
     inversion a1 ; auto.
     inversion H ; subst ; intuition.
 Qed.
-    
 
-(* 
+
 Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
   (descendand des anc <-> (des'' des anc = true)).
 Proof.
   intros.
   unfold descendand. unfold des''. unfold parent_walk'. split ; intros.
   repeat destruct H1.
+  destruct des. destruct anc. simpl in *.
   induction g ; intros ; simpl in * ; intuition.
   + inversion H. inversion H0.
-    subst. apply name_comp_name in H3. subst. rewrite cnnc. unfold eqn. break_match. auto.
+    subst. subst. unfold eqn. break_match. break_match. auto.
     intuition.
-  + inversion H.
+    unfold component_name in n. intuition.
+  + unfold component_name in *.
+    inversion H.
     inversion H2. subst.
-    simpl in *.
-    inversion H0. inversion H3. subst. simpl in *. rewrite cnnc in *.
-    break_match.
-      apply name_comp_name in H6.
-      subst.
-      unfold eqn. destruct (Name_eq_dec anc anc). intuition. intuition. intuition.
-    subst. rewrite cnnc in *.
-    break_match. 
+    inversion H0. inversion H3. subst.
+    repeat break_match.
+      unfold eqn. break_match. intuition. break_match. intuition. intuition.
+      intuition.
+    subst.
+    repeat break_match. unfold eqn. repeat break_match ; subst ; intuition.
+      
       inversion H. inversion H4. subst.
        
       
@@ -299,7 +300,7 @@ Proof.
     assert (Walk (V_single x) A_empty (name_component des) (name_component des) [] []).
     apply W_null ; auto.
     exists H1.
-    unfold parent_walk'. intros. inversion H2. *)
+    unfold parent_walk'. intros. inversion H2.
 
 Lemma parent_arcs : forall x y,
   x = parent y -> v (name_component y) -> y <> root -> (a (A_ends (name_component x) (name_component y)) /\ a (A_ends (name_component y) (name_component x))).

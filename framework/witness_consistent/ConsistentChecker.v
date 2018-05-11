@@ -306,7 +306,6 @@ Lemma Witness_consistent_root_subtree_consistent :
 Proof.
   unfold Witness_consistent. unfold root_subtree_consistent.
   split ; intros.
-  + unfold descendand in *.
     repeat destruct H0.
     repeat destruct H1.
     assert (x1' := x1).
@@ -315,7 +314,7 @@ Proof.
     apply W_endx_inv in x4'.
     apply (H d1 d2 a0) ; auto.
   + apply (H a0 c1 c2) ; auto ; unfold descendand_r.
-    
+
     apply (parent_walk_to_root v a g c1) ; auto.
     apply (parent_walk_to_root v a g c2) ; auto.
 Qed.
@@ -323,7 +322,6 @@ Qed.
 Lemma root_descendand : 
   descendand_r root.
 Proof.
-  unfold descendand.
   exists V_nil.
   exists E_nil.
   assert (Walk v a (name_component root) (name_component root) V_nil E_nil).
@@ -1868,6 +1866,15 @@ Lemma parent_exists: forall c d,
 Proof.
 Admitted.
 
+Lemma descendand_edge : forall v0 a0 c0 x y n v1 v2 n0 n1 d c, 
+  descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = 
+            descendand' v0 a0 c0 d c.
+Proof.
+  intros.
+  unfold descendand'.
+  
+Admitted.
+
 Lemma descendand_trans : forall c d (P : Name -> Prop),
   descendand d c ->
   P d ->
@@ -1896,7 +1903,7 @@ Proof.
     admit.
   + assert (forall d c, descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = 
             descendand' v0 a0 c0 d c).
-    admit.
+    apply descendand_edge ; auto.
     assert (H4' := H4).
     specialize (H4' d c). rewrite H4' in H.
     apply IHc0 ; auto.
@@ -2191,7 +2198,6 @@ Proof.
   specialize (H v2 x x0).
   subst.
   unfold descendand_r in *.
-  unfold descendand in *.
 
   apply H ; auto.
 Qed.
