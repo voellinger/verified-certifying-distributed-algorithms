@@ -2138,12 +2138,40 @@ Proof.
         apply In_left. apply E_left.
         exists H1. unfold parent_walk' ; intros ; simpl in *.
         break_match ; subst ; simpl in *. destruct H2. inversion H2. rewrite cnnc. auto.
-        assert (v0 y). admit. intuition.
-        destruct H2. inversion H2 ; subst. rewrite cnnc in n2. intuition.
+        assert (v0 y). apply (W_inxyel_inxvl v0 a0 x c x0 x1 x2) in H2 ; auto.
+        simpl in H2. destruct H2. subst. auto. apply (W_invl_inv v0 a0 x c x0 x1 x2) in H2. auto.
+        intuition.
+      destruct H2. inversion H2 ; subst. rewrite cnnc in n2. intuition.
         unfold parent_walk' in H0. apply (H0 c1 c2) ; auto.
-      
-Admitted.
-
+      specialize (IHg x0). intuition. repeat destruct H0.
+        exists x1. exists x2.
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) (name_component x0) c x1 x2).
+        apply (Walk_subgraph v0 _ a0 _) ; auto.
+        unfold V_included. unfold Included ; intros. apply In_right ; auto.
+        unfold A_included. unfold Included ; intros. apply In_right ; auto.
+        exists H1. unfold parent_walk' in * ; intros.
+        simpl in *. specialize (H0 c1 c2). intuition.
+        break_match ; subst ; simpl in * ; intuition.
+        assert (v0 y). apply (W_inxyel_inxvl v0 a0 (name_component x0) c x1 x2 x3) in H2 ; auto.
+        simpl in H2. destruct H2. subst. unfold name_component in n0.
+        break_match. intuition. apply (W_invl_inv v0 a0 (name_component x0) c x1 x2 x3) in H0. auto.
+        intuition.
+  + specialize (IHg x0).
+    intuition.
+    repeat destruct H0.
+    exists x1. exists x2.
+    destruct (root' v0 a0 g0). simpl in *.
+    assert (Walk v0 (A_union (E_set x y) a0) (name_component x0) c x1 x2).
+    apply (Walk_subgraph v0 _ a0 _) ; auto.
+    unfold V_included. unfold Included ; intros. auto.
+    unfold A_included. unfold Included ; intros. apply In_right ; auto.
+    exists H1. unfold parent_walk' in * ; intros.
+    simpl in *. specialize (H0 c1 c2). intuition.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    specialize (IHg x).
+    intuition.
+Qed.
 
 
 Theorem root_ends_true_witness_consistent: forall net tr,
