@@ -1883,17 +1883,33 @@ Proof.
   destruct H2. subst. auto.
   assert (exists (e : Name), descendand e c /\ In d (children e)).
   apply (parent_exists c d) ; auto.
-  rewrite descendand_descedan in *.
+  unfold descendand in *.
   induction g ; simpl in * ; intuition.
-  + unfold descendan in H.
+  + unfold descendand' in H.
     repeat destruct H.
     assert (x1' := x2). apply W_endx_inv in x1'. inversion x1'.
     assert (x1'' := x2). apply W_endy_inv in x1''. inversion x1''.
     subst. intuition. unfold name_component in *. simpl in *. repeat break_match. subst. intuition.
-  + 
+  + (* 
     assert (x1' := x1). apply W_endx_inv in x1'.
-    assert (x1'' := x1). apply W_endy_inv in x1''.
-    
+    assert (x1'' := x1). apply W_endy_inv in x1''. *)
+    admit.
+  + assert (forall d c, descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = 
+            descendand' v0 a0 c0 d c).
+    admit.
+    assert (H4' := H4).
+    specialize (H4' d c). rewrite H4' in H.
+    apply IHc0 ; auto.
+    intros.
+    apply (H1 e d0) ; intuition.
+    rewrite (H4 e c). auto.
+    destruct H3.
+    exists x0.
+    destruct H3 ; intuition.
+    rewrite <- (H4 x0 c) ; auto.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    intuition.
 Admitted.
 
 Lemma all_subtree_in_ass_list: forall net tr,
