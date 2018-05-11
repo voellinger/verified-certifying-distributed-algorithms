@@ -194,6 +194,36 @@ Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
   (v0 y -> False) ->
   v0 des ->
   Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) des x vl el ->
+  {vl1 : V_list & {vl2 : V_list & {el1 : E_list & {el2 : E_list & {w: Walk v0 a0 des x vl1 el1 & vl = vl1 ++ vl2 /\ el = el1 ++ el2}}}}}.
+Proof.
+  intros v0 a0 c0.
+  induction c0 ; simpl in * ; intuition.
+  + inversion H. inversion H1. subst. exists []. exists vl. exists []. exists el.
+    assert (Walk (V_single des) A_empty des des [] []).
+    apply W_null. apply In_single.
+    exists H3. simpl. auto.
+  + apply V_union_single_dec in H ; auto.
+    apply V_union_single_dec in H1 ; auto.
+    assert (y <> y0 /\ ~v0 y0).
+    unfold not. split ; intros.
+    subst. apply H0. apply In_left. apply In_single.
+    apply H0. apply In_right. auto.
+    destruct H3. clear H0.
+    destruct H.
+    destruct H1. subst.
+    admit. subst.
+    admit.
+    destruct H1. subst.
+    admit.
+    specialize (IHc0 x0 y0 des vl el). intuition.
+    
+
+
+Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) x y des vl el,
+  v0 x ->
+  (v0 y -> False) ->
+  v0 des ->
+  Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) des x vl el ->
   {vl : V_list & {el : E_list & Walk v0 a0 des x vl el}}.
 Proof.
   intros v0 a0 c0.
