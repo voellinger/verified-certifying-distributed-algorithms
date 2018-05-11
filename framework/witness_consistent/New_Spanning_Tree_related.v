@@ -147,21 +147,10 @@ Definition parent_walk' (x y : Component) (vl : V_list) (el : E_list) v a g (w :
 Definition parent_walk x y vl el w : Prop :=
   parent_walk' x y vl el v a g w.
 
-Definition descendand' (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : Prop :=
-  exists vl el, exists (w : Walk v a (name_component des) (name_component ancestor) vl el), parent_walk' (name_component des) (name_component ancestor) vl el v a c w.
-
-Definition descendand (des ancestor : Name) : Prop :=
-  descendand' v a g des ancestor.
-
-(* Function descendand2' (v : V_set) (a : A_set) (c : Connected v a) (des ancestor : Name) : bool :=
-  if (Name_eq_dec des ancestor) then 
-    true else 
-    (eqb (Name_eqb des (parent des)) false) && descendand2' v a c (parent des) ancestor. *)
-
 Function eqn n1 n2 : bool :=
   if (Name_eq_dec n1 n2) then true else false.
 
-Fixpoint des' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
+Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor : Name) : bool :=
   match c with
   | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
   | C_leaf v a co x y _ _ => 
@@ -174,133 +163,10 @@ Fixpoint des' (v : V_set) (a : A_set) (c : Connected v a) (descendand ancestor :
   | C_eq v v' a a' _ _ co => des' v a co descendand ancestor
   end.
 
-Definition des'' (descendand ancestor : Name) : bool :=
-  des' v a g descendand ancestor.
-
-Axiom finite_sets : forall (v : V_set) (y : Vertex), {v y} + {~ v y}.
+Definition descendand (descendand ancestor : Name) : bool :=
+  descendand' v a g descendand ancestor.
 
 
-Lemma W_backstep :
- forall v a (x y z : Vertex) (vl : V_list) (el : E_list),
- Walk v a x z (y :: vl) el -> {el' : E_list &  Walk v a y z vl el'}.
-Proof.
-        intros; inversion H.
-        split with el0; trivial.
-Qed.
-
-Axiom Walk_in_smaller' : forall v0 a0 (c0 : Connected v0 a0) anc new des vl el,
-  Walk (V_union (V_single new) v0) (A_union (E_set anc new) a0) des anc vl el ->
-  v0 des ->
-  v0 anc ->
-  (v0 new -> False) ->
-  {vl2 : V_list &
-  {el2 : E_list &
-  {w: Walk (V_union (V_single new) v0) (A_union (E_set anc new) a0) des anc vl2 el2 &
-  ~ In new vl2}}}.
-
-(* Lemma Walk_in_smaller' : forall v0 a0 (c0 : Connected v0 a0) anc new des vl el,
-  Walk (V_union (V_single new) v0) (A_union (E_set anc new) a0) des anc vl el ->
-  v0 des ->
-  v0 anc ->
-  (v0 new -> False) ->
-  {vl2 : V_list &
-  {el2 : E_list &
-  {w: Walk (V_union (V_single new) v0) (A_union (E_set anc new) a0) des anc vl2 el2 &
-  ~ In new vl2}}}.
-Proof.
-  intros.
-  induction H.
-  + exists []. exists [].
-    assert (Walk (V_union (V_single new) v0) (A_union (E_set x new) a0) x x [] []).
-    apply W_null ; auto.
-    exists H. auto.
-  + (* clear v1.
-    assert (x <> new) as desnew. admit.
-    assert (anc <> new) as ancnew. admit.
-    assert (H2' := H).
-    apply W_endx_inv in H2'.
-    apply V_union_single_dec in H2' ; auto.
-    assert (H2'' := H).
-    apply W_endy_inv in H2''.
-    apply V_union_single_dec in H2'' ; auto.
-    destruct H2' ; subst.
-    admit. apply IHWalk in v1 ; clear IHWalk.
-    destruct v1. repeat destruct s.
-    exists (y :: x0).
-    exists (E_ends x y :: x1).
-    assert (Walk (V_union (V_single new) v0) (A_union (E_set z new) a0) x z (y :: x0) (E_ends x y :: x1)).
-    apply W_step ; auto.
-    apply In_right ; auto.
-    admit.
-(*     inversion a1. inversion H3 ; subst ; intuition. subst. *)
-    exists H3.
-    unfold not. intros.
-    simpl in H4. destruct H4.
-    subst.
-    assert (anc = x). admit. subst.
- admit.
-    intuition. *)
-Admitted. *)
-
-
-Lemma Walk_in_smaller : forall v0 a0 (c0 : Connected v0 a0) anc new des vl el,
-  Walk (V_union (V_single new) v0) (A_union (E_set anc new) a0) des anc vl el ->
-  v0 des ->
-  v0 anc ->
-  (v0 new -> False) ->
-  {vl : V_list & {el : E_list & Walk v0 a0 des anc vl el}}.
-Proof.
-  intros v0 a0 c0 anc new des vl el H H0 H1 H2.
-  apply Walk_in_smaller' in H ; auto.
-  destruct H. repeat destruct s.
-  exists x. exists x0.
-  induction x1.
-  + apply W_null. auto.
-  + clear v1.
-    intuition.
-    assert (H2' := x1).
-    apply W_endx_inv in H2'.
-    apply V_union_single_dec in H2' ; auto.
-    destruct H2'.
-    subst. simpl in *. intuition. intuition.
-    apply W_step ; auto.
-    inversion a1 ; auto.
-    inversion H ; subst ; intuition.
-Qed.
-
-
-Lemma descendand_descendands : forall des anc : Name, v (name_component des) -> v (name_component anc) -> 
-  (descendand des anc <-> (des'' des anc = true)).
-Proof.
-  intros.
-  unfold descendand. unfold des''. unfold parent_walk'. split ; intros.
-  repeat destruct H1.
-  destruct des. destruct anc. simpl in *.
-  induction g ; intros ; simpl in * ; intuition.
-  + inversion H. inversion H0.
-    subst. subst. unfold eqn. break_match. break_match. auto.
-    intuition.
-    unfold component_name in n. intuition.
-  + unfold component_name in *.
-    inversion H.
-    inversion H2. subst.
-    inversion H0. inversion H3. subst.
-    repeat break_match.
-      unfold eqn. break_match. intuition. break_match. intuition. intuition.
-      intuition.
-    subst.
-    repeat break_match. unfold eqn. repeat break_match ; subst ; intuition.
-      
-      inversion H. inversion H4. subst.
-       
-      
-  
-  + subst.
-    exists []. exists [].
-    assert (Walk (V_single x) A_empty (name_component des) (name_component des) [] []).
-    apply W_null ; auto.
-    exists H1.
-    unfold parent_walk'. intros. inversion H2.
 
 Lemma parent_arcs : forall x y,
   x = parent y -> v (name_component y) -> y <> root -> (a (A_ends (name_component x) (name_component y)) /\ a (A_ends (name_component y) (name_component x))).
