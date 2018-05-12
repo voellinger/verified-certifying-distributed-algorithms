@@ -1925,7 +1925,7 @@ Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
   descendand' v a g d c = true ->
   P d ->
   (forall e d : Name,
-    descendand' v a g e c = true ->
+    descendand' v a g d c = true ->
     In d (children' v a g e) ->
     P d -> P e) ->
   P c.
@@ -1935,118 +1935,15 @@ Proof.
   apply (descendand_inv2) in H. intuition.
   apply (descendand_inv1) in H. intuition.
   intros.
+  assert ((parent' v0 a0 g0 d0) = d0 \/ (parent' v0 a0 g0 d0) <> d0).
+  apply classic.
+  destruct H4. rewrite H4. auto.
   apply (H1 (parent' v0 a0 g0 d0) d0) ; auto.
-  
+Admitted.
 
 
-  assert (forall c d, descendand' v a g d c = true ->
-  c <> d ->
-  (exists (e : Name), descendand' v a g e c = true /\ In d (children' v a g e))) as parent_exists'.
-  apply parent_exists ; auto.
-  induction g ; simpl in * ; unfold eqn in * ; unfold component_name in * ; simpl in * ; intuition.
-  + specialize (parent_exists' c d).
-    assert (c = d \/ c <> d).
-    apply classic.
-    destruct H2. subst. auto.
-    destruct parent_exists' ; intuition.
-  + assert ((forall c d : Name,
-       descendand' v0 a0 g0 d c = true ->
-       (c = d -> False) -> exists e : Name, descendand' v0 a0 g0 e c = true /\ In d (children' v0 a0 g0 e))) as newparentexists.
-    apply (parent_exists) ; auto. intuition. clear newparentexists.
-    assert (c = d \/ c <> d).
-    apply classic.
-    destruct H3. subst. auto.
-    specialize (parent_exists' c d).
-    destruct parent_exists' ; intuition.
-    break_match ; subst ; intuition ; simpl in *.
-        break_match ; subst ; intuition ; simpl in *.
-          inversion e. subst. intuition.
-          inversion e. subst. intuition.
-          subst. break_match ; subst ; intuition ; simpl in *.
-            apply (H1 (Checker x) (Checker y)) ; intuition.
-              break_match ; subst ; intuition.
-              break_match ; subst ; intuition.
-            break_match ; subst ; intuition.
-            break_match ; subst ; intuition ; simpl in *.
-            apply (H2 c (Checker y)) ; intuition.
-            apply (H1 c (Checker y)) ; intuition.
-              break_match ; subst ; intuition. destruct c. apply descendand_refl. apply descendand_inv2 in H4. simpl in H4. auto.
-              break_match ; subst ; intuition. repeat break_match ; subst ; intuition ; simpl in *.
 
-            repeat break_match ; subst ; intuition ; simpl in *.
-    repeat break_match ; subst ; intuition ; simpl in *.
-      inversion e0. subst. intuition.
-      apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
-        apply descendand_refl ; auto.
-      apply H4 ; auto. intros. apply (H1 e d0) ; auto.
-        break_match ; subst ; intuition.
-        break_match ; subst ; intuition.
-        destruct H3. break_match. destruct H3. subst.
-        break_match ; subst ; intuition. inversion e. subst. intuition.
-        apply children_help in H5. simpl in H5. intuition.
-        destruct H3. exists x0. intuition. break_match ; subst ; intuition.
-        inversion H5 ; intuition. subst. apply descendand_inv1 in H. simpl in H. intuition.
-      apply descendand_inv2 in H. simpl in H. intuition.
-
-      assert (H' := H). apply descendand_inv2 in H'.
-        destruct H3. 
-        repeat break_match ; subst ; intuition.
-        inversion e0. subst. intuition.
-        assert (~ In (Checker y) (children' v0 a0 c0 (Checker y))).
-        apply (children_not_reflexive v0 a0 c0 (Checker y)).
-        intuition. clear H4 H2 n2.
-        apply (H1 c (Checker y)) ; auto.
-        repeat break_match ; subst ; intuition. destruct c. apply descendand_refl. simpl in H'. auto.
-        repeat break_match ; subst ; intuition.
-        
-      assert (H' := H). apply descendand_inv2 in H'.
-        destruct H3. repeat break_match ; subst ; intuition.
-        inversion e0. subst. intuition.
-        apply children_help in H6. simpl in H6. intuition.
-        destruct H6. subst. apply descendand_inv1 in H. simpl in H. intuition.
-        apply H4. intros. apply (H1 e d0) ; auto.
-        break_match ; subst ; intuition.
-        break_match ; subst ; intuition.
-        exists (Checker x) ; intuition.
-        apply H4. intros. apply (H1 e d0) ; auto.
-        break_match ; subst ; intuition.
-        apply descendand_inv1 in H3. simpl in H3. intuition.
-        break_match ; subst ; intuition.
-        exists x0 ; intuition.
-
-
-(* Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
-  descendand' v a g d c = true ->
-  P d ->
-  (forall d : Name,
-    P d -> P (parent' v a g d)) ->
-  P c.
-Proof.
-  intros v a g c d P.
-  assert (c = d \/ c <> d).
-  apply classic.
-  destruct H. subst. auto.
-  assert (c = parent' v a g d \/ c <> parent' v a g d).
-  apply classic.
-  destruct H0. subst.
-  induction g ; intros ; simpl in * ; unfold eqn in * ; unfold component_name in * ; simpl in * ; intuition.
-  + repeat break_match ; subst ; simpl in * ; intuition.
-    apply (H2 d) ; auto.
-  + induction g ; intros ; simpl in * ; unfold eqn in * ; unfold component_name in * ; simpl in * ; intuition.
-    - repeat break_match ; subst ; simpl in * ; intuition.
-      inversion H1.
-    - assert (forall c d, descendand' v0 a0 g0 d c = true ->
-  c <> d ->
-  (exists (e : Name), descendand' v0 a0 g0 e c = true /\ In d (children' v0 a0 g0 e))) as parent_exists'.
-  apply parent_exists ; auto.
-    specialize (parent_exists' c d).
-    repeat break_match ; subst ; simpl in * ; intuition.
-      specialize (H3 (Checker y)). break_match ; subst ; intuition.
-      apply (IHg c (Checker y) P) ; auto.
-      specialize (H1 (Checker y)). break_match ; subst ; intuition.
-        inversion e. subst. intuition. *)
-
-Lemma descendand_trans : forall c d (P : Name -> Prop),
+(* Lemma descendand_trans : forall c d (P : Name -> Prop),
   descendand' v a g d c = true ->
   P d ->
   (forall e d : Name,
@@ -2104,7 +2001,7 @@ Proof.
         apply descendand_inv1 in H3. simpl in H3. intuition.
         break_match ; subst ; intuition.
         exists x0 ; intuition.
-Admitted.
+Admitted. *)
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -2140,8 +2037,9 @@ Proof.
   assert (forall d, Permutation (children (Checker c0)) (child_done (nwState net (Checker c0))) -> In d (children (Checker c0)) -> In d (child_done (nwState net (Checker c0)))).
   apply Permutation_in.
   apply Permutation_sym in H9. apply H10 ; auto.
-  apply (descendand_trans (Checker c) (Checker d)) ; auto.
+  apply (descendand_trans v a g (Checker c) (Checker d)) ; auto.
   intros. apply (H4 e0 d0) ; auto.
+  (* Sei c <> d0, dann gilt das *)
 Qed.
 
 
