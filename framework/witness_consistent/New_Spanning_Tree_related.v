@@ -155,9 +155,9 @@ Fixpoint descendand' (v : V_set) (a : A_set) (c : Connected v a) (descendand anc
   | C_isolated x => (eqn ancestor (component_name x)) && eqn descendand ancestor
   | C_leaf v a co x y _ _ => 
       if (Name_eq_dec descendand (component_name y)) then
-        (eqn ancestor (component_name x)) || 
+        ((eqn ancestor (component_name x)) || 
         (eqn ancestor (component_name y)) || 
-        (descendand' v a co (component_name x) ancestor) else
+        (descendand' v a co (component_name x) ancestor)) else
          descendand' v a co descendand ancestor
   | C_edge v a co x y _ _ _ _ _ => descendand' v a co descendand ancestor
   | C_eq v v' a a' _ _ co => descendand' v a co descendand ancestor
