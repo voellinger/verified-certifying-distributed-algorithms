@@ -1841,24 +1841,6 @@ Proof.
 Admitted.
 
 
-(* Lemma nearly_all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
-    (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
-Proof.
-  intros net tr H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
-  + subst.
-    simpl in *.
-    intuition.
-  + subst. simpl in *.
-    intuition.
-    invc H0 ; simpl in *.
-    - unfold NetHandler in H5.
-Admitted. *)
-
-
 Lemma parent_exists: forall c d,
   descendand d c = true ->
   c <> d ->
@@ -1881,15 +1863,6 @@ Proof.
     inversion e0. subst ; auto.
     apply children_help in H3. simpl in H3. intuition.
 Qed.
-
-Lemma descendand_edge : forall v0 a0 c0 x y n v1 v2 n0 n1 d c, 
-  descendand' v0 (A_union (E_set x y) a0) (C_edge v0 a0 c0 x y v1 v2 n n0 n1) d c = true <->
-            descendand' v0 a0 c0 d c  = true.
-Proof.
-  intros.
-  unfold descendand'.
-  
-Admitted.
 
 Lemma descendand_trans : forall c d (P : Name -> Prop),
   descendand d c = true ->
@@ -1966,6 +1939,23 @@ Proof.
         break_match ; subst ; intuition.
         exists x0 ; intuition.
 Admitted.
+
+(* Lemma nearly_all_subtree_in_ass_list: forall net tr,
+  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
+  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
+    (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
+Proof.
+  intros net tr H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+Admitted. *)
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
