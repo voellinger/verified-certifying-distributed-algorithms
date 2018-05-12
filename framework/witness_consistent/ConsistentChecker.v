@@ -1960,43 +1960,6 @@ Proof.
 Qed.
 
 
-(* Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
-  descendand' v a g d c = true ->
-  P d ->
-  (forall e d : Name,
-    descendand' v a g e c = true ->
-    In d (children' v a g e) ->
-    P d -> P e) ->
-  P c.
-Proof.
-  intros.
-  assert (v0 (name_component d)).
-  apply descendand_inv1 in H. auto.
-  induction g0 ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
-  + inversion H.
-  + inversion H.
-  + inversion e0. subst. intuition.
-  + inversion e0. subst. intuition.
-  + assert (H1' := H1). apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
-    apply descendand_refl ; auto.
-  + inversion H2. inversion H4. subst.
-      apply descendand_inv1 in H. intuition.
-      apply (H3) ; auto ; intros.
-      assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
-  + inversion H2.
-      inversion H4. subst. apply descendand_inv1 in H. intuition.
-      apply descendand_inv2 in H. simpl in H. intuition.
-  + inversion H2. inversion H3. subst.
-   apply (H1 c (Checker y)) ; auto ; break_match ; subst ; intuition. destruct c. apply descendand_refl ; auto.
-      apply descendand_inv2 in H. auto.
-      admit.
-      intuition.
-  + apply (IHg c d P) ; auto ; intros.
-    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
-    apply descendand_inv1 in H2. simpl in H2. intuition.
-Qed. *)
-
-
 Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
   descendand' v a g d c = true ->
   P d ->
@@ -2006,12 +1969,6 @@ Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
     P d -> P e) ->
   P c.
 Proof.
-(*   intros v a g.
-  induction g.
-  - admit.
-  - simpl in *. intros. break_match ; subst ; intuition. unfold eqn in *. break_match. admit. break_match. admit.
-    simpl in *. unfold component_name in *. intuition. *)
-  
   intros v a g.
   induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
   + inversion H.
@@ -2023,20 +1980,14 @@ Proof.
   + apply (IHg (Checker x) d P) ; auto ; intros.
     assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
   + apply descendand_inv2 in H. simpl in H. intuition.
-  + apply (IHg c (Checker y)) ; auto.
-    admit.
+  + assert (P (Checker x)).
+    apply (H1 (Checker x) (Checker y)) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
+    apply (IHg c (Checker x)) ; auto.
     intros. apply (H1 e d) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
-    
-    (* apply (H1 c (Checker y)) ; auto. break_match ; subst ; intuition. destruct c. apply descendand_refl ; auto. apply descendand_inv2 in H. auto. *)
-(*     admit. *)
   + apply (IHg c d P) ; auto ; intros.
     assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
     apply descendand_inv1 in H2. simpl in H2. intuition.
-Admitted.
-
-
-
-
+Qed.
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
