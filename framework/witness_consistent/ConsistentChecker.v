@@ -1930,16 +1930,15 @@ Proof.
   + apply (IHg d c) ; auto.
 Qed.
 
-Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
+Lemma descendand_trans' : forall v a g c d (P : Name -> Prop),
   descendand' v a g d c = true ->
   P d ->
   (forall e d : Name,
-    descendand' v a g e c = true ->
+    descendand' v a g d c = true ->
     In d (children' v a g e) ->
     P d -> P e) ->
   P c.
 Proof.
-Admitted. (* 
   intros.
   apply (descendand_trans''' v0 a0 g0 d c) ; auto.
   apply (descendand_inv2) in H. intuition.
@@ -1958,46 +1957,87 @@ Admitted. (*
       subst. intuition.
     - inversion H2. inversion H. subst. intuition.
       subst. intuition.
-Qed. *)
-
-Lemma all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
-  (nwState net (Checker c)).(terminated) = true ->
-  (forall d, descendand (component_name d) (component_name c) = true ->
-    (forall e, In e (nwState net (Checker d)).(ass_list) -> In e (nwState net (Checker c)).(ass_list)))).
-Proof.
-  intros.
-  assert (H0' := H0).
-  apply (terminated_child_todo_null net tr) in H0' ; auto.
-  assert (Permutation (child_done (nwState net (Checker c))) (children (Checker c))).
-  assert (Permutation ((nwState net (Checker c)).(child_done) ++ (nwState net (Checker c)).(child_todo)) (children (Checker c))).
-  apply (child_done_children_list_children net tr) ; auto.
-  rewrite H0' in *. rewrite app_nil_r in H3. auto.
-  assert (forall d, Permutation (children (Checker c)) (child_done (nwState net (Checker c))) -> In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
-  apply Permutation_in.
-  apply Permutation_sym in H3.
-  assert (forall d : Name, In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
-  intros.
-  apply (H4 d0) ; auto.
-  clear H4.
-  assert (forall d' d : Name, descendand d' (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
-  intros.
-  apply (child_done_in_ass_list net tr H d' d0) ; auto.
-  assert (terminated (nwState net d') = true).
-  apply (all_subtree_terminated net tr H (Checker c)) ; auto.
-  destruct d'.
-  apply (terminated_child_todo_null net tr) in H8 ; auto.
-  assert (Permutation (child_done (nwState net (Checker c0))) (children (Checker c0))).
-  assert (Permutation ((nwState net (Checker c0)).(child_done) ++ (nwState net (Checker c0)).(child_todo)) (children (Checker c0))).
-  apply (child_done_children_list_children net tr) ; auto.
-  rewrite H8 in *. rewrite app_nil_r in H9. auto.
-  assert (forall d, Permutation (children (Checker c0)) (child_done (nwState net (Checker c0))) -> In d (children (Checker c0)) -> In d (child_done (nwState net (Checker c0)))).
-  apply Permutation_in.
-  apply Permutation_sym in H9. apply H10 ; auto.
-  apply (descendand_trans v a g (Checker c) (Checker d)) ; auto.
-  intros. apply (H4 e0 d0) ; auto.
 Qed.
 
+
+(* Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
+  descendand' v a g d c = true ->
+  P d ->
+  (forall e d : Name,
+    descendand' v a g e c = true ->
+    In d (children' v a g e) ->
+    P d -> P e) ->
+  P c.
+Proof.
+  intros.
+  assert (v0 (name_component d)).
+  apply descendand_inv1 in H. auto.
+  induction g0 ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
+  + inversion H.
+  + inversion H.
+  + inversion e0. subst. intuition.
+  + inversion e0. subst. intuition.
+  + assert (H1' := H1). apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
+    apply descendand_refl ; auto.
+  + inversion H2. inversion H4. subst.
+      apply descendand_inv1 in H. intuition.
+      apply (H3) ; auto ; intros.
+      assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+  + inversion H2.
+      inversion H4. subst. apply descendand_inv1 in H. intuition.
+      apply descendand_inv2 in H. simpl in H. intuition.
+  + inversion H2. inversion H3. subst.
+   apply (H1 c (Checker y)) ; auto ; break_match ; subst ; intuition. destruct c. apply descendand_refl ; auto.
+      apply descendand_inv2 in H. auto.
+      admit.
+      intuition.
+  + apply (IHg c d P) ; auto ; intros.
+    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+    apply descendand_inv1 in H2. simpl in H2. intuition.
+Qed. *)
+
+
+Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
+  descendand' v a g d c = true ->
+  P d ->
+  (forall e d : Name,
+    descendand' v a g e c = true ->
+    In d (children' v a g e) ->
+    P d -> P e) ->
+  P c.
+Proof.
+(*   intros v a g.
+  induction g.
+  - admit.
+  - simpl in *. intros. break_match ; subst ; intuition. unfold eqn in *. break_match. admit. break_match. admit.
+    simpl in *. unfold component_name in *. intuition. *)
+  
+  intros v a g.
+  induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
+  + inversion H.
+  + inversion H.
+  + inversion e0. subst. intuition.
+  + inversion e0. subst. intuition.
+  + assert (H1' := H1). apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
+    apply descendand_refl ; auto.
+  + apply (IHg (Checker x) d P) ; auto ; intros.
+    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+  + apply descendand_inv2 in H. simpl in H. intuition.
+  + apply (IHg c (Checker y)) ; auto.
+    admit.
+    intros. apply (H1 e d) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
+    
+    apply (H1 c (Checker y)) ; auto. break_match ; subst ; intuition. destruct c. apply descendand_refl ; auto. apply descendand_inv2 in H. auto.
+    admit.
+  + apply (IHg c d P) ; auto ; intros.
+    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+    apply descendand_inv1 in H2. simpl in H2. intuition.
+Qed.
+
+
+
+
+
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   (nwState net (Checker c)).(terminated) = true ->
@@ -2018,7 +2058,7 @@ Proof.
   intros.
   apply (H4 d0) ; auto.
   clear H4.
-  assert (forall d' d : Name, descendand' v a g d (Checker c) = true -> descendand' v a g d' (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
+  assert (forall d' d : Name, descendand' v a g d' (Checker c) = true -> descendand' v a g d' (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
   intros.
   apply (child_done_in_ass_list net tr H d' d0) ; auto.
   assert (terminated (nwState net d') = true).
@@ -2036,20 +2076,6 @@ Proof.
   intros.
 
   apply (H4 e0 d0) ; auto.
-
-
-
-
-  clear H8 H4 H5 H3 H0' H2 e H1 H0 H tr net null_Value.
-  unfold descendand.
-  induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
-  + inversion e. subst. intuition.
-  + apply descendand_inv1 in H0. simpl in H0. intuition.
-  + inversion e2. inversion e3. subst. intuition.
-  + inversion e2. subst. apply descendand_refl ; auto.
-  + inversion e2. subst. 
-
-  (* Sei c <> d0, dann gilt das *)
 Qed.
 
 
