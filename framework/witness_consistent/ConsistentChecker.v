@@ -2057,48 +2057,7 @@ Proof.
   assert (forall d : Name, In d (children (Checker c)) -> In d (child_done (nwState net (Checker c)))).
   intros.
   apply (H4 d0) ; auto.
-  clear H4. unfold component_name in *. clear H0'.
-
-  apply (descendand_trans''' v a g (Checker d) (Checker c)) ; auto.
-  apply Component_prop_1.
-  apply Component_prop_1.
-  intros.
-  assert (terminated (nwState net d0) = true).
-  apply (all_subtree_terminated net tr H (Checker c)) ; auto.
-  destruct d0.
-  apply (terminated_child_todo_null net tr) in H7 ; auto.
-  assert (Permutation (child_done (nwState net (Checker c0))) (children (Checker c0))).
-  assert (Permutation ((nwState net (Checker c0)).(child_done) ++ (nwState net (Checker c0)).(child_todo)) (children (Checker c0))).
-  apply (child_done_children_list_children net tr) ; auto.
-  rewrite H11 in *. rewrite app_nil_r in *. auto.
-  assert (forall d, Permutation (children (Checker c0)) (child_done (nwState net (Checker c0))) -> In d (children (Checker c0)) -> In d (child_done (nwState net (Checker c0)))).
-  apply Permutation_in.
-  apply Permutation_sym in H12. apply H13 ; auto.
-
-
-
-  intros. (* assert (e0 <> d0) as new. admit. *)
-  assert (forall d' d : Name, descendand' v a g d (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
-  intros.
-  apply (child_done_in_ass_list net tr H d' d1) ; auto.
-  assert (terminated (nwState net d') = true).
-  apply (all_subtree_terminated net tr H (Checker c)) ; auto.
-  
-
- admit.
-  destruct d'.
-  apply (terminated_child_todo_null net tr) in H11 ; auto.
-  assert (Permutation (child_done (nwState net (Checker c0))) (children (Checker c0))).
-  assert (Permutation ((nwState net (Checker c0)).(child_done) ++ (nwState net (Checker c0)).(child_todo)) (children (Checker c0))).
-  apply (child_done_children_list_children net tr) ; auto.
-  rewrite H11 in *. rewrite app_nil_r in *. auto.
-  assert (forall d, Permutation (children (Checker c0)) (child_done (nwState net (Checker c0))) -> In d (children (Checker c0)) -> In d (child_done (nwState net (Checker c0)))).
-  apply Permutation_in.
-  apply Permutation_sym in H12. apply H13 ; auto.
-  apply (H8 e0 d0) ; auto.
-
-
-
+  clear H4.
   assert (forall d' d : Name, descendand' v a g d' (Checker c) = true -> In d (children d') -> (forall e, In e (nwState net d).(ass_list) -> In e (nwState net d').(ass_list))).
   intros.
   apply (child_done_in_ass_list net tr H d' d0) ; auto.
@@ -2115,8 +2074,11 @@ Proof.
   apply Permutation_sym in H9. apply H10 ; auto.
   apply (descendand_trans v a g (Checker c) (Checker d)) ; auto.
   intros.
+
   apply (H4 e0 d0) ; auto.
 Qed.
+
+
 
 
 Lemma packets_work''' : forall x tr a0,
