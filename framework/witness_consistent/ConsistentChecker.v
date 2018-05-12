@@ -1841,13 +1841,12 @@ Proof.
 Admitted.
 
 
-Lemma parent_exists: forall c d,
-  descendand d c = true ->
+Lemma parent_exists: forall v a g c d,
+  descendand' v a g d c = true ->
   c <> d ->
-  (exists (e : Name), descendand e c = true /\ In d (children e)).
+  (exists (e : Name), descendand' v a g e c = true /\ In d (children' v a g e)).
 Proof.
-  intros.
-  unfold descendand in *. unfold children in *.
+  intros v a g c d.
   induction g ; intuition ; simpl in *.
   + unfold eqn in *. repeat break_match ; subst ; intuition.
     simpl in H. inversion H. simpl in H. inversion H.
@@ -1856,24 +1855,37 @@ Proof.
     inversion e0. subst. intuition.
     exists (Checker x). repeat break_match ; subst ; intuition. 
       apply descendand_refl ; auto.
-    destruct H1. exists x0. repeat break_match ; subst ; intuition.
-    destruct H1. exists x0. repeat break_match ; subst ; intuition.
+    destruct H2. exists x0. repeat break_match ; subst ; intuition.
+    destruct H2. exists x0. repeat break_match ; subst ; intuition.
     exists (Checker x). repeat break_match ; subst ; intuition.
-    destruct H1. exists x0. repeat break_match ; subst ; intuition.
+    destruct H2. exists x0. repeat break_match ; subst ; intuition.
     inversion e0. subst ; auto.
     apply children_help in H3. simpl in H3. intuition.
 Qed.
 
-Lemma descendand_trans : forall c d (P : Name -> Prop),
-  descendand d c = true ->
+Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
+  descendand' v a g d c = true ->
   P d ->
   (forall e d : Name,
-    descendand e c = true ->
-    In d (children e) ->
+    descendand' v a g e c = true ->
+    In d (children' v a g e) ->
     P d -> P e) ->
   P c.
 Proof.
-  intros c d prop H H0 H1.
+  intros v a g.
+  assert (
+
+  induction g ; simpl in * ; unfold eqn in * ; unfold component_name in * ; simpl in * ; intuition.
+  + assert (c = d \/ c <> d).
+    apply classic.
+    destruct H2. subst. auto.
+    apply (H1 c d) ; auto.
+    admit.
+
+
+
+
+  intros v a g c d prop H H0 H1.
   assert (c = d \/ c <> d).
   apply classic.
   destruct H2. subst. auto.
@@ -1897,32 +1909,16 @@ Proof.
         inversion H5 ; intuition. subst. apply descendand_inv1 in H. simpl in H. intuition.
       apply descendand_inv2 in H. simpl in H. intuition.
 
-      (* assert (H' := H). apply descendand_inv2 in H'.
+      assert (H' := H). apply descendand_inv2 in H'.
         destruct H3. 
-(* break_match ; subst ; intuition. break_match ; subst ; intuition. inversion e. subst. intuition.
-        assert (~ In (Checker y) (children' v0 a0 c0 (Checker y))).
-        apply (children_not_reflexive v0 a0 c0 (Checker y)). intuition.
         repeat break_match ; subst ; intuition.
-        apply (H1 c (Checker y)) ; auto.
-        repeat break_match ; subst ; intuition. destruct c. apply descendand_refl. simpl in H'. auto.
-        repeat break_match ; subst ; intuition. *)
-
-
-
- repeat break_match ; subst ; intuition.
         inversion e0. subst. intuition.
         assert (~ In (Checker y) (children' v0 a0 c0 (Checker y))).
         apply (children_not_reflexive v0 a0 c0 (Checker y)).
-        intuition. clear H4 H2 n2 H5.
+        intuition. clear H4 H2 n2.
         apply (H1 c (Checker y)) ; auto.
         repeat break_match ; subst ; intuition. destruct c. apply descendand_refl. simpl in H'. auto.
         repeat break_match ; subst ; intuition.
- admit.  *)(* apply (H1 c (Checker y)) ; intuition ; repeat break_match ; intuition.
-           destruct c. apply descendand_refl. apply descendand_inv2 in H. simpl in H. auto.
-           break_match. subst. auto. destruct c. simpl in H'. apply (descendand_refl v0 a0 c0 c) ; auto.
-        break_match ; subst ; intuition. break_match ; subst. destruct H5.
-        repeat break_match ; subst ; intuition.
-        inversion e0. subst. intuition.  *) admit.
         
       assert (H' := H). apply descendand_inv2 in H'.
         destruct H3. repeat break_match ; subst ; intuition.
@@ -1939,23 +1935,6 @@ Proof.
         break_match ; subst ; intuition.
         exists x0 ; intuition.
 Admitted.
-
-(* Lemma nearly_all_subtree_in_ass_list: forall net tr,
-  step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
-  In d (children c) -> (~ In d (child_todo (nwState net c))) ->
-    (forall e, In e (nwState net d).(ass_list) -> In e (nwState net c).(ass_list))).
-Proof.
-  intros net tr H.
-  remember step_async_init as y in *.
-  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
-  + subst.
-    simpl in *.
-    intuition.
-  + subst. simpl in *.
-    intuition.
-    invc H0 ; simpl in *.
-    - unfold NetHandler in H5.
-Admitted. *)
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
