@@ -1802,17 +1802,17 @@ Lemma empty_subtree : forall v a g d h,
   d = h.
 Proof.
   intros v a g.
-      induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-        unfold eqn in H. apply andb_prop in H. destruct H. destruct (Name_eq_dec d h). intuition. inversion H0.
-        repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-        inversion H1.
-        inversion H1.
-        repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-        inversion H0.
-        inversion H0.
-        assert (component_name x = h).
-        apply (IHg (component_name x) h) ; auto.
-        intuition.
+  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    unfold eqn in H. apply andb_prop in H. destruct H. destruct (Name_eq_dec d h). intuition. inversion H0.
+    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H1.
+    inversion H1.
+    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H0.
+    inversion H0.
+    assert (component_name x = h).
+    apply (IHg (component_name x) h) ; auto.
+    intuition.
 Qed.
 
 Lemma all_subtree_terminated: forall net tr,
@@ -1845,9 +1845,31 @@ Proof.
       apply (H6 c) ; auto.
       apply (H6 (parent pSrc)) ; auto.
       apply (H6 c) ; auto.
-      clear H5 H2. admit.
-      (* es gibt nur noch einen in der child_todo, 
-        (das ist pSrc) entweder d war vom pSrc-zweig, 
+      clear H5 H2.
+      assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
+      assert (pSrc = (parent pSrc) \/ pSrc <> (parent pSrc)).
+      apply classic. destruct H2. rewrite <- H2 in *. apply eqb_false_iff in Heqb. intuition.
+      apply (pSrc_in_child_todo x' tr1 H _ (parent pSrc) pBody) ; auto.
+      rewrite H4. apply in_or_app. simpl. auto.
+      rewrite Heql0 in H2. inversion H2 ; subst ; intuition. clear H2.
+      assert (exists (child : Name), In child (children (parent pSrc)) /\ descendand d child = true).
+      admit.
+
+child_done_children_list_children
+forall (net : network) (tr : list (name * (input + list output))),
+step_async_star step_async_init net tr ->
+forall c : name,
+Permutation (child_done (nwState net c) ++ child_todo (nwState net c)) (children c)
+
+child_done_terminated
+forall (net : network) (tr : list (name * (input + list output))),
+step_async_star step_async_init net tr ->
+forall (c : name) (d : Name),
+In d (child_done (nwState net c)) -> terminated (nwState net d) = true
+
+      admit.
+     (* es gibt nur noch pSrc in der child_todo, 
+        entweder d war vom pSrc-zweig, 
         oder von einem anderen und ist dadurch schon drin *)
       apply (H6 c) ; auto.
       apply (H6 (parent pSrc)) ; auto.
