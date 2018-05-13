@@ -1148,6 +1148,11 @@ Lemma not_parent_in_packets : forall x' tr,
   In {| pSrc := parent pSrc; pDst := pDst2; pBody := pBody2 |} (nwPackets x') -> 
   (pSrc = parent pSrc /\ pDst = pDst2 /\ pBody = pBody2)).
 Proof.
+(*     Dieses Lemma kann man nicht induktiv beweisen.
+       Das liegt daran, dass man mit einem induktiven Beweis f\u00fcr alle Situationen, in denen die 
+       Vorbedingung gilt, zeigen kann, dass die Nachbedingung gilt. Hier wollen wir die Nachbedingung
+       beweisen, _obwohl die Vorbedingung nicht gilt_. (Zumindest in manchen Unterf\u00e4llen nicht.)
+       In solchen Situationen hat ein induktiver Beweis keine Aussagekraft.     *)
 intros net tr H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody pDst2 pBody2 H2 H3 ; simpl in *.
@@ -1179,7 +1184,7 @@ intros net tr H.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
       inversion H7. inversion H3. subst. auto.
       inversion H7. subst. rewrite H6 in *.
-      admit.
+      clear H7. admit.
       inversion H3. subst. admit.
       apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
@@ -1187,6 +1192,7 @@ intros net tr H.
       apply (H4 pSrc (parent pSrc) pBody pDst2 pBody2) ; auto.
       apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
+    - 
 Admitted.
 
 Lemma pbody_is_asslist : forall x' tr,
@@ -1311,6 +1317,11 @@ Lemma pSrc_in_child_todo : forall x' tr,
   pSrc <> pDst ->
   In pSrc (nwState x' (parent pSrc)).(child_todo)).
 Proof.
+(*     Dieses Lemma kann man nicht induktiv beweisen.
+       Das liegt daran, dass man mit einem induktiven Beweis f\u00fcr alle Situationen, in denen die 
+       Vorbedingung gilt, zeigen kann, dass die Nachbedingung gilt. Hier wollen wir die Nachbedingung
+       beweisen, _obwohl die Vorbedingung nicht gilt_. (Zumindest in manchen Unterf\u00e4llen nicht.)
+       In solchen Situationen hat ein induktiver Beweis keine Aussagekraft.     *)
   intros net tr H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros pSrc pDst pBody H2 psrcpdst ; simpl in *.
@@ -1418,9 +1429,11 @@ Proof.
       apply in_app_or in H2. destruct H2 ; apply in_or_app ; simpl ; auto.
   - unfold InputHandler in H4.
     specialize (H3 pSrc (parent pSrc) pBody).
-    repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+    repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition ; clear H4.
     inversion H0. subst. symmetry in H5. intuition.
-    inversion H0. subst. intuition. admit. (* Heqb is False *)
+    inversion H0. subst.
+    clear H0 H4 n H6. intuition.
+admit.
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
