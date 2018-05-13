@@ -1430,10 +1430,9 @@ Proof.
   - unfold InputHandler in H4.
     specialize (H3 pSrc (parent pSrc) pBody).
     repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition ; clear H4.
-    inversion H0. subst. symmetry in H5. intuition.
+    inversion H0. subst. symmetry in H4. intuition.
     inversion H0. subst.
-    clear H0 H4 n H6. intuition.
-admit.
+    admit.
 Admitted.
 
 Lemma child_done_in_ass_list: forall net tr,
