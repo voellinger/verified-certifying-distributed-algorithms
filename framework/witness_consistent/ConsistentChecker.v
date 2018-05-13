@@ -843,7 +843,7 @@ Qed.
 
 
 
-Lemma packets_work' : forall x tr,
+Lemma packet_source_terminated : forall x tr,
   refl_trans_1n_trace step_async step_async_init x tr -> forall p,
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   terminated (nwState x pSrc) = true.
@@ -871,7 +871,7 @@ Proof.
       inversion H0. subst. intuition.
 Qed.
 
-Lemma packets_work'wrap : forall x tr,
+Lemma packet_source_terminated' : forall x tr,
   refl_trans_1n_trace step_async step_async_init x tr -> forall (pSrc pDst : Name) pBody,
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x) -> 
   terminated (nwState x pSrc) = true.
@@ -881,7 +881,7 @@ Proof.
   refl_trans_1n_trace step_async step_async_init x tr -> forall p,
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   terminated (nwState x pSrc) = true).
-  apply (packets_work').
+  apply (packet_source_terminated).
   specialize (H1 x tr H).
   specialize (H1 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
   auto.
@@ -897,7 +897,7 @@ Proof.
   destruct H ; auto.
 Qed.
 
-Lemma packets_work'' : forall x tr,
+Lemma p_dst_eq_psrc : forall x tr,
   refl_trans_1n_trace step_async step_async_init x tr -> forall p,
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   pDst = parent pSrc.
@@ -907,7 +907,7 @@ Proof.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
   + inversion H.
   + assert (H2' := H2).
-    apply (packets_work' x'' (tr1 ++ tr2)) in H2' ; auto.
+    apply (packet_source_terminated x'' (tr1 ++ tr2)) in H2' ; auto.
     simpl in *.
     destruct p.
     simpl in *.
@@ -946,7 +946,7 @@ Proof.
       specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
 Qed.
 
-Lemma packets_work'''' : forall x (tr : list (Name * (Input + list Output))),
+Lemma packets_dst_eq_src : forall x (tr : list (Name * (Input + list Output))),
   refl_trans_1n_trace step_async step_async_init x tr -> forall (pSrc pDst: Name) (pBody : Msg),
   In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x) -> 
   pDst = parent pSrc.
@@ -956,7 +956,7 @@ Proof.
   refl_trans_1n_trace step_async step_async_init x tr -> forall p,
   In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
   pDst = parent pSrc).
-  apply packets_work''.
+  apply p_dst_eq_psrc.
   specialize (H1 x tr H {| pSrc := pSrc; pDst := pDst; pBody := pBody |} H0).
   simpl in *.
   auto.
@@ -1034,7 +1034,7 @@ Proof.
       apply (H3 c (pDst p)) ; auto.
       assert (terminated (nwState x' (pSrc p)) = true).
       destruct p. simpl in *.
-        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
         rewrite H4. apply in_or_app. simpl. auto. 
         destruct p. simpl in *. subst. apply eqb_false_iff in Heqb. intuition.
       apply (H3 (pDst p) (pDst p) ) ; auto.
@@ -1044,12 +1044,12 @@ Proof.
       apply (H3 (pDst p) d) ; auto.
       apply (H3 c d) ; auto.
       destruct p. simpl in *. rewrite <- H0 in *.
-        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
         rewrite H4. apply in_or_app. simpl. auto.
       apply (H3 (pDst p) d) ; auto.
       apply (H3 c d ) ; auto.
       destruct p. simpl in *. rewrite <- H0 in *.
-        apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
         rewrite H4. apply in_or_app. simpl. auto.
       apply (H3 (pDst p) d) ; auto.
       apply (H3 c d ) ; auto.
@@ -1109,10 +1109,10 @@ Proof.
     invc H0 ; simpl in * ; intuition.
     - destruct p. simpl in *.
       assert ((nwState x' pSrc).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
 
       subst.
@@ -1123,7 +1123,7 @@ Proof.
       apply NoDup_remove in H2. destruct H2.
       apply NoDup_cons ; auto. intuition.
       assert ((nwState x' (parent pSrc)).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H (parent pSrc) (parent (parent pSrc)) (ass_list (nwState x' (parent pSrc)) ++ pBody)) ; auto.
+      apply (packet_source_terminated' x' tr1 H (parent pSrc) (parent (parent pSrc)) (ass_list (nwState x' (parent pSrc)) ++ pBody)) ; auto.
       rewrite H3. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
       apply eqb_false_iff in Heqb. intuition.
       apply NoDup_remove_1 in H2 ; auto.
@@ -1132,7 +1132,7 @@ Proof.
       apply NoDup_cons ; auto.
       intuition.
       assert ((nwState x' h).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H h (parent h) (ass_list (nwState x' h))) ; auto.
+      apply (packet_source_terminated' x' tr1 H h (parent h) (ass_list (nwState x' h))) ; auto.
       apply eqb_false_iff in Heqb. intuition.
 Qed.
 
@@ -1158,15 +1158,15 @@ intros net tr H.
   + subst. simpl in *.
     intuition.
     assert (pDst = parent pSrc) as pDst'.
-    apply (packets_work'''' x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
+    apply (packets_dst_eq_src x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
     subst.
     invc H0 ; simpl in * ; intuition.
     - destruct p. simpl in *.
       assert ((nwState x' pSrc0).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc0 pDst pBody0) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H5. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc0).
-      apply (packets_work'''' x' tr1 H pSrc0 pDst pBody0) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H5. apply in_or_app. simpl. auto.
 
       subst.
@@ -1210,10 +1210,10 @@ Proof.
     - destruct p. simpl in *.
 
       assert ((nwState x' pSrc0).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc0 pDst0 pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       assert (pDst0 = parent pSrc0).
-      apply (packets_work'''' x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc0 pDst0 pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
 
       subst.
@@ -1327,7 +1327,7 @@ Proof.
   + subst. simpl in *.
     intuition.
     assert (pDst = parent pSrc) as pDst'.
-    apply (packets_work'''' x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
+    apply (packets_dst_eq_src x'' (tr1 ++ tr2) H1 pSrc pDst pBody) ; auto.
     subst.
     invc H0 ; simpl in * ; intuition.
     - (* unfold NetHandler in H5.
@@ -1343,10 +1343,10 @@ Proof.
       apply (pbody_is_asslist x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       assert ((nwState x' pSrc0).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc0 pDst pBody0) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc0).
-      apply (packets_work'''' x' tr1 H pSrc0 pDst pBody0) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc0 pDst pBody0) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
 
       subst.
@@ -1460,10 +1460,10 @@ Proof.
 
 
       assert ((nwState x' pSrc).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H5. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H5. apply in_or_app. simpl. auto.
       assert (l = [] \/ exists p, l = [p]).
       apply (Nethandler_nil_one x' pDst pSrc pBody out d0 l) ; auto.
@@ -1640,10 +1640,10 @@ remember step_async_init as y in *.
 
 
       assert ((nwState x' pSrc).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
 
       subst.
@@ -1697,10 +1697,10 @@ Proof.
 
 
       assert ((nwState x' pSrc).(terminated) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H3. apply in_or_app. simpl. auto.
 
       subst.
@@ -1856,10 +1856,10 @@ Proof.
     invc H0 ; simpl in *.
     - destruct p. simpl in *.
       assert (terminated (nwState x' pSrc) = true).
-      apply (packets_work'wrap x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       assert (pDst = parent pSrc).
-      apply (packets_work'''' x' tr1 H pSrc pDst pBody) ; auto.
+      apply (packets_dst_eq_src x' tr1 H pSrc pDst pBody) ; auto.
       rewrite H4. apply in_or_app. simpl. auto.
       subst.
       unfold NetHandler in H5.
@@ -2100,7 +2100,7 @@ Qed.
 
 
 
-Lemma packets_work''' : forall x tr a0,
+Lemma packet_msg_from_descendand : forall x tr a0,
   refl_trans_1n_trace step_async step_async_init x tr -> 
   (((forall p, In p (nwPackets x) -> ((let (pSrc, pDst, pBody) := p in
   (In a0 pBody -> exists d : Name, descendand d pSrc = true /\ In a0 (init_certificate d))))) /\
@@ -2117,9 +2117,9 @@ Proof.
     apply Component_prop_1.
   + intuition.
     assert (H2' := H2).
-    apply (packets_work' x'' (tr1 ++ tr2)) in H2' ; auto.
+    apply (packet_source_terminated x'' (tr1 ++ tr2)) in H2' ; auto.
     assert (H2'' := H2).
-    apply (packets_work'' x'' (tr1 ++ tr2)) in H2'' ; auto.
+    apply (p_dst_eq_psrc x'' (tr1 ++ tr2)) in H2'' ; auto.
     intuition.
     invc H0 ; simpl in *.
     - rewrite H5 in *. intuition.
@@ -2153,7 +2153,7 @@ Proof.
         destruct H3. exists x. destruct H3. split ; auto.
         unfold descendand in *.
         apply (descendandp1 v a g pDst0 pSrc0 x) ; auto.
-        apply (packets_work'''' x' tr1 H pSrc0 pDst0 pBody0) ; auto.
+        apply (packets_dst_eq_src x' tr1 H pSrc0 pDst0 pBody0) ; auto.
         rewrite H5. apply in_or_app. right. simpl. auto.
       apply (silly_lemma2 pSrc0 pDst0 pBody0) in H7. specialize (H3 {| pSrc := pDst0; pDst := parent pDst0; pBody := pBody |} ). intuition.
       inversion H7. subst. apply eqb_false_iff in Heqb. intuition.
@@ -2180,7 +2180,7 @@ Proof.
       apply in_or_app.
       right. simpl. auto.
       assert (H0' := H0).
-      apply (packets_work' x' tr1) in H0 ; auto. subst. intuition.
+      apply (packet_source_terminated x' tr1) in H0 ; auto. subst. intuition.
       assert (let (pSrc, pDst, pBody) := p in
   In a0 pBody -> 
     exists d : Name, descendand d (component_name (name_component pSrc)) = true /\ In a0 (init_certificate d)) as new.
@@ -2195,14 +2195,14 @@ Proof.
         intuition. rewrite cnnc in *. destruct H7. destruct H7.
         exists x. split ; auto.
         apply (descendandp1 v a g (Checker c) pSrc) ; auto.
-        apply (packets_work'' x' tr1) in H0' ; auto.
+        apply (p_dst_eq_psrc x' tr1) in H0' ; auto.
 
       apply in_app_or in H2. destruct H2. intuition.
         specialize (H4 (name_component pSrc)).
         rewrite checker_name in H4. intuition. destruct H7. destruct H7.
         exists x. split ; auto. rewrite cnnc in *.
         apply (descendandp1 v a g (component_name c) pSrc) ; auto.
-        apply (packets_work'' x' tr1) in H0' ; auto.
+        apply (p_dst_eq_psrc x' tr1) in H0' ; auto.
       intuition.
       simpl in *.
       break_match.
@@ -2223,7 +2223,7 @@ Proof.
   (((forall p, In p (nwPackets x) -> ((let (pSrc, pDst, pBody) := p in
   (In a0 pBody -> exists d : Name, descendand d pSrc = true /\ In a0 (init_certificate d))))) /\
   forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) = true /\ In a0 (init_certificate d)))).
-  apply packets_work'''.
+  apply packet_msg_from_descendand.
   specialize (H1 net tr a0). apply H1 ; auto.
 Qed.
 
