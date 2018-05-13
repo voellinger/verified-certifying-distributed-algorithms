@@ -861,4 +861,122 @@ Proof.
     intuition.
   + intuition.
 Qed.
+
+Lemma no_v_no_children : forall v0 a0 c y x,
+  ~ v0 y ->
+  ~ In (component_name y) (children' v0 a0 c (component_name x)).
+Proof.
+  intros.
+  induction c ; intros ; simpl in *.
+  + intuition.
+  + assert (~ v0 y).
+    intuition.
+    apply H.
+    apply In_right. auto. apply IHc in H0.
+    assert (y <> y0).
+    intuition. apply H.
+    apply In_left. auto. subst. apply In_single.
+    unfold not. intros.
+    break_match.
+      - simpl in H2.
+        destruct H2. inversion e. inversion H2. subst. intuition.
+        intuition.
+      - intuition.
+  + intuition.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
+Lemma NoDup_children: forall name,
+  NoDup (children name).
+Proof.
+  intros.
+  unfold children.
+  induction g ; intros ; simpl in * ; intuition.
+  + break_match ; subst.
+    - assert (~ In (component_name y) (children' v0 a0 c (component_name x))).
+      apply no_v_no_children ; auto.
+      apply NoDup_cons ; auto.
+    - auto.
+Qed.
+
+Lemma empty_subtree : forall v a g d h,
+  descendand' v a g d h = true ->
+  children' v a g h = [] ->
+  d = h.
+Proof.
+  intros v a g.
+  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    unfold eqn in H. apply andb_prop in H. destruct H. destruct (Name_eq_dec d h). intuition. inversion H0.
+    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H1.
+    inversion H1.
+    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H0.
+    inversion H0.
+    assert (component_name x = h).
+    apply (IHg (component_name x) h) ; auto.
+    intuition.
+Qed.
+
+Lemma child_exists : forall v a g d p,
+  descendand' v a g d p = true ->
+  (d = p -> False) ->
+  (exists child : Name, In child (children' v a g p) /\ descendand' v a g d child = true).
+Proof.
+  intros v a g.
+  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+  + unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H.
+    inversion H.
+  + unfold eqn in * ; repeat break_match ; subst ; unfold component_name in * ; simpl in * ; intuition.
+    inversion e1. subst. intuition.
+    exists (Checker y). repeat break_match ; subst ; intuition.
+    specialize (IHg d (Checker x)). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
+    specialize (IHg (Checker x) p). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
+    repeat break_match ; subst ; intuition.
+Qed.
+
+Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
+  descendand' v a g d c = true ->
+  P d ->
+  (forall e d : Name,
+    descendand' v a g e c = true ->
+    In d (children' v a g e) ->
+    P d -> P e) ->
+  P c.
+Proof.
+  intros v a g.
+  induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
+  + inversion H.
+  + inversion H.
+  + inversion e0. subst. intuition.
+  + inversion e0. subst. intuition.
+  + assert (H1' := H1). apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
+    apply descendand_refl ; auto.
+  + apply (IHg (Checker x) d P) ; auto ; intros.
+    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+  + apply descendand_inv2 in H. simpl in H. intuition.
+  + assert (P (Checker x)).
+    apply (H1 (Checker x) (Checker y)) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
+    apply (IHg c (Checker x)) ; auto.
+    intros. apply (H1 e d) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
+  + apply (IHg c d P) ; auto ; intros.
+    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
+    apply descendand_inv1 in H2. simpl in H2. intuition.
+Qed.
+
+Lemma root_is_ancestor : forall (v : V_set) a g d,
+  v (name_component d) ->
+  descendand' v a g d (root' v a g) = true.
+Proof.
+  intros v a g.
+  induction g ; simpl in * ; intuition.
+  + inversion H. subst. rewrite cnnc. unfold eqn. break_match. auto. intuition.
+  + inversion H. inversion H0. subst. rewrite cnnc in *. unfold eqn. repeat break_match ; intuition ; simpl in *.
+    unfold eqn. repeat break_match ; intuition ; simpl in *.
+  + rewrite <- e in *.
+    intuition.
+Qed.
+
 End New_Spanning_Tree.

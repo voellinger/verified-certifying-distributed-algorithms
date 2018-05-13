@@ -52,7 +52,6 @@ Proof.
   destruct H ; auto.
 Qed.
 
-
 Lemma name_comp_name : forall n1 n2,
   name_component n1 = name_component n2 -> n1 = n2.
 Proof.
@@ -73,8 +72,31 @@ Proof.
   auto.
 Qed.
 
-Fixpoint Name_eqb (n1 n2 : Name) : bool :=
-  if (Name_eq_dec n1 n2) then true else false.
+Lemma cinc: forall pSrc0 pSrc,
+  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = true ->
+  pSrc0 = pSrc.
+Proof.
+  intros.
+  apply beq_nat_true in H.
+  unfold component_index in *.
+  unfold name_component in *.
+  destruct pSrc. destruct pSrc0.
+  destruct c0. destruct c. subst.
+  auto.
+Qed.
+
+Lemma cinc': forall pSrc0 pSrc,
+  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = false ->
+  pSrc0 <> pSrc.
+Proof.
+  intros.
+  apply beq_nat_false in H.
+  destruct pSrc. destruct pSrc0.
+  destruct c0. destruct c. simpl in *.
+  intuition. apply H.
+  inversion H0. auto.
+Qed.
+
 
 Notation "a =/= b" := (beq_nat (Some a) (Some b)) (at level 70).
 Notation "a == b" := (beq_nat a b) (at level 70).
@@ -96,6 +118,79 @@ Fixpoint remove_src (src : Name) (child_list : list Name) : list Name :=
   | [] => []
   | hd :: tl => if (component_index (name_component src) == component_index (name_component hd)) then tl else hd :: (remove_src src tl)
   end.
+
+Lemma remove_src_still_in : forall pSrc pSrc0 x,
+  pSrc <> pSrc0 ->
+  In pSrc x ->
+  In pSrc (remove_src pSrc0 x).
+Proof.
+  intros.
+  induction x.
+  inversion H0.
+  simpl in *.
+  destruct H0 ; repeat break_match ; intuition.
+  subst.
+  apply cinc in Heqb.
+  subst.
+  intuition.
+  simpl. left. auto.
+Qed.
+
+Lemma remove_removes_one : forall p l,
+ In p l -> NoDup l -> Permutation (p :: remove_src p l) l.
+Proof.
+  intros p l H H0.
+  induction l.
+  inversion H.
+  simpl in H. destruct H.
+  subst.
+  simpl.
+  break_match. auto. 
+  assert ((component_index (name_component p) =? component_index (name_component p)) = true).
+  apply Nat.eqb_refl.
+  rewrite H in Heqb. inversion Heqb.
+  intuition.
+  assert (H0' := H0).
+  apply NoDup_cons_iff in H0'.
+  destruct H0'.
+  intuition.
+  simpl in *.
+  assert (p = a0 \/ p <> a0).
+  apply classic.
+  destruct H1.
+  subst. intuition.
+  break_match.
+  apply cinc in Heqb.
+  intuition.
+  apply (perm_skip a0) in H4.
+  apply Permutation_sym in H4. apply Permutation_sym.
+  apply (Permutation_trans H4) ; auto.
+  apply perm_swap.
+Qed.
+
+Lemma remove_src_before': forall (d pSrc : Name) (l1 : list Name),
+  ~ In d l1 ->
+  ~ In d (remove_src pSrc l1).
+Proof.
+  intros.
+  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
+  inversion H0.
+  subst.
+  intuition.
+  intuition.
+Qed.
+
+Lemma NoDup_remove_src : forall pSrc l1,
+  NoDup l1 ->
+  NoDup (remove_src pSrc l1).
+Proof.
+  intros.
+  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
+  + apply NoDup_cons_iff in H. destruct H ; auto.
+  + apply NoDup_cons_iff in H. destruct H ; intuition.
+    apply NoDup_cons_iff. split ; auto.
+    apply remove_src_before' ; auto.
+Qed.
 
 Fixpoint is_always (test_case : Assignment) (vl : list Assignment) : bool :=
   let (var, val) := test_case in

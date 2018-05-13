@@ -279,10 +279,30 @@ Proof.
       inversion Heqb.
 Qed.
 
-
-
-
-
+Lemma is_in_isa : forall v2 v1 n,
+  In (assign_cons v2 v1) (init_certificate n) -> isa_aVarComponent v2 n.
+Proof.
+  intros v2 v1 n H.
+  unfold isa_aVarComponent.
+  apply init_certificate_init_var_l in H.
+  induction (init_var_l n).
+  + induction H. 
+  + simpl in *.
+    destruct H.
+    - subst.
+      unfold varList_has_var.
+      unfold varList_has_varb.
+      unfold var_beq.
+      break_match.
+      simpl. auto.
+      intuition.
+    - apply IHl in H.
+      unfold varList_has_var in *.
+      unfold varList_has_varb in *.
+      apply orb_true_intro.
+      right.
+      auto.
+Qed.
 
 
 
@@ -330,7 +350,80 @@ Proof.
   inversion H0.
 Qed.
 
-
+Lemma root_is_ancestor2 : forall (v : V_set) a g x,
+  descendand' v a g x (root' v a g) = true ->
+(exists
+       (vl : V_list) (el : E_list) (w : Walk v a (name_component x)
+                                          (name_component (root' v a g)) vl el),
+       parent_walk' (name_component x) (name_component (root' v a g)) vl el v a g w).
+Proof.
+  intros v a g.
+  induction g ; simpl in * ; intuition ; unfold eqn in *.
+  + repeat break_match ; subst ; intuition ; simpl in *.
+    exists []. exists [].
+    assert (Walk (V_single x) A_empty x x [] []).
+    apply W_null ; auto. apply In_single.
+    exists H0. unfold parent_walk'. intros. inversion H1. inversion H.
+  + destruct (root' v0 a0 g0).
+    repeat break_match ; subst ; intuition ; simpl in * ; unfold component_name in *.
+      inversion e0. inversion e1. subst. assert (v1' := v1). apply n in v1'. intuition.
+      inversion e0. subst. unfold parent_walk'. simpl. exists ([x]). exists ([E_ends y x]).
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y x [x] [E_ends y x]).
+        apply W_step ; auto. apply W_null ; auto. apply In_right ; auto.
+        apply In_left. apply In_single. apply In_left. apply E_left.
+        exists H0. intros. break_match ; subst ; intuition. simpl in *.
+        inversion H1 ; intuition. inversion H2. rewrite cnnc. auto.
+        inversion H1 ; intuition. inversion H2 ; subst ; simpl in *. unfold name_component in *.
+        repeat break_match ; intuition. inversion H2.
+      inversion e0. subst. unfold parent_walk'. simpl. exists []. exists [].
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y y [] []).
+        apply W_null ; auto. apply In_left. apply In_single.
+        exists H0. intros. inversion H1.
+      specialize (IHg (Checker x)). intuition. simpl in *. repeat destruct H0.
+        exists (x :: x0). exists (E_ends y x :: x1).
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y c (x :: x0) (E_ends y x :: x1)).
+        apply W_step ; auto.
+        apply (Walk_subgraph v0 _ a0 _) ; auto.
+        unfold V_included. unfold Included ; intros. apply In_right ; auto.
+        unfold A_included. unfold Included ; intros. apply In_right ; auto.
+        apply In_left. apply In_single.
+        apply In_left. apply E_left.
+        exists H1. unfold parent_walk' ; intros ; simpl in *.
+        break_match ; subst ; simpl in *. destruct H2. inversion H2. rewrite cnnc. auto.
+        assert (v0 y). apply (W_inxyel_inxvl v0 a0 x c x0 x1 x2) in H2 ; auto.
+        simpl in H2. destruct H2. subst. auto. apply (W_invl_inv v0 a0 x c x0 x1 x2) in H2. auto.
+        intuition.
+      destruct H2. inversion H2 ; subst. rewrite cnnc in n2. intuition.
+        unfold parent_walk' in H0. apply (H0 c1 c2) ; auto.
+      specialize (IHg x0). intuition. repeat destruct H0.
+        exists x1. exists x2.
+        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) (name_component x0) c x1 x2).
+        apply (Walk_subgraph v0 _ a0 _) ; auto.
+        unfold V_included. unfold Included ; intros. apply In_right ; auto.
+        unfold A_included. unfold Included ; intros. apply In_right ; auto.
+        exists H1. unfold parent_walk' in * ; intros.
+        simpl in *. specialize (H0 c1 c2). intuition.
+        break_match ; subst ; simpl in * ; intuition.
+        assert (v0 y). apply (W_inxyel_inxvl v0 a0 (name_component x0) c x1 x2 x3) in H2 ; auto.
+        simpl in H2. destruct H2. subst. unfold name_component in n0.
+        break_match. intuition. apply (W_invl_inv v0 a0 (name_component x0) c x1 x2 x3) in H0. auto.
+        intuition.
+  + specialize (IHg x0).
+    intuition.
+    repeat destruct H0.
+    exists x1. exists x2.
+    destruct (root' v0 a0 g0). simpl in *.
+    assert (Walk v0 (A_union (E_set x y) a0) (name_component x0) c x1 x2).
+    apply (Walk_subgraph v0 _ a0 _) ; auto.
+    unfold V_included. unfold Included ; intros. auto.
+    unfold A_included. unfold Included ; intros. apply In_right ; auto.
+    exists H1. unfold parent_walk' in * ; intros.
+    simpl in *. specialize (H0 c1 c2). intuition.
+  + rewrite <- e in *.
+    rewrite <- e0 in *.
+    specialize (IHg x).
+    intuition.
+Qed.
 
 
 
@@ -1263,48 +1356,6 @@ Proof.
       inversion H0. subst. intuition.
 Qed.
 
-Lemma cinc: forall pSrc0 pSrc,
-  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = true ->
-  pSrc0 = pSrc.
-Proof.
-  intros.
-  apply beq_nat_true in H.
-  unfold component_index in *.
-  unfold name_component in *.
-  destruct pSrc. destruct pSrc0.
-  destruct c0. destruct c. subst.
-  auto.
-Qed.
-
-Lemma cinc': forall pSrc0 pSrc,
-  (component_index (name_component pSrc0) =? component_index (name_component pSrc)) = false ->
-  pSrc0 <> pSrc.
-Proof.
-  intros.
-  apply beq_nat_false in H.
-  destruct pSrc. destruct pSrc0.
-  destruct c0. destruct c. simpl in *.
-  intuition. apply H.
-  inversion H0. auto.
-Qed.
-
-Lemma remove_src_still_in : forall pSrc pSrc0 x,
-  pSrc <> pSrc0 ->
-  In pSrc x ->
-  In pSrc (remove_src pSrc0 x).
-Proof.
-  intros.
-  induction x.
-  inversion H0.
-  simpl in *.
-  destruct H0 ; repeat break_match ; intuition.
-  subst.
-  apply cinc in Heqb.
-  subst.
-  intuition.
-  simpl. left. auto.
-Qed.
-
 Lemma pSrc_in_child_todo : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
@@ -1506,118 +1557,6 @@ Proof.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H5 ; subst ; simpl in * ; intuition.
 Qed.
 
-Lemma comp_index_name : forall pSrc n,
-  component_index (name_component pSrc) =? component_index (name_component n) = true <->
-  pSrc = n.
-Proof.
-  intros pSrc n.
-  split ; intros.
-  assert (pSrc = n \/ pSrc <> n).
-  apply classic.
-  destruct H0.
-  auto.
-  unfold name_component in *. repeat break_match.
-  subst. unfold component_index in *. repeat break_match.
-  subst.
-  apply Nat.eqb_eq in H. subst. intuition.
-  apply <- Nat.eqb_eq ; auto.
-  subst. auto.
-Qed.
-
-Lemma remove_removes_one : forall p l,
- In p l -> NoDup l -> Permutation (p :: remove_src p l) l.
-Proof.
-  intros p l H H0.
-  induction l.
-  inversion H.
-  simpl in H. destruct H.
-  subst.
-  simpl.
-  break_match. auto. 
-  assert ((component_index (name_component p) =? component_index (name_component p)) = true).
-  apply Nat.eqb_refl.
-  rewrite H in Heqb. inversion Heqb.
-  intuition.
-  assert (H0' := H0).
-  apply NoDup_cons_iff in H0'.
-  destruct H0'.
-  intuition.
-  simpl in *.
-  assert (p = a0 \/ p <> a0).
-  apply classic.
-  destruct H1.
-  subst. intuition.
-  break_match.
-  apply comp_index_name in Heqb.
-  intuition.
-  apply (perm_skip a0) in H4.
-  apply Permutation_sym in H4. apply Permutation_sym.
-  apply (Permutation_trans H4) ; auto.
-  apply perm_swap.
-Qed.
-
-Lemma no_v_no_children : forall v0 a0 c y x,
-  ~ v0 y ->
-  ~ In (component_name y) (children' v0 a0 c (component_name x)).
-Proof.
-  intros.
-  induction c ; intros ; simpl in *.
-  + intuition.
-  + assert (~ v0 y).
-    intuition.
-    apply H.
-    apply In_right. auto. apply IHc in H0.
-    assert (y <> y0).
-    intuition. apply H.
-    apply In_left. auto. subst. apply In_single.
-    unfold not. intros.
-    break_match.
-      - simpl in H2.
-        destruct H2. inversion e. inversion H2. subst. intuition.
-        intuition.
-      - intuition.
-  + intuition.
-  + rewrite <- e in *.
-    intuition.
-Qed.
-
-Lemma NoDup_children: forall name,
-  NoDup (children name).
-Proof.
-  intros.
-  unfold children.
-  induction g ; intros ; simpl in * ; intuition.
-  + break_match ; subst.
-    - assert (~ In (component_name y) (children' v0 a0 c (component_name x))).
-      apply no_v_no_children ; auto.
-      apply NoDup_cons ; auto.
-    - auto.
-Qed.
-
-Lemma remove_src_before': forall (d pSrc : Name) (l1 : list Name),
-  ~ In d l1 ->
-  ~ In d (remove_src pSrc l1).
-Proof.
-  intros.
-  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
-  inversion H0.
-  subst.
-  intuition.
-  intuition.
-Qed.
-
-Lemma NoDup_remove_src : forall pSrc l1,
-  NoDup l1 ->
-  NoDup (remove_src pSrc l1).
-Proof.
-  intros.
-  induction l1 ; intros ; simpl in * ; intuition ; break_match ; intuition.
-  + apply NoDup_cons_iff in H. destruct H ; auto.
-  + apply NoDup_cons_iff in H. destruct H ; intuition.
-    apply NoDup_cons_iff. split ; auto.
-    apply remove_src_before' ; auto.
-Qed.
-
 Lemma Nodup_child_todo: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
   NoDup (child_todo (nwState net c))).
@@ -1724,13 +1663,13 @@ Proof.
       apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
       apply (Permutation_trans H2 H5) ; auto.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
-      apply comp_index_name in Heqb0. subst.
+      apply cinc in Heqb0. subst.
       specialize (H2 (parent n)). rewrite Heql0 in H2. auto.
       assert (Permutation (n :: child_done (nwState x' (parent n)) ++ n0 :: l1) (child_done (nwState x' (parent n)) ++ n :: n0 :: l1)).
       apply (Permutation_cons_app (child_done (nwState x' (parent n))) ) ; auto.
       apply Permutation_sym. apply Permutation_sym in H2. apply Permutation_sym in H5.
       apply (Permutation_trans H2 H5) ; auto.
-      apply comp_index_name in Heqb1. subst.
+      apply cinc in Heqb1. subst.
       specialize (H2 (parent n0)). rewrite Heql0 in *.
       apply Permutation_sym. apply Permutation_sym in H2.
       apply (Permutation_trans H2) ; auto.
@@ -1804,43 +1743,6 @@ Proof.
   auto.
 Qed.
 
-Lemma empty_subtree : forall v a g d h,
-  descendand' v a g d h = true ->
-  children' v a g h = [] ->
-  d = h.
-Proof.
-  intros v a g.
-  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-    unfold eqn in H. apply andb_prop in H. destruct H. destruct (Name_eq_dec d h). intuition. inversion H0.
-    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-    inversion H1.
-    inversion H1.
-    repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-    inversion H0.
-    inversion H0.
-    assert (component_name x = h).
-    apply (IHg (component_name x) h) ; auto.
-    intuition.
-Qed.
-
-Lemma child_exists : forall v a g d p,
-  descendand' v a g d p = true ->
-  (d = p -> False) ->
-  (exists child : Name, In child (children' v a g p) /\ descendand' v a g d child = true).
-Proof.
-  intros v a g.
-  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-  + unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
-    inversion H.
-    inversion H.
-  + unfold eqn in * ; repeat break_match ; subst ; unfold component_name in * ; simpl in * ; intuition.
-    inversion e1. subst. intuition.
-    exists (Checker y). repeat break_match ; subst ; intuition.
-    specialize (IHg d (Checker x)). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
-    specialize (IHg (Checker x) p). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
-    repeat break_match ; subst ; intuition.
-Qed.
-
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
   (nwState net c).(terminated) = true ->
@@ -1908,154 +1810,6 @@ Proof.
       inversion H.
 Qed.
 
-
-Lemma descendand_trans''' : forall (v : V_set) a g d c (P : Name -> Prop),
-  v (name_component c) -> v (name_component d) ->
-  P d ->
-  (forall d : Name,
-    descendand' v a g d c = true -> P d -> P (parent' v a g d)) ->
-  descendand' v a g d c = true ->
-  P c.
-Proof.
-  intros v a g.
-  induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
-  + inversion H3.
-  + inversion H3.
-  + inversion e1. subst. intuition.
-  + specialize (H2 (Checker y)). break_match ; subst ; intuition.
-  + assert (H0' := H2). specialize (H0' (Checker y)). break_match ; subst ; intuition.
-    assert (H0'' := H2). specialize (H0'' (Checker x)). intuition. simpl in *.
-    assert (V_union (V_single y) v0 x). apply In_right. auto. intuition. break_match ; subst ; intuition.
-    inversion e0. subst. intuition.
-    clear H0 e H4 n2. assert (v0 (name_component c)). inversion H. inversion H0. subst. rewrite checker_name in n1. intuition.
-    auto. clear H.
-    apply (IHg (Checker x) c P) ; intuition.
-    assert (H0''' := H2).
-    specialize (H2 d).
-    
-    intuition. break_match ; subst ; intuition.
-    specialize (H0''' (Checker y)). apply descendand_inv1 in H. simpl in H. intuition.
-  + inversion H. inversion H4. subst.
-    inversion H0. inversion H5. unfold name_component in *. repeat break_match ; subst ; intuition. subst.
-    apply (descendand_inv2) in H3. intuition.
-    subst.
-    inversion H0. inversion H5. subst.
-    apply (descendand_inv1) in H3. intuition.
-    subst.
-    assert (IHg' := IHg).
-    specialize (IHg' d (Checker x) P). intuition.
-    
-    apply H6 ; auto. intros.
-    specialize (H2 d0) ; intuition.
-    assert (V_union (V_single y) v0 (name_component d0)). apply In_right. auto.
-    intuition. break_match ; subst ; intuition.
-    apply descendand_inv1 in H7. simpl in H7. intuition.
-    apply descendand_inv1 in H7. auto.
-    break_match ; subst ; intuition.
-    apply descendand_inv1 in H7. simpl in H7. intuition.
-  + inversion H. inversion H4. subst.
-    inversion H0. inversion H5. unfold name_component in *. repeat break_match ; subst ; intuition. subst.
-    apply (descendand_inv2) in H3. intuition.
-    subst.
-    inversion H0. inversion H5. subst.
-    apply (descendand_inv1) in H3. intuition.
-    subst.
-    assert (IHg' := IHg).
-    specialize (IHg' d (Checker x) P). intuition.
-    
-    apply H6 ; auto. intros.
-    specialize (H2 d0) ; intuition.
-    assert (V_union (V_single y) v0 (name_component d0)). apply In_right. auto.
-    intuition. break_match ; subst ; intuition.
-    apply descendand_inv1 in H7. simpl in H7. intuition.
-    apply descendand_inv1 in H7. auto.
-    break_match ; subst ; intuition.
-    apply descendand_inv1 in H7. simpl in H7. intuition.
-  + inversion H. inversion H4. subst.
-    inversion H0. inversion H5. unfold name_component in *. repeat break_match ; subst ; intuition. subst.
-    apply (descendand_inv2) in H3. intuition.
-    subst.
-    inversion H0. inversion H5. subst.
-    apply (descendand_inv1) in H3. intuition.
-    subst.
-    assert (IHg' := IHg).
-    specialize (IHg' d (Checker x) P). intuition.
-  + inversion H. inversion H4. subst.
-    inversion H0. inversion H5. unfold name_component in *. repeat break_match ; subst ; intuition. subst.
-    apply (descendand_inv2) in H3. intuition.
-    subst.
-    inversion H0. inversion H5. subst.
-    apply (descendand_inv1) in H3. intuition.
-    subst.
-    assert (IHg' := IHg).
-    specialize (IHg' d c P). intuition.
-    
-    apply H6 ; auto. intros.
-    specialize (H2 d0) ; intuition.
-    assert (V_union (V_single y) v0 (name_component d0)). apply In_right. apply descendand_inv1 in H7. auto.
-    intuition. break_match ; subst ; intuition.
-    apply descendand_inv1 in H7. intuition.
-  + apply (IHg d c) ; auto.
-Qed.
-
-Lemma descendand_trans' : forall v a g c d (P : Name -> Prop),
-  descendand' v a g d c = true ->
-  P d ->
-  (forall e d : Name,
-    descendand' v a g d c = true ->
-    In d (children' v a g e) ->
-    P d -> P e) ->
-  P c.
-Proof.
-  intros.
-  apply (descendand_trans''' v0 a0 g0 d c) ; auto.
-  apply (descendand_inv2) in H. intuition.
-  apply (descendand_inv1) in H. intuition.
-  intros.
-  assert ((parent' v0 a0 g0 d0) = d0 \/ (parent' v0 a0 g0 d0) <> d0).
-  apply classic.
-  destruct H4. rewrite H4. auto.
-  apply (H1 (parent' v0 a0 g0 d0) d0) ; auto.
-  apply (descendand_inv1) in H2.
-  clear H3 H1 H0 H P c d.
-  induction g0 ; unfold name_component in * ; unfold eqn in * ; repeat break_match ; simpl in * ; subst ; intuition.
-  + inversion H2. subst. intuition.
-  + repeat break_match ; simpl in * ; subst ; intuition.
-    - inversion H2. inversion H. subst. intuition.
-      subst. intuition.
-    - inversion H2. inversion H. subst. intuition.
-      subst. intuition.
-Qed.
-
-
-Lemma descendand_trans : forall v a g c d (P : Name -> Prop),
-  descendand' v a g d c = true ->
-  P d ->
-  (forall e d : Name,
-    descendand' v a g e c = true ->
-    In d (children' v a g e) ->
-    P d -> P e) ->
-  P c.
-Proof.
-  intros v a g.
-  induction g ; simpl in * ; intuition ; unfold eqn in * ; unfold component_name in * ; repeat break_match ; subst ; intuition ; simpl in *.
-  + inversion H.
-  + inversion H.
-  + inversion e0. subst. intuition.
-  + inversion e0. subst. intuition.
-  + assert (H1' := H1). apply (H1 (Checker x) (Checker y)) ; auto ; break_match ; subst ; intuition.
-    apply descendand_refl ; auto.
-  + apply (IHg (Checker x) d P) ; auto ; intros.
-    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
-  + apply descendand_inv2 in H. simpl in H. intuition.
-  + assert (P (Checker x)).
-    apply (H1 (Checker x) (Checker y)) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
-    apply (IHg c (Checker x)) ; auto.
-    intros. apply (H1 e d) ; auto. break_match ; subst ; intuition. break_match ; subst ; intuition.
-  + apply (IHg c d P) ; auto ; intros.
-    assert (H1' := H1). apply (H1 e d0) ; auto ; break_match ; subst ; intuition.
-    apply descendand_inv1 in H2. simpl in H2. intuition.
-Qed.
 
 Lemma all_subtree_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c,
@@ -2225,119 +1979,6 @@ Proof.
   forall c, In a0 (ass_list (nwState x (Checker c))) -> exists d : Name, descendand d (component_name c) = true /\ In a0 (init_certificate d)))).
   apply packet_msg_from_descendand.
   specialize (H1 net tr a0). apply H1 ; auto.
-Qed.
-
-Lemma is_in_isa : forall v2 v1 n,
-  In (assign_cons v2 v1) (init_certificate n) -> isa_aVarComponent v2 n.
-Proof.
-  intros v2 v1 n H.
-  unfold isa_aVarComponent.
-  apply init_certificate_init_var_l in H.
-  induction (init_var_l n).
-  + induction H. 
-  + simpl in *.
-    destruct H.
-    - subst.
-      unfold varList_has_var.
-      unfold varList_has_varb.
-      unfold var_beq.
-      break_match.
-      simpl. auto.
-      intuition.
-    - apply IHl in H.
-      unfold varList_has_var in *.
-      unfold varList_has_varb in *.
-      apply orb_true_intro.
-      right.
-      auto.
-Qed.
-
-Lemma root_is_ancestor : forall (v : V_set) a g d,
-  v (name_component d) ->
-  descendand' v a g d (root' v a g) = true.
-Proof.
-  intros v a g.
-  induction g ; simpl in * ; intuition.
-  + inversion H. subst. rewrite cnnc. unfold eqn. break_match. auto. intuition.
-  + inversion H. inversion H0. subst. rewrite cnnc in *. unfold eqn. repeat break_match ; intuition ; simpl in *.
-    unfold eqn. repeat break_match ; intuition ; simpl in *.
-  + rewrite <- e in *.
-    intuition.
-Qed.
-
-Lemma root_is_ancestor2 : forall (v : V_set) a g x,
-  descendand' v a g x (root' v a g) = true ->
-(exists
-       (vl : V_list) (el : E_list) (w : Walk v a (name_component x)
-                                          (name_component (root' v a g)) vl el),
-       parent_walk' (name_component x) (name_component (root' v a g)) vl el v a g w).
-Proof.
-  intros v a g.
-  induction g ; simpl in * ; intuition ; unfold eqn in *.
-  + repeat break_match ; subst ; intuition ; simpl in *.
-    exists []. exists [].
-    assert (Walk (V_single x) A_empty x x [] []).
-    apply W_null ; auto. apply In_single.
-    exists H0. unfold parent_walk'. intros. inversion H1. inversion H.
-  + destruct (root' v0 a0 g0).
-    repeat break_match ; subst ; intuition ; simpl in * ; unfold component_name in *.
-      inversion e0. inversion e1. subst. assert (v1' := v1). apply n in v1'. intuition.
-      inversion e0. subst. unfold parent_walk'. simpl. exists ([x]). exists ([E_ends y x]).
-        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y x [x] [E_ends y x]).
-        apply W_step ; auto. apply W_null ; auto. apply In_right ; auto.
-        apply In_left. apply In_single. apply In_left. apply E_left.
-        exists H0. intros. break_match ; subst ; intuition. simpl in *.
-        inversion H1 ; intuition. inversion H2. rewrite cnnc. auto.
-        inversion H1 ; intuition. inversion H2 ; subst ; simpl in *. unfold name_component in *.
-        repeat break_match ; intuition. inversion H2.
-      inversion e0. subst. unfold parent_walk'. simpl. exists []. exists [].
-        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y y [] []).
-        apply W_null ; auto. apply In_left. apply In_single.
-        exists H0. intros. inversion H1.
-      specialize (IHg (Checker x)). intuition. simpl in *. repeat destruct H0.
-        exists (x :: x0). exists (E_ends y x :: x1).
-        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) y c (x :: x0) (E_ends y x :: x1)).
-        apply W_step ; auto.
-        apply (Walk_subgraph v0 _ a0 _) ; auto.
-        unfold V_included. unfold Included ; intros. apply In_right ; auto.
-        unfold A_included. unfold Included ; intros. apply In_right ; auto.
-        apply In_left. apply In_single.
-        apply In_left. apply E_left.
-        exists H1. unfold parent_walk' ; intros ; simpl in *.
-        break_match ; subst ; simpl in *. destruct H2. inversion H2. rewrite cnnc. auto.
-        assert (v0 y). apply (W_inxyel_inxvl v0 a0 x c x0 x1 x2) in H2 ; auto.
-        simpl in H2. destruct H2. subst. auto. apply (W_invl_inv v0 a0 x c x0 x1 x2) in H2. auto.
-        intuition.
-      destruct H2. inversion H2 ; subst. rewrite cnnc in n2. intuition.
-        unfold parent_walk' in H0. apply (H0 c1 c2) ; auto.
-      specialize (IHg x0). intuition. repeat destruct H0.
-        exists x1. exists x2.
-        assert (Walk (V_union (V_single y) v0) (A_union (E_set x y) a0) (name_component x0) c x1 x2).
-        apply (Walk_subgraph v0 _ a0 _) ; auto.
-        unfold V_included. unfold Included ; intros. apply In_right ; auto.
-        unfold A_included. unfold Included ; intros. apply In_right ; auto.
-        exists H1. unfold parent_walk' in * ; intros.
-        simpl in *. specialize (H0 c1 c2). intuition.
-        break_match ; subst ; simpl in * ; intuition.
-        assert (v0 y). apply (W_inxyel_inxvl v0 a0 (name_component x0) c x1 x2 x3) in H2 ; auto.
-        simpl in H2. destruct H2. subst. unfold name_component in n0.
-        break_match. intuition. apply (W_invl_inv v0 a0 (name_component x0) c x1 x2 x3) in H0. auto.
-        intuition.
-  + specialize (IHg x0).
-    intuition.
-    repeat destruct H0.
-    exists x1. exists x2.
-    destruct (root' v0 a0 g0). simpl in *.
-    assert (Walk v0 (A_union (E_set x y) a0) (name_component x0) c x1 x2).
-    apply (Walk_subgraph v0 _ a0 _) ; auto.
-    unfold V_included. unfold Included ; intros. auto.
-    unfold A_included. unfold Included ; intros. apply In_right ; auto.
-    exists H1. unfold parent_walk' in * ; intros.
-    simpl in *. specialize (H0 c1 c2). intuition.
-  + rewrite <- e in *.
-    rewrite <- e0 in *.
-    specialize (IHg x).
-    intuition.
 Qed.
 
 
