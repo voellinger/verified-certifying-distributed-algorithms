@@ -1796,6 +1796,25 @@ Proof.
   auto.
 Qed.
 
+Lemma empty_subtree : forall v a g d h,
+  descendand' v a g d h = true ->
+  children' v a g h = [] ->
+  d = h.
+Proof.
+  intros v a g.
+      induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+        unfold eqn in H. apply andb_prop in H. destruct H. destruct (Name_eq_dec d h). intuition. inversion H0.
+        repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+        inversion H1.
+        inversion H1.
+        repeat break_match ; subst ; simpl in * ; intuition ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+        inversion H0.
+        inversion H0.
+        assert (component_name x = h).
+        apply (IHg (component_name x) h) ; auto.
+        intuition.
+Qed.
+
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
   (nwState net c).(terminated) = true ->
@@ -1837,7 +1856,12 @@ Proof.
       specialize (H0 c).
       unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
-      
+      clear H4 Heqb H1 H2 inp0 H0 H tr1.
+      assert (False).
+      clear x'.
+      apply n. unfold children in Heql0. unfold descendand in H3.
+      apply (empty_subtree v a g) ; auto.
+      inversion H.
 Admitted.
 
 
