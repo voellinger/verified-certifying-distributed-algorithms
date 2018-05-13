@@ -1815,6 +1815,24 @@ Proof.
     intuition.
 Qed.
 
+Lemma child_exists : forall v a g d p,
+  descendand' v a g d p = true ->
+  (d = p -> False) ->
+  (exists child : Name, In child (children' v a g p) /\ descendand' v a g d child = true).
+Proof.
+  intros v a g.
+  induction g ; unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+  + unfold eqn in * ; repeat break_match ; subst ; simpl in * ; intuition.
+    inversion H.
+    inversion H.
+  + unfold eqn in * ; repeat break_match ; subst ; unfold component_name in * ; simpl in * ; intuition.
+    inversion e1. subst. intuition.
+    exists (Checker y). repeat break_match ; subst ; intuition.
+    specialize (IHg d (Checker x)). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
+    specialize (IHg (Checker x) p). intuition. destruct H2. exists x0. split ; auto. destruct H1 ; auto. destruct H1 ; auto.
+    repeat break_match ; subst ; intuition.
+Qed.
+
 Lemma all_subtree_terminated: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> forall c,
   (nwState net c).(terminated) = true ->
@@ -1846,31 +1864,27 @@ Proof.
       apply (H6 (parent pSrc)) ; auto.
       apply (H6 c) ; auto.
       clear H5 H2.
-      assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
-      assert (pSrc = (parent pSrc) \/ pSrc <> (parent pSrc)).
-      apply classic. destruct H2. rewrite <- H2 in *. apply eqb_false_iff in Heqb. intuition.
-      apply (pSrc_in_child_todo x' tr1 H _ (parent pSrc) pBody) ; auto.
-      rewrite H4. apply in_or_app. simpl. auto.
-      rewrite Heql0 in H2. inversion H2 ; subst ; intuition. clear H2.
-      assert (exists (child : Name), In child (children (parent pSrc)) /\ descendand d child = true).
-      admit.
-
-child_done_children_list_children
-forall (net : network) (tr : list (name * (input + list output))),
-step_async_star step_async_init net tr ->
-forall c : name,
-Permutation (child_done (nwState net c) ++ child_todo (nwState net c)) (children c)
-
-child_done_terminated
-forall (net : network) (tr : list (name * (input + list output))),
-step_async_star step_async_init net tr ->
-forall (c : name) (d : Name),
-In d (child_done (nwState net c)) -> terminated (nwState net d) = true
-
-      admit.
-     (* es gibt nur noch pSrc in der child_todo, 
-        entweder d war vom pSrc-zweig, 
-        oder von einem anderen und ist dadurch schon drin *)
+        assert (In pSrc (child_todo (nwState x' (parent pSrc)))).
+        assert (pSrc = (parent pSrc) \/ pSrc <> (parent pSrc)).
+        apply classic. destruct H2. rewrite <- H2 in *. apply eqb_false_iff in Heqb. intuition.
+        apply (pSrc_in_child_todo x' tr1 H _ (parent pSrc) pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+        rewrite Heql0 in H2. inversion H2 ; subst ; intuition. clear H2.
+        assert (exists (child : Name), In child (children (parent pSrc)) /\ descendand d child = true).
+        clear H6 H0 H4 Heql0 Heqb H1 xs ys pBody H tr1 x'.
+        unfold descendand in *. unfold parent in *.
+        apply (child_exists v a g d (parent' v a g pSrc)) ; auto.
+        repeat destruct H2.
+        assert (forall c : name, Permutation (child_done (nwState x' c) ++ child_todo (nwState x' c)) (children c)).
+        apply (child_done_children_list_children x' tr1) ; auto.
+        specialize (H7 (parent pSrc)).
+        apply Permutation_sym in H7.
+        apply (Permutation_in _ H7) in H2.
+        apply in_app_or in H2. destruct H2.
+        apply (child_done_terminated x' tr1) in H2 ; auto.
+        apply (H6 x) ; auto.
+        rewrite Heql0 in H2. inversion H2 ; subst ; intuition.
+        apply (H6 x) ; auto.
       apply (H6 c) ; auto.
       apply (H6 (parent pSrc)) ; auto.
       apply (H6 c) ; auto.
@@ -1884,7 +1898,7 @@ In d (child_done (nwState net c)) -> terminated (nwState net d) = true
       apply n. unfold children in Heql0. unfold descendand in H3.
       apply (empty_subtree v a g) ; auto.
       inversion H.
-Admitted.
+Qed.
 
 
 Lemma descendand_trans''' : forall (v : V_set) a g d c (P : Name -> Prop),
