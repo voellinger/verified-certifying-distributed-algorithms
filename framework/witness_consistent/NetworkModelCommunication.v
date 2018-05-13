@@ -52,7 +52,7 @@ Qed.
 
 Definition Nodes : list Name := (map Checker (CV_list v a g)).
 
-(* all components that exist are actually part of our graph *)
+(* all components that we prove anything about, are actually part of our graph *)
 Axiom Component_prop_1: forall (c: Component),
 v c.
 
@@ -78,7 +78,8 @@ Proof.
     apply (IHc0 c0 H).
 Qed.
 
-(* this needs the Axiom Component_prop_1: but is it really necessary? What does this actually mean? *)
+(*   This Lemma is needed for Verdi. Basically all Nodes, we ever prove anything about, are part of the 
+  complete network. *)
 Lemma all_Names_Nodes : forall n: Name, In n Nodes.
 Proof.
   unfold Nodes.

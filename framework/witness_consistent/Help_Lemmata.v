@@ -159,8 +159,8 @@ Proof.
     intros.
     inversion H0.
     inversion H1.
-    apply <- Assignment_eq_dec3 in H3.
-    apply <- Assignment_eq_dec3 in H4.
+    apply <- asign_cons_eq_dec2 in H3.
+    apply <- asign_cons_eq_dec2 in H4.
     destruct H3. destruct H4.
     rewrite <- H5. rewrite H6. auto.
     inversion H4.
@@ -195,34 +195,34 @@ Proof.
         intros. subst.
         simpl in *.
         destruct H2.
-          apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+          apply <- asign_cons_eq_dec2 in H2. destruct H2. subst.
           destruct H3.
-            apply <- Assignment_eq_dec3 in H2. destruct H2. auto.
+            apply <- asign_cons_eq_dec2 in H2. destruct H2. auto.
             destruct H2.
-              apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+              apply <- asign_cons_eq_dec2 in H2. destruct H2. subst.
               intuition.
               unfold is_consistent in H1.
               apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
               simpl. left. auto.
               simpl. right. auto.
           destruct H2.
-            apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+            apply <- asign_cons_eq_dec2 in H2. destruct H2. subst.
             destruct H3.
-              apply <- Assignment_eq_dec3 in H2. destruct H2. subst.
+              apply <- asign_cons_eq_dec2 in H2. destruct H2. subst.
               intuition.
               destruct H2.
-                apply <- Assignment_eq_dec3 in H2. destruct H2. auto.
+                apply <- asign_cons_eq_dec2 in H2. destruct H2. auto.
                 unfold is_consistent in new.
                 apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
                 simpl. left. auto.
                 simpl. right. auto.
             destruct H3.
-            apply <- Assignment_eq_dec3 in H3. destruct H3. subst.
+            apply <- asign_cons_eq_dec2 in H3. destruct H3. subst.
             apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
             simpl. right. auto.
             simpl. left. auto.
             destruct H3.
-            apply <- Assignment_eq_dec3 in H3. destruct H3. subst.
+            apply <- asign_cons_eq_dec2 in H3. destruct H3. subst.
             apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
             simpl. right. auto.
             simpl. left. auto.
@@ -238,42 +238,42 @@ Proof.
         intros.
         subst.
         inversion H2.
-          apply <- Assignment_eq_dec3 in H0.
+          apply <- asign_cons_eq_dec2 in H0.
           destruct H0.
           subst.
           inversion H3.
-            apply <- Assignment_eq_dec3 in H0.
+            apply <- asign_cons_eq_dec2 in H0.
             destruct H0.
             subst.
             auto.
             inversion H0.
-              apply <- Assignment_eq_dec3 in H4.
+              apply <- asign_cons_eq_dec2 in H4.
               destruct H4. subst. auto.
               unfold is_consistent in H1.
               apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
               simpl. left. auto.
             simpl. right. auto.
           inversion H0.
-            apply <- Assignment_eq_dec3 in H4.
+            apply <- asign_cons_eq_dec2 in H4.
             destruct H4.
             subst.
             inversion H3.
-              apply <- Assignment_eq_dec3 in H4.
+              apply <- asign_cons_eq_dec2 in H4.
               destruct H4.
               auto.
               inversion H4.
-              apply <- Assignment_eq_dec3 in H5.
+              apply <- asign_cons_eq_dec2 in H5.
               destruct H5. auto.
             unfold is_consistent in new.
             apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
           inversion H3.
-          apply <- Assignment_eq_dec3 in H5. destruct H5. subst.
+          apply <- asign_cons_eq_dec2 in H5. destruct H5. subst.
           unfold is_consistent in H1.
           apply (H1 (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
           simpl. right. auto.
           simpl. left. auto.
           inversion H5.
-          apply <- Assignment_eq_dec3 in H6. destruct H6. subst.
+          apply <- asign_cons_eq_dec2 in H6. destruct H6. subst.
           unfold is_consistent in new.
           apply (new (assign_cons v4 v3) (assign_cons v4 v5)) ; auto.
           apply (is_consistent_one_lesss) in new.
@@ -500,7 +500,7 @@ Proof.
       inversion H1.
         inversion H2.
           rewrite H5 in H4.
-          apply <- Assignment_eq_dec3 in H4.
+          apply <- asign_cons_eq_dec2 in H4.
           destruct H4 ; auto.
           unfold check_ass_list in H.
           apply andb_true_iff in H.

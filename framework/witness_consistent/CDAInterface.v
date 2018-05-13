@@ -15,8 +15,8 @@ Load NetworkModelCommunication.
 (* The user has to change this file to make it fit to their specific CDA *)
 
 (* We assume a fixed connected graph g=(v,a). *)
-Variable a : A_set.
 Variable v : C_set.
+Variable a : A_set.
 Variable g : Connected v a.
 
 (* In the general case, input and output are just some types. *)
@@ -36,8 +36,10 @@ Variable Value: Type.
 (* Design choice: Value needs to be differentiable *)
 Axiom val_eq_dec : forall x y : Value, {x = y} + {x <> y}.
 Inductive Assignment := assign_cons: Var ->  Value -> Assignment.
-Axiom Assignment_eq_dec2 : forall (x y : Var) (a b : Value),
+(* Design choice: variable or value difference makes the whole assignment different. *)
+Axiom asign_cons_eq_dec : forall (x y : Var) (a b : Value),
   {x <> y} + {a <> b} -> assign_cons x a <> assign_cons y b.
+
 Lemma Assignment_eq_dec : forall x y : Assignment, {x = y} + {x <> y}.
 Proof.
   intros.
@@ -49,13 +51,27 @@ Proof.
   destruct H.
     destruct H0.
       left. rewrite e. rewrite e0. auto.
-      right. apply Assignment_eq_dec2 ; auto.
-    right. apply Assignment_eq_dec2.
+      right. apply asign_cons_eq_dec ; auto.
+    right. apply asign_cons_eq_dec.
     left. auto.
 Qed.
 
-Axiom Assignment_eq_dec3 : forall (x y : Var) (a b : Value),
+Lemma asign_cons_eq_dec2 : forall (x y : Var) (a b : Value),
   (x = y /\ a = b) <-> (assign_cons x a = assign_cons y b).
+Proof.
+  split ; intros.
+    destruct H.
+    subst.
+    auto.
+  assert (x = y \/ x <> y).
+  apply classic. destruct H0. intuition.
+  assert (a0 = b \/ a0 <> b).
+  apply classic. destruct H0. intuition.
+  assert ({x <> x} + {a0 <> b}).
+  right. auto. apply asign_cons_eq_dec in H1. intuition.
+  assert ({x <> y} + {a0 <> b}).
+  left. auto. apply asign_cons_eq_dec in H1. intuition.
+Qed.
 
 Definition Certificate := list Assignment.
 
@@ -92,16 +108,6 @@ Proof.
   intuition.
   reflexivity.
 Qed.
-
-Variable allVar : list Var.
-
-Axiom allVar_holds_all_Vars: forall (aVar : Var),
-  In aVar allVar.
-
-
-(* These are two placeholders for actual Variables and Values *)
-Variable varnull: Var.
-Variable valuenull: Value.
 
 Definition assignment_var (assi: Assignment) :  Var :=
 match assi with
@@ -141,14 +147,20 @@ Definition is_consistent (cert : Certificate) : Prop :=
         In assign1 cert -> In assign2 cert ->
           var1 = var2 -> val1 = val2.
 
+
+(* These axioms are to be sure the initialisation of the network doesn't break the consistency 
+_within_ each checker. Therefore the initial certificate has to be consistent and the var_l
+has to be correctly initialized. *)
+
+Axiom init_certificate_is_consistent : forall Name,
+  is_consistent (init_certificate Name).
+
 Axiom init_var_l_init_certificate : forall Name var,
   In var (init_var_l Name) -> (exists val : Value, In (assign_cons var val) (init_certificate Name)).
 
 Axiom init_certificate_init_var_l : forall Name var val,
   In (assign_cons var val) (init_certificate Name) -> In var (init_var_l Name).
 
-Axiom init_certificate_is_consistent : forall Name,
-  is_consistent (init_certificate Name).
 
 (* initialisation of a sub-checker;
  * knowledge a sub-checker has even before the cda computed and terminated *)
