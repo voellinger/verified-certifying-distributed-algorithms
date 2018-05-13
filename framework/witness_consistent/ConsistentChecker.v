@@ -13,10 +13,6 @@ Require Import Verdi.ExtrOcamlList.
 
 Require Import FunInd.
 
-
-
-(* Load Spanning_Tree_related. *)
-
 Load New_Spanning_Tree_related.
 
 
