@@ -200,17 +200,17 @@ Instance Checker_MultiParams : MultiParams Checker_BaseParams :=
 
 
 
-Fixpoint varList_has_varb (vl : list Var) (v : Var) : bool :=
+Fixpoint certificate_has_varb (vl : Certificate) (v : Var) : bool :=
   match vl with
   | nil => false
-  | hd :: tl => var_beq hd v || varList_has_varb tl v
+  | (assign_cons hd hd2) :: tl => var_beq hd v || certificate_has_varb tl v
   end.
 
-Definition varList_has_var (vl : list Var) (v : Var) : Prop :=
-  varList_has_varb vl v = true.
+Definition certificate_has_var (vl : Certificate) (v : Var) : Prop :=
+  certificate_has_varb vl v = true.
 
 Definition isa_aVarComponent (aVar : Var) (c : Name) : Prop :=
-  varList_has_var (init_var_l c) aVar.
+  certificate_has_var (init_certificate c) aVar.
 
 Variable null_Value : Value.
 
@@ -229,22 +229,17 @@ Lemma has_var_exists_val : forall var d,
 Proof.
   intros var d H.
   unfold isa_aVarComponent in H.
-  assert (In var (init_var_l d)).
-  - unfold varList_has_var in H.
-    unfold varList_has_varb in H.
-    induction (init_var_l d).
-    + inversion H.
-    + simpl in *.
-      apply orb_prop in H.
-      destruct H.
-      unfold var_beq in H.
-      repeat break_match.
-      left. auto.
-      inversion H.
-      right.
-      apply IHl ; auto.
-  - apply init_var_l_init_certificate in H0.
-    apply H0.
+  unfold certificate_has_var in H.
+  induction init_certificate ; simpl in * ; intuition.
+  + inversion H.
+  + break_match ; subst.
+    apply orb_prop in H.
+    destruct H ; intuition.
+    exists v1 ; intuition. left. unfold var_beq in H. break_match ; subst ; intuition.
+    inversion H.
+    destruct H0.
+    exists x.
+    auto.
 Qed.
 
 Lemma is_in_cons_cert_then_take_it : forall var val d,
@@ -284,21 +279,21 @@ Lemma is_in_isa : forall v2 v1 n,
 Proof.
   intros v2 v1 n H.
   unfold isa_aVarComponent.
-  apply init_certificate_init_var_l in H.
-  induction (init_var_l n).
+  induction (init_certificate n).
   + induction H. 
   + simpl in *.
     destruct H.
     - subst.
-      unfold varList_has_var.
-      unfold varList_has_varb.
+      unfold certificate_has_var.
+      unfold certificate_has_varb.
       unfold var_beq.
       break_match.
       simpl. auto.
       intuition.
     - apply IHl in H.
-      unfold varList_has_var in *.
-      unfold varList_has_varb in *.
+      unfold certificate_has_var in *.
+      unfold certificate_has_varb in *. simpl in *.
+      break_match ; subst ; simpl.
       apply orb_true_intro.
       right.
       auto.

@@ -136,7 +136,6 @@ Definition init_neighbor_l (me : Name) := (neighbors v a g (name_component me)).
 
 Variable init_inp_l : Name -> list inp.
 Variable init_predicate_distribution_l : Name -> list Predicate_distribution.
-Variable init_var_l : Name -> list Var.
 Variable init_outp_l : Name -> list outp.
 Variable init_certificate : Name -> list Assignment.
 
@@ -155,24 +154,17 @@ has to be correctly initialized. *)
 Axiom init_certificate_is_consistent : forall Name,
   is_consistent (init_certificate Name).
 
-Axiom init_var_l_init_certificate : forall Name var,
-  In var (init_var_l Name) -> (exists val : Value, In (assign_cons var val) (init_certificate Name)).
-
-Axiom init_certificate_init_var_l : forall Name var val,
-  In (assign_cons var val) (init_certificate Name) -> In var (init_var_l Name).
-
 
 (* initialisation of a sub-checker;
  * knowledge a sub-checker has even before the cda computed and terminated *)
 Record Checkerknowledge : Type := mk_Checkerknowledge {
   inp_l : list inp;
   Predicate_distribution_l: list Predicate_distribution;
-  var_l: list Var;
   neighbor_l: list Component
 }.
 
 Definition init_Checkerknowledge (me : Name) :=
-  mk_Checkerknowledge (init_inp_l me) (init_predicate_distribution_l me) (init_var_l me) (init_neighbor_l me).
+  mk_Checkerknowledge (init_inp_l me) (init_predicate_distribution_l me) (init_neighbor_l me).
 
 (* a sub-checker gets the sub-output and sub-certificate of its component after the cda computed and terminated *)
 Record Checkerinput : Type := mk_Checkerinput{
