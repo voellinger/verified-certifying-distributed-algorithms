@@ -1,13 +1,13 @@
 Section LOCAL_WITNESS.
 
-Add LoadPath "/home/dash/Documents/diplom/coq/".
+
 Load witness_prop.
 
 Variable n : nat.
 
 Record component : Set := mk_component {
   is_s  : bool;
-  i     : (set n);             
+  i     : (set n);
   E_i   : (set n) -> nat
 }.
 
@@ -26,11 +26,27 @@ Definition local_wtnss_prop (c : component) : Prop :=
   (c.(is_s) = true -> local_start_prop c /\ local_trian_prop c) /\ 
   (c.(is_s) = false -> local_trian_prop c /\ local_justf_prop c).
 
-Variable select : (set n) -> component.
-Axiom select_ok : forall i' : set n, (select i').(i) = i'.
 
 Variable start_i : 
   (set n).
+
+Variable E_dists : (set n) -> nat.
+
+Definition select (S : set n) : component :=
+  if (proj1_sig S =? proj1_sig start_i) then
+  {| is_s := true ; i := S ; E_i := fun (m : set n) => 0 |} else
+  {| is_s := false ; i := S ; E_i := E_dists |}.
+
+Lemma select_ok : forall i' : set n, (select i').(i) = i'.
+Proof.
+  intros.
+  unfold select.
+  assert ((proj1_sig i' = proj1_sig start_i) \/ ~ (proj1_sig i' = proj1_sig start_i)).
+  apply classic.
+  destruct H.
+  apply Nat.eqb_eq in H. rewrite H. simpl. auto.
+  apply Nat.eqb_neq in H. rewrite H. simpl. auto.
+Qed.
 
 Hypothesis Hstart_component_existence:
   (select start_i).(is_s) = true.
@@ -126,8 +142,8 @@ Proof.
   assert (B : is_s (select v) = false).
   apply Hstart_component_unique.
   simpl in H.
-  rewrite select_ok in H.
   apply distinct.
+  rewrite select_ok in H.
   apply H.
   apply A in B.
   destruct B as [_ B].
@@ -156,8 +172,6 @@ Qed.
 Require Import Coq.Arith.Compare_dec.
 Require Import Coq.Arith.Peano_dec.
 Open Scope nat_scope.
-Check nat_compare_eq.
-Check eq_eq_nat.
 
 
 Definition start_check (c : component) := 
@@ -183,9 +197,7 @@ Proof.
   inversion H.
 Qed.
 
-  
-End LOCAL_WITNESS.
 
-Check start_check_ok.
+End LOCAL_WITNESS.
 
 Extraction start_check.
