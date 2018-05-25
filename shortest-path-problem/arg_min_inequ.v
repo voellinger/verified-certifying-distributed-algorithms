@@ -21,9 +21,10 @@ Require Import ZArith.
 
 
 Variable n : nat.
-Variable f : { m : nat | m < n } -> nat.
-Variable g : { m : nat | m < n } -> nat.
 Definition mnnat := { m : nat | m < n }.
+Variable f : mnnat -> nat.
+Variable g : mnnat -> nat.
+
 
 Definition P x : Prop := f x < g x.
 Definition ltn (n m : nat) : Prop :=  m < n.
