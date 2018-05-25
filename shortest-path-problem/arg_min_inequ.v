@@ -26,12 +26,11 @@ Variable f : mnnat -> nat.
 Variable g : mnnat -> nat.
 
 
+
 Definition P x : Prop := f x < g x.
 Definition ltn (n m : nat) : Prop :=  m < n.
 Definition minimal_Pholder x : Prop := P x /\ (forall y, P y -> f x <= f y).
 Definition exists_Px : Prop := exists x, P x.
-
-
 
 Fixpoint nat_lessthan_n (n : nat) : list nat :=
   match n with
@@ -245,6 +244,8 @@ Lemma exists_Px_minimal_Pholder :
   (exists x, P x) -> exists x, (P x /\ (forall y, P y -> f x <= f y)).
 Proof.
   intros.
+
+  auto.
   destruct H. destruct x.
   assert (H' := l). rename l into x1. rename H into H0.
   apply <- nat_lessthan_n_lessthan_n in H'.
@@ -283,6 +284,7 @@ Lemma exists_minimal_P_holder :
   exists_P_x -> exists x, minimal_P_holder x.
 Proof.
   intros.
+  unfold exists_P_x in *. unfold minimal_P_holder.
   apply (exists_Px_minimal_Pholder) ; auto.
 Qed.
 
