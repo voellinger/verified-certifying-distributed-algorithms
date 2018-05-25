@@ -120,6 +120,8 @@ Proof.
   auto.
 Qed.
 
+(* One main point: because of proof_irrelevance, the intuition holds, that 
+  the proof (proj2_sig) is doesn't change the element, as long as it is there. *)
 Lemma proj1_sig_eq : forall (x y : mnnat),
   proj1_sig x = proj1_sig y -> x = y.
 Proof.
@@ -135,6 +137,9 @@ Proof.
   intuition.
 Qed.
 
+(* Second main point: we constructed a transformation for Functions and properties,
+  with `mod`. After `mod n` we alwayy get a number smaller than n, apart from the
+  case n = 0. The transformation needs a proof itself, which was tricky. *)
 Lemma Pf'exists : forall A (a : A) (Pf : mnnat -> A), exists Pf' : nat -> A,
   (forall (x0 : nat) (H1 : x0 < n), Pf' x0 = Pf (exist (ltn n) x0 H1)).
 Proof.
@@ -155,7 +160,8 @@ Proof.
   assert (l' := H1).
   apply mod_mnnat' in l'.
 
-  assert (proj1_sig (exist (fun m : nat => m < n) x0 H1) = proj1_sig (exist (fun m : nat => m < n) (x0 mod n) (mod_mnnat x0 H))).
+  assert (proj1_sig (exist (fun m : nat => m < n) x0 H1) = 
+          proj1_sig (exist (fun m : nat => m < n) (x0 mod n) (mod_mnnat x0 H))).
   simpl. rewrite l'.
   auto.
   apply proj1_sig_eq in H0.
@@ -187,7 +193,7 @@ Proof.
   rewrite (H y0 H2) ; auto.
 Qed.
 
-
+(* The actual induction proof, after all transformations took place. *)
 Lemma induction_proof : forall n (f' : nat -> nat) (P' : nat -> Prop) x,
  x < n -> P' x ->
 (exists (y : nat) (_ : y < n),
@@ -245,11 +251,12 @@ Proof.
   apply exists_mnnat_exists_nat_lessthan_n'.
   unfold ltn.
   apply (exists_f'_implies P).
-  assert (forall (f : mnnat -> nat), exists (f' : nat -> nat), forall (x : nat) (H0: x < n), f' x = f (exist (fun m : nat => m < n) x H0)).
+  assert (exists (f' : nat -> nat), 
+    forall (x : nat) (H0: x < n), f' x = f (exist (fun m : nat => m < n) x H0)).
   intros.
-  apply (Pf'exists nat 0 f0).
-  destruct (H f) as [f' Hf'].
-  exists f'. split ; auto ; intros. clear H.
+  apply (Pf'exists nat 0 f).
+  destruct H as [f' Hf'].
+  exists f'. split ; auto ; intros.
 
 
 
@@ -278,6 +285,7 @@ Proof.
   apply (exists_Px_minimal_Pholder) ; auto.
 Qed.
 
+(* Main Lemma of this file. *)
 Lemma arg_min_inequality : forall x,
   (f x < g x) -> (exists x, f x < g x /\
                             forall y, f y < f x -> f y >= g y).
@@ -292,7 +300,6 @@ Proof.
   unfold minimal_P_holder in H0.
   destruct H0.
   unfold P in *.
-  destruct x0.
   split ; intros.
   + auto.
   + specialize (H1 y) ; intuition.
