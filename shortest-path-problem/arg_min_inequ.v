@@ -25,12 +25,12 @@ Variable f : { m : nat | m < n } -> nat.
 Variable g : { m : nat | m < n } -> nat.
 Definition mnnat := { m : nat | m < n }.
 
-
-Definition ltn (n m : nat) : Prop :=  m < n.
-Definition minimal_Pholder P x : Prop := P x /\ (forall y, P y -> f x <= f y).
-Definition exists_Px (P : mnnat -> Prop) : Prop := exists x, P x.
-
 Definition P x : Prop := f x < g x.
+Definition ltn (n m : nat) : Prop :=  m < n.
+Definition minimal_Pholder x : Prop := P x /\ (forall y, P y -> f x <= f y).
+Definition exists_Px : Prop := exists x, P x.
+
+
 
 Fixpoint nat_lessthan_n (n : nat) : list nat :=
   match n with
@@ -43,34 +43,6 @@ Lemma nat_lessthan_n_lessthan_n : forall n x,
 Proof.
   split ; intros ; induction n0 ; simpl in * ; subst ; intuition ; subst ; intuition.
   inversion H ; intuition.
-Qed.
-
-Lemma nat_lessthan_is_mnnat :
-  (forall x : nat, In x (nat_lessthan_n n) <-> exists y : mnnat, proj1_sig y = x).
-Proof.
-  intros.
-  unfold mnnat in *.
-  split ; intros.
-  apply nat_lessthan_n_lessthan_n in H.
-  assert (ltn n x).
-  unfold ltn ; auto.
-  exists (exist (ltn n) x H0) ; auto.
-
-  destruct H.
-  destruct x0.
-  simpl in *.
-  subst.
-  unfold ltn in l.
-  apply <- nat_lessthan_n_lessthan_n in l.
-  auto.
-Qed.
-
-Lemma mnnat_is_natlessthan :
-  forall x : mnnat, In (proj1_sig x) (nat_lessthan_n n).
-Proof.
-  intros.
-  apply <- nat_lessthan_is_mnnat.
-  exists x. auto.
 Qed.
 
 Lemma exists_mnnat_exists_nat_lessthan_n : forall (P : mnnat -> Prop),
@@ -108,9 +80,7 @@ Proof.
 Qed.
 
 
-
-
-Lemma without_P' : forall P,
+Lemma exists_f'_implies : forall P,
 (exists f' : nat -> nat,
       (forall (x : nat) (H0 : x < n), f (exist (fun m : nat => m < n) x H0) = f' x) /\
 (exists (y : nat) (H0 : y < n), P (exist (fun m : nat => m < n) y H0) /\
@@ -150,8 +120,8 @@ Proof.
   auto.
 Qed.
 
-Lemma f_proj1_sig : forall (f : mnnat -> nat) x y,
-  proj1_sig x = proj1_sig y -> f x = f y.
+Lemma proj1_sig_eq : forall (x y : mnnat),
+  proj1_sig x = proj1_sig y -> x = y.
 Proof.
   intros.
   rewrite (sig_eta x).
@@ -191,7 +161,8 @@ Proof.
   assert (proj1_sig (exist (fun m : nat => m < n) x l) = proj1_sig (exist (fun m : nat => m < n) (x mod n) (mod_mnnat x H))).
   simpl. rewrite l'.
   auto.
-  apply (f_proj1_sig f0) in H0.
+  apply proj1_sig_eq in H0.
+  rewrite H0.
   auto.
 Qed.
 
@@ -219,21 +190,6 @@ Proof.
   rewrite (H y0 H2) ; auto.
 Qed.
 
-Lemma P_proj1_sig : forall (P : mnnat -> Prop) x y,
-  proj1_sig x = proj1_sig y -> P x = P y.
-Proof.
-  intros.
-  rewrite (sig_eta x).
-  rewrite (sig_eta y).
-  destruct x. destruct y as [y H0].
-  simpl in *.
-  subst.
-  assert (l = H0).
-  apply proof_irrelevance.
-  subst.
-  intuition.
-Qed.
-
 Lemma P'exists : exists P' : nat -> Prop,
   (forall (x0 : nat) (H1 : x0 < n), P' x0 = P (exist (ltn n) x0 H1)).
 Proof.
@@ -257,12 +213,13 @@ Proof.
   assert (proj1_sig (exist (fun m : nat => m < n) x0 H1) = proj1_sig (exist (fun m : nat => m < n) (x0 mod n) (mod_mnnat x0 H))).
   simpl. rewrite l'.
   auto.
-  apply (P_proj1_sig P) in H0.
+  apply proj1_sig_eq in H0.
+  rewrite H0.
   auto.
 Qed.
 
 
-Lemma inductino : forall n (f' : nat -> nat) (P' : nat -> Prop) x,
+Lemma induction_proof : forall n (f' : nat -> nat) (P' : nat -> Prop) x,
  x < n -> P' x ->
 (exists (y : nat) (_ : y < n),
   P' y /\ (forall y0 : nat, y0 < n -> P' y0 -> f' y <= f' y0)).
@@ -312,18 +269,13 @@ Lemma exists_Px_minimal_Pholder :
   (exists x, P x) -> exists x, (P x /\ (forall y, P y -> f x <= f y)).
 Proof.
   intros.
-  destruct H.
-  assert (exists (y : nat) (H0 : y < n), P (exist (ltn n) y H0)).
-  exists (proj1_sig x).
-  destruct x. simpl in *. exists l. auto.
-  destruct H0. destruct H0.
-  assert (H' := x1).
+  destruct H. destruct x.
+  assert (H' := l). rename l into x1. rename H into H0.
   apply <- nat_lessthan_n_lessthan_n in H'.
   apply (exists_mnnat_exists_nat_lessthan_n).
   apply exists_mnnat_exists_nat_lessthan_n'.
-  clear H x.
-  rename x0 into x. unfold ltn.
-  apply (without_P' P).
+  unfold ltn.
+  apply (exists_f'_implies P).
   assert (forall (f : mnnat -> nat), exists (f' : nat -> nat), forall (x : nat) (H0: x < n), f (exist (fun m : nat => m < n) x H0) = f' x).
   intros.
   assert (exists (f' : nat -> nat), forall x : mnnat, f0 x = f' (proj1_sig x)).
@@ -351,20 +303,17 @@ Proof.
   exists P'.
   split ; intros.
   auto.
+  unfold ltn in *.
   rewrite <- (H1 x x1) in H0.
-  clear H1 Hg' Hf'.
-
-
-  clear H.
-  apply (inductino n _ _ x) ; auto.
+  apply (induction_proof n _ _ x) ; auto.
 Qed.
 
 
-Definition minimal_argprop_holder x : Prop := P x /\ (forall y, P y -> f x <= f y).
-Definition exists_argprop_x : Prop := exists x, P x.
+Definition minimal_P_holder x : Prop := P x /\ (forall y, P y -> f x <= f y).
+Definition exists_P_x : Prop := exists x, P x.
 
-Lemma exists_minimal_argprop_holder : 
-  exists_argprop_x -> exists x, minimal_argprop_holder x.
+Lemma exists_minimal_P_holder : 
+  exists_P_x -> exists x, minimal_P_holder x.
 Proof.
   intros.
   apply (exists_Px_minimal_Pholder) ; auto.
@@ -375,13 +324,13 @@ Lemma arg_min_inequality : forall x,
                             forall y, f y < f x -> f y >= g y).
 Proof.
   intros.
-  assert (exists x, minimal_argprop_holder x).
-  apply exists_minimal_argprop_holder.
-  unfold exists_argprop_x.
+  assert (exists x, minimal_P_holder x).
+  apply exists_minimal_P_holder.
+  unfold exists_P_x.
   unfold P.
   exists x ; auto.
   destruct H0. exists x0.
-  unfold minimal_argprop_holder in H0.
+  unfold minimal_P_holder in H0.
   destruct H0.
   unfold P in *.
   destruct x0.
