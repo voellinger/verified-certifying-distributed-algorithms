@@ -121,7 +121,7 @@ Proof.
 Qed.
 
 (* One main point: because of proof_irrelevance, the intuition holds, that 
-  the proof (proj2_sig) is doesn't change the element, as long as it is there. *)
+  the proof (proj2_sig) doesn't change the element, as long as it is there. *)
 Lemma proj1_sig_eq : forall (x y : mnnat),
   proj1_sig x = proj1_sig y -> x = y.
 Proof.
