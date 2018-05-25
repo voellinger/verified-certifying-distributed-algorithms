@@ -30,12 +30,12 @@ Definition local_wtnss_prop (c : component) : Prop :=
 Variable start_i : 
   (set n).
 
-Variable E_dists : (set n) -> nat.
+Variable E_dists : (set n) -> (set n) -> nat.
 
 Definition select (S : set n) : component :=
   if (proj1_sig S =? proj1_sig start_i) then
-  {| is_s := true ; i := S ; E_i := fun (m : set n) => 0 |} else
-  {| is_s := false ; i := S ; E_i := E_dists |}.
+  {| is_s := true ; i := S ; E_i := E_dists S |} else
+  {| is_s := false ; i := S ; E_i := E_dists S|}.
 
 Lemma select_ok : forall i' : set n, (select i').(i) = i'.
 Proof.
