@@ -135,9 +135,8 @@ Proof.
   intuition.
 Qed.
 
-
-Lemma f'exists : forall (f : mnnat -> nat),
-  exists (ff : nat -> nat), forall x : mnnat, f x = ff (proj1_sig x).
+Lemma Pf'exists : forall A (a : A) (Pf : mnnat -> A), exists Pf' : nat -> A,
+  (forall (x0 : nat) (H1 : x0 < n), Pf' x0 = Pf (exist (ltn n) x0 H1)).
 Proof.
   intros.
   assert (n = 0 \/ n > 0).
@@ -145,20 +144,18 @@ Proof.
   auto.
   intuition.
   destruct H.
-  exists (fun m : nat => m).
-  intuition. destruct x. assert (l' := l). rewrite H in l'. inversion l'.
+  exists (fun n => a).
+  intuition. assert (l' := H1). rewrite H in l'. inversion l'.
   unfold mnnat in *.
 
 
-  exists (fun m : nat => f0 (exist (ltn n) (m mod n) (mod_mnnat m H))).
+  exists (fun m : nat => Pf (exist (ltn n) (m mod n) (mod_mnnat m H))).
   intros.
-  destruct x.
-  simpl.
   unfold ltn.
-  assert (l' := l).
+  assert (l' := H1).
   apply mod_mnnat' in l'.
 
-  assert (proj1_sig (exist (fun m : nat => m < n) x l) = proj1_sig (exist (fun m : nat => m < n) (x mod n) (mod_mnnat x H))).
+  assert (proj1_sig (exist (fun m : nat => m < n) x0 H1) = proj1_sig (exist (fun m : nat => m < n) (x0 mod n) (mod_mnnat x0 H))).
   simpl. rewrite l'.
   auto.
   apply proj1_sig_eq in H0.
@@ -188,34 +185,6 @@ Proof.
   rewrite <- (H x x0) ; auto.
   apply (H1 y0) ; auto.
   rewrite (H y0 H2) ; auto.
-Qed.
-
-Lemma P'exists : exists P' : nat -> Prop,
-  (forall (x0 : nat) (H1 : x0 < n), P' x0 = P (exist (ltn n) x0 H1)).
-Proof.
-  intros.
-  assert (n = 0 \/ n > 0).
-  induction n.
-  auto.
-  intuition.
-  destruct H.
-  exists (fun n => False).
-  intuition. assert (l' := H1). rewrite H in l'. inversion l'.
-  unfold mnnat in *.
-
-
-  exists (fun m : nat => P (exist (ltn n) (m mod n) (mod_mnnat m H))).
-  intros.
-  unfold ltn.
-  assert (l' := H1).
-  apply mod_mnnat' in l'.
-
-  assert (proj1_sig (exist (fun m : nat => m < n) x0 H1) = proj1_sig (exist (fun m : nat => m < n) (x0 mod n) (mod_mnnat x0 H))).
-  simpl. rewrite l'.
-  auto.
-  apply proj1_sig_eq in H0.
-  rewrite H0.
-  auto.
 Qed.
 
 
@@ -272,45 +241,35 @@ Proof.
   destruct H. destruct x.
   assert (H' := l). rename l into x1. rename H into H0.
   apply <- nat_lessthan_n_lessthan_n in H'.
-  apply (exists_mnnat_exists_nat_lessthan_n).
+  apply exists_mnnat_exists_nat_lessthan_n.
   apply exists_mnnat_exists_nat_lessthan_n'.
   unfold ltn.
   apply (exists_f'_implies P).
-  assert (forall (f : mnnat -> nat), exists (f' : nat -> nat), forall (x : nat) (H0: x < n), f (exist (fun m : nat => m < n) x H0) = f' x).
+  assert (forall (f : mnnat -> nat), exists (f' : nat -> nat), forall (x : nat) (H0: x < n), f' x = f (exist (fun m : nat => m < n) x H0)).
   intros.
-  assert (exists (f' : nat -> nat), forall x : mnnat, f0 x = f' (proj1_sig x)).
-  apply f'exists.
-  destruct H as [f' H].
-  exists f'.
-  intros. apply (H (exist (ltn n) x0 H1)).
-  assert (HH := H).
+  apply (Pf'exists nat 0 f0).
   destruct (H f) as [f' Hf'].
-  destruct (HH g) as [g' Hg'].
-  exists f'. split ; auto ; intros. clear H HH.
+  exists f'. split ; auto ; intros. clear H.
 
 
 
-  assert (n = 0 \/ n <> 0).
-  apply classic.
-  destruct H. assert (x1' := x1). rewrite H in x1'.
-  inversion x1'.
   clear H'.
   apply P'exists_implies.
   assert (exists P' : nat -> Prop,
-  (forall (x0 : nat) (H1 : x0 < n), P' x0 = P (exist (ltn n) x0 H1))).
-  apply P'exists.
-  destruct H1 as [P' H1].
+    (forall (x0 : nat) (H1 : x0 < n), P' x0 = P (exist (ltn n) x0 H1))).
+  apply (Pf'exists Prop False P).
+  destruct H as [P' H].
   exists P'.
   split ; intros.
   auto.
   unfold ltn in *.
-  rewrite <- (H1 x x1) in H0.
+  rewrite <- (H x x1) in H0.
   apply (induction_proof n _ _ x) ; auto.
 Qed.
 
 
-Definition minimal_P_holder x : Prop := P x /\ (forall y, P y -> f x <= f y).
 Definition exists_P_x : Prop := exists x, P x.
+Definition minimal_P_holder x : Prop := P x /\ (forall y, P y -> f x <= f y).
 
 Lemma exists_minimal_P_holder : 
   exists_P_x -> exists x, minimal_P_holder x.
