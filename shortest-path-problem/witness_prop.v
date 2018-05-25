@@ -8,7 +8,7 @@ Require Import Coq.Logic.Classical_Pred_Type.
 Require Import Coq.Logic.Classical_Prop.
 Require Import Bool.
 
-Load arg_min_inequ'''.
+Load arg_min_inequ.
 Load delta_func.
 
 Variable g : graph.
