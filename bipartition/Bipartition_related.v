@@ -52,10 +52,10 @@ Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : 
 
 (* a tree, that spans all components of the graph *)
 Definition Gamma_1 := spanning_tree.
-(* some component has a neighboring component, which has the evenness or oddity of length towards the root *)
+(* some component has a neighboring component, which has the evenness or oddity of distance towards the root *)
 Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
-(* there exist some neighboring components, which both have the same evenness or oddity of the path to root *)
+(* there exist some neighboring components, which both have the same evenness or oddity of distance towards the root *)
 Definition Gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
  {v1 : Component & gamma_2 v a c t v1}.
 (* there exists a walk of odd length in the graph *)
