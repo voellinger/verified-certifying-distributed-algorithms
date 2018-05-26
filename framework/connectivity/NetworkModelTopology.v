@@ -53,12 +53,47 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
   | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
   end.
 
-(* das habe ich als Axiom
+Lemma CV_list_complete : forall (v : V_set) (a : A_set) (c : Connected v a) (x : Component),
+  v x <-> In x (CV_list v a c).
+Proof.
+  intros v a c x.
+  split ; intros.
+  - induction c.
+    + simpl.
+      inversion H.
+      auto.
+    + simpl.
+      inversion H.
+      inversion H0.
+      auto.
+      right.
+      apply (IHc H0).
+    + simpl.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
+  - induction c.
+    + simpl in H.
+      destruct H.
+      rewrite H.
+      apply In_single.
+      inversion H.
+    + simpl in H.
+      destruct H.
+      rewrite <- H.
+      apply In_left.
+      apply In_single.
+      apply In_right.
+      apply (IHc H).
+    + simpl in H.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
+Qed.  
 
-Variable Component_prop: forall (c:Component)(v : V_set) (a : A_set)(g : Connected v a),
-In c (CV_list v a g). *)
-
-Lemma C_non_directed :forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
+Lemma C_non_directed : forall (v : V_set) (a : A_set) (g : Connected v a) (x y : Vertex),
  a (A_ends x y) -> a (A_ends y x).
 Proof.
 intros.
@@ -69,44 +104,13 @@ apply H.
 Qed.
 
 
-Fixpoint beq_nat (n m : nat) : bool :=
-  match n with
-  | O => match m with
-         | O => true
-         | S m' => false
-         end
-  | S n' => match m with
-            | O => false
-            | S m' => beq_nat n' m'
-            end
-  end.
-
-Definition beq (n m : Component) : bool :=
-beq_nat (component_index n) (component_index m). 
-
-
-(*Variable beq : Component -> Component -> bool.*)
-(* Basic properties for beq: maybe these arent used
-Variable beq_refl : forall x:Component, true = beq x x.
-
-Variable beq_eq : forall x y:Component, true = beq x y -> x = y.
-
-Variable beq_eq_true : forall x y:Component, x = y -> true = beq x y.
-
-Variable beq_eq_not_false : forall x y:Component, x = y -> false <> beq x y.
-
-Variable beq_false_not_eq : forall x y:Component, false = beq x y -> x <> y.
-
-Variable exists_beq_eq : forall x y:Component, {b : bool | b = beq x y}.
-
-Variable not_eq_false_beq : forall x y:Component, x <> y -> false = beq x y.
-
-Variable eq_dec : forall x y:Component, {x = y} + {x <> y}. *)
+Definition beq_comp (n m : Component) : bool :=
+Nat.eqb (component_index n) (component_index m). 
 
 Fixpoint In_bool (a: Component) (l:C_list) : bool:=
   match l with
   | nil => false
-  | b :: m => beq b a || In_bool a m
+  | b :: m => beq_comp b a || In_bool a m
   end.
 
 Definition neighbors (v : V_set) (a : A_set)(g : Connected v a) (c: Component) : C_list :=
@@ -297,7 +301,7 @@ Qed.
 Fixpoint forallb_neighbors (l:C_list) (c:Component) : bool :=
       match l with
         | nil => true
-        | a::k => beq a c && forallb_neighbors k c
+        | a::k => beq_comp a c && forallb_neighbors k c
       end.
 
 
@@ -310,7 +314,7 @@ Proof.
   - simpl in H.
     apply andb_prop in H.
     destruct H.
-    unfold beq in H.
+    unfold beq_comp in H.
     apply Nat.eqb_eq in H.
     destruct (a).
     destruct (c).
@@ -327,7 +331,7 @@ Proof.
     symmetry. apply beq_eq_true.
     simpl in H. intuition.
     destruct x.
-    unfold beq.
+    unfold beq_comp.
     simpl.
     symmetry.
     apply <- Nat.eqb_eq.
