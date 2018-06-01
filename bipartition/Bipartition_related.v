@@ -38,7 +38,8 @@ Variable distance : Component -> nat.
 
 
 
-(* a bipartition that colors a component in one of two colors: true or false *)
+(* a bipartition that colors a component in one of two colors: true or false,
+  all neighboring components are of different color *)
 Definition bipartition (a: A_set) (color : Component -> bool) : Prop :=
   forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 
