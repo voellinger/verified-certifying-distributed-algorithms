@@ -32,18 +32,19 @@ Variable root: Component.
 Variable parent : Component -> Component.
 (* a function that holds the distance of the parent-path from this component to the root of a tree *)
 Variable distance : Component -> nat.
-(* a function that colors a component in one of two colors: true or false *)
-Variable color : Component -> bool.
 
 
 
 
 
+
+(* a bipartition that colors a component in one of two colors: true or false *)
 Definition bipartition (a: A_set) (color : Component -> bool) : Prop :=
   forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 
-(* all neighbors are colored differently -- as there are only two colors this is enough *)
-Definition bipartite (a: A_set) := {(color : Component -> bool) & bipartition a color}.
+(* there can be a coloring that is a bipartition *)
+Definition bipartite (a: A_set) := exists color : Component -> bool, bipartition a color.
+(* Definition bipartite (a: A_set) := {color : Component -> bool & bipartition a color}. *)
 (* a closed walk of odd length *)
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
@@ -72,11 +73,12 @@ Definition Psi a := ~bipartite a.
   In a bipartite graph every component pair that is connected in the graph, must be of different color. Otherwise the very edge between the components is 
   in conflict with the definition of bipartiteness.
 *)
-Lemma neighbors_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a),
-  a (A_ends y x) -> v x -> v y -> bipartite a -> color x <> color y.
+Lemma neighbors_different: forall (v:V_set)(a:A_set)(x y: Component) (c : Connected v a) (color : Component -> bool),
+  a (A_ends y x) -> v x -> v y -> bipartition a color -> color x <> color y.
 Proof.
-  intros v a x y c ar vx vy bi.
-  unfold bipartite in bi.
+  intros v a x y c col ar vx vy bi.
+  unfold bipartition in bi.
+  
   specialize (bi (A_ends y x)).
   unfold A_tail in bi.
   unfold A_head in bi.
@@ -94,10 +96,11 @@ Qed.
     1. If w' is of odd length, then color x != color y' != color y. Therefore w is of even length and color x = color y.
     2. If w' is of even length, then color x = color y' != color y. Therefore w is of odd length and color x != color y. Qed.
 *)
-Lemma walk_colored_ends: forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (c : Connected v a) (w: Walk v a x y vl el),
-  bipartite a -> ((Nat.odd (length el) = true -> color x <> color y) /\ (Nat.even (length el) = true -> color x = color y)).
+Lemma walk_colored_ends: forall (v: V_set) (a: A_set) (vl : V_list) (el: E_list) (x y : Component) (c : Connected v a) 
+                                (w: Walk v a x y vl el) (color : Component -> bool),
+  bipartition a color -> ((Nat.odd (length el) = true -> color x <> color y) /\ (Nat.even (length el) = true -> color x = color y)).
 Proof.
-  intros v a vl el x y c w H.
+  intros v a vl el x y c w color H.
 
   elim w.
   intros.
@@ -109,7 +112,7 @@ Proof.
   intros.
 
   destruct H0.
-  apply (neighbors_different v a y0 x0 c) in a0.
+  apply (neighbors_different v a y0 x0 c color) in a0.
   split.
   
   destruct (color x0).
@@ -195,12 +198,12 @@ Proof.
   destruct H.
   unfold not.
   intros.
-  apply (walk_colored_ends v a vl el x x) in H1.
-  destruct H1.
+  unfold bipartite in H1.
+  destruct H1 as [color bipartition].
+  apply (walk_colored_ends v a vl el x x c w color) in bipartition.
+  destruct bipartition.
   apply H1 in H0.
   intuition.
-  apply c.
-  apply w.
 Qed.
 
 (* If there is some non-bipartite graph, if you add more arcs there still won't be a bipartition possible. This is, because the old conflict of two neighbors, 
@@ -215,6 +218,9 @@ Proof.
   unfold not in H.
   apply H.
   unfold bipartite.
+  destruct H0.
+  exists x.
+  unfold bipartition in *.
   intros.
   apply H0.
   apply A_in_left.
@@ -227,8 +233,6 @@ Lemma odd_closed_walk_rest_graph_not_bi:
     (d : Connected (V_union v v') (A_union a a')),
   ~ bipartite (A_union a a').
 Proof.
-  intros.
-  unfold not.
   intros.
   apply (odd_closed_walk_no_bipartitition v a vl el x c w) in o.
   apply (graph_not_bi_graph_plus_not_bi v v' a a' c d) in o.
@@ -419,20 +423,22 @@ Qed.
 
 
 
-Definition gamma_2' (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) :=
+Definition gamma_2' (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) (color : Component -> bool) :=
   forall (v2 : Component), v v2 /\ a (A_ends v1 v2) -> color v1 <> color v2.
 
-Definition Gamma_2' (v:V_set) (a:A_set)(c: Connected v a) :=
-  forall (v1 : Component), v v1 -> gamma_2' v a c v1.
+Definition Gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (color : Component -> bool) :=
+  forall (v1 : Component), v v1 -> gamma_2' v a c v1 color.
 
-Theorem Gamma_2'_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a),
-  Gamma_2' v a c -> bipartite a.
+Theorem Gamma_2'_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a) (color : Component -> bool),
+  Gamma_2' v a c color -> bipartite a.
 Proof.
-  intros v a c G2'.
+  intros v a c color G2'.
   unfold Gamma_2' in G2'.
   unfold bipartite.
   intros.
   unfold gamma_2' in G2'.
+  exists color.
+  unfold bipartition. intros.
   destruct ar.
   simpl in *.
   apply Connected_Isa_Graph in c.
