@@ -39,10 +39,11 @@ Variable color : Component -> bool.
 
 
 
-
+Definition bipartition (a: A_set) (color : Component -> bool) : Prop :=
+  forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
 
 (* all neighbors are colored differently -- as there are only two colors this is enough *)
-Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
+Definition bipartite (a: A_set) := {(color : Component -> bool) & bipartition a color}.
 (* a closed walk of odd length *)
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
