@@ -41,9 +41,9 @@ Variable color : Component -> bool.
 
 
 
-(* alle neighbors are colored diferently -- as there are only two colors this is enough *)
+(* all neighbors are colored differently -- as there are only two colors this is enough *)
 Definition bipartite (a: A_set) := forall (ar : Arc), a ar -> color (A_tail ar) <> color (A_head ar).
-(* a walk of odd length *)
+(* a closed walk of odd length *)
 Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_list) (el : E_list) (w : Walk v a x y vl el)
  := Closed_walk v a x y vl el w /\ Nat.odd (length el) = true.
 (* two neighboring components with both even or both odd length to the root *)
@@ -399,7 +399,7 @@ Proof.
 Qed.
 
 (* If there exists a closed walk of odd length in the graph (Gamma), the graph itself is not bipartite (Psi). *)
-Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set)(c: Connected v a),
+Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set) (c: Connected v a),
   Gamma v a -> Psi a.
 Proof.
   intros v a c Gamma.
@@ -409,6 +409,38 @@ Proof.
   destruct s.
   apply (odd_closed_walk_no_bipartitition v a x0 x1 x c x2) in o.
   apply o.
+Qed.
+
+
+
+
+
+
+
+
+Definition gamma_2' (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) :=
+  forall (v2 : Component), v v2 /\ a (A_ends v1 v2) -> color v1 <> color v2.
+
+Definition Gamma_2' (v:V_set) (a:A_set)(c: Connected v a) :=
+  forall (v1 : Component), v v1 -> gamma_2' v a c v1.
+
+Theorem Gamma_2'_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a),
+  Gamma_2' v a c -> bipartite a.
+Proof.
+  intros v a c G2'.
+  unfold Gamma_2' in G2'.
+  unfold bipartite.
+  intros.
+  unfold gamma_2' in G2'.
+  destruct ar.
+  simpl in *.
+  apply Connected_Isa_Graph in c.
+  assert (v v0).
+  apply (G_ina_inv1 v a) in H ; auto.
+  assert (v v1).
+  apply (G_ina_inv2 v a) in H ; auto.
+  specialize (G2' v0). intuition.
+  specialize (H5 v1). intuition.
 Qed.
 
 End Bipartion_related.
