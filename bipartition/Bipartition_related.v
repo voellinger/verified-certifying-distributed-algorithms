@@ -424,20 +424,20 @@ Qed.
 
 
 
-Definition gamma_2' (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) (color : Component -> bool) :=
+Definition gamma_3 (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) (color : Component -> bool) :=
   forall (v2 : Component), v v2 /\ a (A_ends v1 v2) -> color v1 <> color v2.
 
-Definition Gamma_2' (v:V_set) (a:A_set)(c: Connected v a) (color : Component -> bool) :=
-  forall (v1 : Component), v v1 -> gamma_2' v a c v1 color.
+Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (color : Component -> bool) :=
+  forall (v1 : Component), v v1 -> gamma_3 v a c v1 color.
 
-Theorem Gamma_2'_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a) (color : Component -> bool),
-  Gamma_2' v a c color -> bipartite a.
+Theorem Gamma_3_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a) (color : Component -> bool),
+  Gamma_3 v a c color -> bipartite a.
 Proof.
   intros v a c color G2'.
-  unfold Gamma_2' in G2'.
+  unfold Gamma_3 in G2'.
   unfold bipartite.
   intros.
-  unfold gamma_2' in G2'.
+  unfold gamma_3 in G2'.
   exists color.
   unfold bipartition. intros.
   destruct ar.
