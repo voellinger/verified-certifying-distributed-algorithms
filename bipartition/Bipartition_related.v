@@ -54,17 +54,20 @@ Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : 
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
 (* a tree, that spans all components of the graph *)
-Definition Gamma_1 := spanning_tree.
+Definition Gamma_2 := spanning_tree.
 (* some component has a neighboring component, which has the evenness or oddity of distance towards the root *)
-Definition gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
+Definition gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
 (* there exist some neighboring components, which both have the same evenness or oddity of distance towards the root *)
-Definition Gamma_2 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
- {v1 : Component & gamma_2 v a c t v1}.
+Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
+ {v1 : Component & gamma_3 v a c t v1}.
 (* there exists a walk of odd length in the graph *)
 Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
+
+(* the graph is bipartite *)
+Definition Psi1 a := bipartite a.
 (* the graph is not bipartite *)
-Definition Psi a := ~bipartite a.
+Definition Psi2 a := ~bipartite a.
 
 
 
@@ -241,18 +244,18 @@ Proof.
 Qed.
 
 (* Here we show that if there are two components in a tree, with both odd or both even distance to the root and they share an edge,
-  (together they are gamma_2) that there must be an odd_closed_walk in the graph.
+  (together they are gamma_3) that there must be an odd_closed_walk in the graph.
   Let distance(x, root) = 2*k distance(y, root) = 2*l then: 2*k + 2*l + 1 is odd (the cycle root----x-y----root)
   Let distance(x, root) = 2*k+1 distance(y, root) = 2*l+1 then: 2*k + 2*l + 2 + 1 is odd *)
-Lemma gamma_2_makes_odd_closed_walk: 
+Lemma gamma_3_makes_odd_closed_walk: 
   forall (v:V_set) (a:A_set) (c : Connected v a) (t : spanning_tree v a root parent distance c)(x : Component), 
-  gamma_2 v a c t x -> 
+  gamma_3 v a c t x -> 
 {y: Component & {vlx : V_list & {vly : V_list & {elx: E_list & {ely: E_list & {w: Walk v a y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) & 
 odd_closed_walk y y (x :: (vlx ++ vly)) ((E_ends y x) :: (elx ++ ely)) w}}}}}}.
 Proof.
   intros v a c t x H.
 
-  unfold gamma_2 in H.
+  unfold gamma_3 in H.
   destruct H.
   destruct n.
   destruct H0.
@@ -384,13 +387,13 @@ Qed.
 
 (* If there is a correct spanning tree (Gamma 1) and we have two components with both even or both odd length to root in this tree (Gamma 2), there exists
 a closed walk of odd length (Gamma). *)
-Theorem Gamma_1_Gamma_2_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_1 v a root parent distance c),
-  Gamma_2 v a c G1 -> Gamma v a.
+Theorem Gamma_2_Gamma_3_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_2 v a root parent distance c),
+  Gamma_3 v a c G1 -> Gamma v a.
 Proof.
   intros v a c G1 G2.
   unfold Gamma.
   destruct G2.
-  apply gamma_2_makes_odd_closed_walk in g.
+  apply gamma_3_makes_odd_closed_walk in g.
   destruct g.
   destruct s.
   destruct s.
@@ -406,7 +409,7 @@ Qed.
 
 (* If there exists a closed walk of odd length in the graph (Gamma), the graph itself is not bipartite (Psi). *)
 Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set) (c: Connected v a),
-  Gamma v a -> Psi a.
+  Gamma v a -> Psi2 a.
 Proof.
   intros v a c Gamma.
   destruct Gamma.
@@ -424,20 +427,20 @@ Qed.
 
 
 
-Definition gamma_3 (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) (color : Component -> bool) :=
+Definition gamma_1 (v:V_set) (a:A_set) (c: Connected v a) (v1 : Component) (color : Component -> bool) :=
   forall (v2 : Component), v v2 /\ a (A_ends v1 v2) -> color v1 <> color v2.
 
-Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (color : Component -> bool) :=
-  forall (v1 : Component), v v1 -> gamma_3 v a c v1 color.
+Definition Gamma_1 (v:V_set) (a:A_set)(c: Connected v a) (color : Component -> bool) :=
+  forall (v1 : Component), v v1 -> gamma_1 v a c v1 color.
 
-Theorem Gamma_3_Psi' : forall (v : V_set) (a : A_set) (c : Connected v a) (color : Component -> bool),
-  Gamma_3 v a c color -> bipartite a.
+Theorem Gamma_1_Psi1 : forall (v : V_set) (a : A_set) (c : Connected v a) (color : Component -> bool),
+  Gamma_1 v a c color -> bipartite a.
 Proof.
   intros v a c color G2'.
-  unfold Gamma_3 in G2'.
+  unfold Gamma_1 in G2'.
   unfold bipartite.
   intros.
-  unfold gamma_3 in G2'.
+  unfold gamma_1 in G2'.
   exists color.
   unfold bipartition. intros.
   destruct ar.
