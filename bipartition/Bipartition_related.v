@@ -53,8 +53,19 @@ Definition odd_closed_walk {v : V_set} {a : A_set} (x y : Component) (vl : V_lis
 Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 v2: Component) :=
   v v1 /\ v v2 /\ a (A_ends v1 v2) /\ Nat.odd (distance v1) = Nat.odd (distance v2).
 
-(* a tree, that spans all components of the graph *)
-Definition Gamma_2 := spanning_tree.
+
+(* Prop: do the spanning_tree props hold for this component? *)
+Definition gamma_2 (v:V_set) (a:A_set) (x : Component) := 
+ parent_prop v a root parent x /\ distance_prop root parent distance x.
+(* Prop: is this the root component or not? *)
+Definition root_prop' (v : V_set) (c : Component) :=
+  v c /\ root = c.
+(* there is a root such that (root, parent, distance) form a correct spanning tree *)
+Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
+  (exists (r: Component), root_prop' v r)  /\ forall (x : Component), gamma_2 v a x.
+(* (root, parent, distance) form a correct spanning tree *)
+Definition Gamma_2 (v:V_set) (a:A_set) (c: Connected v a) :=
+  spanning_tree v a root parent distance c.
 (* some component has a neighboring component, which has the evenness or oddity of distance towards the root *)
 Definition gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) (v1 : Component) :=
  {v2 : Component & neighbors_with_same_color v a c t v1 v2}.
@@ -64,13 +75,21 @@ Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a 
 (* there exists a closed walk of odd length in the graph *)
 Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
 
-(* the graph is bipartite *)
-Definition Psi1 a := bipartite a.
-(* the graph is not bipartite *)
-Definition Psi2 a := ~bipartite a.
 
-
-
+Lemma G2'G2 : forall (v:V_set) (a:A_set) (c: Connected v a),
+  Gamma_2' v a c -> Gamma_2 v a c.
+Proof.
+  unfold Gamma_2'.
+  unfold Gamma_2.
+  unfold spanning_tree.
+  unfold gamma_2.
+  intros.
+  destruct H.
+  destruct H.
+  unfold root_prop' in H.
+  destruct H. subst.
+  split ; intros ; auto. specialize (H0 x0) ; intuition.
+Qed.
 
 (* 
   In a bipartite graph every component pair that is connected in the graph, must be of different color. Otherwise the very edge between the components is 
@@ -386,7 +405,7 @@ Qed.
 
 (* If there is a correct spanning tree (Gamma_2) and we have two components with both even or both odd length to root in this tree (Gamma_3), there exists
 a closed walk of odd length (Gamma). *)
-Theorem Gamma_2_Gamma_3_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_2 v a root parent distance c),
+Theorem Gamma_2_Gamma_3_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_2 v a c),
   Gamma_3 v a c G1 -> Gamma v a.
 Proof.
   intros v a c G1 G2.
