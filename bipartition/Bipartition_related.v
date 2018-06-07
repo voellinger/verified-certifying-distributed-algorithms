@@ -61,14 +61,13 @@ Definition gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a 
 (* there exist some neighboring components, which both have the same evenness or oddity of distance towards the root *)
 Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a root parent distance c) :=
  {v1 : Component & gamma_3 v a c t v1}.
-(* there exists a walk of odd length in the graph *)
+(* there exists a closed walk of odd length in the graph *)
 Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
 
 (* the graph is bipartite *)
 Definition Psi1 a := bipartite a.
 (* the graph is not bipartite *)
 Definition Psi2 a := ~bipartite a.
-
 
 
 
@@ -385,7 +384,7 @@ Proof.
   apply temp''.
 Qed.
 
-(* If there is a correct spanning tree (Gamma 1) and we have two components with both even or both odd length to root in this tree (Gamma 2), there exists
+(* If there is a correct spanning tree (Gamma_2) and we have two components with both even or both odd length to root in this tree (Gamma_3), there exists
 a closed walk of odd length (Gamma). *)
 Theorem Gamma_2_Gamma_3_Gamma: forall (v: V_set) (a: A_set) (c: Connected v a) (G1: Gamma_2 v a root parent distance c),
   Gamma_3 v a c G1 -> Gamma v a.
@@ -409,7 +408,7 @@ Qed.
 
 (* If there exists a closed walk of odd length in the graph (Gamma), the graph itself is not bipartite (Psi). *)
 Theorem Gamma_implies_Psi: forall (v :V_set) (a :A_set) (c: Connected v a),
-  Gamma v a -> Psi2 a.
+  Gamma v a -> ~bipartite a.
 Proof.
   intros v a c Gamma.
   destruct Gamma.
