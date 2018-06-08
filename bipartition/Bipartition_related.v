@@ -55,14 +55,14 @@ Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : 
 
 
 (* Prop: do the spanning_tree props hold for this component? *)
-Definition gamma_2 (v:V_set) (a:A_set) (x : Component) := 
+Definition gamma_2 (v:V_set) (a:A_set) (root x : Component) := 
  parent_prop v a root parent x /\ distance_prop root parent distance x.
 (* Prop: is this the root component or not? *)
 Definition root_prop' (v : V_set) (c : Component) :=
   v c /\ root = c.
 (* there is a root such that (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
-  (exists (r: Component), root_prop' v r)  /\ forall (x : Component), gamma_2 v a x.
+  (exists (r: Component), root_prop' v r  /\ forall (x : Component), gamma_2 v a r x).
 (* (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2 (v:V_set) (a:A_set) (c: Connected v a) :=
   spanning_tree v a root parent distance c.
