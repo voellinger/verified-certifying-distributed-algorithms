@@ -62,7 +62,7 @@ Definition root_prop' (v : V_set) (c : Component) :=
   v c /\ root = c.
 (* there is a root such that (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
-  (exists (r: Component), root_prop' v r  /\ forall (x : Component), gamma_2 v a r x).
+  (exists (r: Component), root_prop' v r  /\ forall (x : Component), v x -> gamma_2 v a r x).
 (* (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2 (v:V_set) (a:A_set) (c: Connected v a) :=
   spanning_tree v a root parent distance c.
