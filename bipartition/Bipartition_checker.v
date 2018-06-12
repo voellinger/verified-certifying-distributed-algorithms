@@ -388,7 +388,7 @@ Lemma leader_i_local : forall x,
   v x -> checker_tree x = true ->
   v (leader_i (construct_checker_input x)).
 Proof.
-  intros. clear dummy.
+  intros.
   unfold checker_tree in H0.
   apply andb_true_iff in H0.
   destruct H0.
@@ -411,18 +411,24 @@ Proof.
     unfold is_leader in H1.
     destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
     inversion H1. clear H1.
+    apply is_in_correct in H3.
+    assert (forall y : Component, a (A_ends x y) -> leader_i (construct_checker_input y) = leader_i (construct_checker_input x)).
+    admit.
+    unfold neighbours in *.
+    unfold construct_local_input in *.
+    unfold neighbors in *.
+    apply neighborhood_correct in H3.
+
+    intuition. clear H0.
+    induction c ; simpl in * ; intuition.
+    + inversion H3.
+    + inversion H. inversion H4. subst.
     
+      specialize (H1 (parent_i (construct_checker_input x))).
+      intuition.
+      
+      
 
-
-  unfold neighbours in *. simpl in *.
-  unfold neighbors in *.
-  induction c ; simpl in * ; subst ; intuition.
-  - inversion H. subst.
-    apply andb_true_iff in H2.
-    destruct H2.
-    apply andb_true_iff in H1.
-    destruct H1.
-    unfold is_leader in H1.
     destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
     rewrite <- e. apply In_single.
     inversion H1.
