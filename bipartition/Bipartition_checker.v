@@ -419,11 +419,15 @@ Proof.
     unfold neighbors in *.
     apply neighborhood_correct in H3.
 
-    intuition. clear H0.
+    intuition. clear H0 H2.
+    specialize (H1 (parent_i (construct_checker_input x))).
+    intuition.
+    clear H3.
+    generalize H1 H3 n H. generalize x. clear H1 H3 n H x dummy.
     induction c ; simpl in * ; intuition.
     + inversion H3.
-    + inversion H. inversion H4. subst.
-    
+    + inversion H0. inversion H2. subst.
+      inversion H3. inversion H4 ; subst ; intuition.
       specialize (H1 (parent_i (construct_checker_input x))).
       intuition.
       
