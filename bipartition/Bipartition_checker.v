@@ -9,6 +9,8 @@ Extraction Language Haskell.
 
 Section Checker.
 
+Variable dummy : Component.
+
 Record local_input: Set := mk_local_input {
   i : Component;
   neighbours : list Component;
@@ -147,6 +149,12 @@ Fixpoint get_distance_in_list (x : Component) (l : list (Component * Component *
   | (y,z,n) :: tl => if V_eq_dec x y then n else get_distance_in_list x tl
   end.
 
+Fixpoint get_leader_in_list (x : Component) (l : list (Component * Component * nat)) : Component :=
+  match l with
+  | nil => dummy
+  | (y,z,n) :: tl => if V_eq_dec x y then z else get_leader_in_list x tl
+  end.
+
 Axiom checker_input_correct0 : forall (x y z : Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
     is_in_once y (construct_checker_input x).(neighbor_leader_distance).
@@ -158,6 +166,10 @@ Axiom checker_input_correct1 : forall (x1 x2 : Component),
 Axiom checker_input_correct2 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) <-> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
+
+Axiom checker_input_correct5 : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) <-> 
+     get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 
 Lemma checker_input_correct4 : forall (x y : Component),
   is_in_once y (construct_checker_input x).(neighbor_leader_distance) ->
@@ -208,6 +220,17 @@ Fixpoint leader_same (x : Component) (l : list (Component * Component * nat)) : 
   | nil => true
   | (c1, c2, n) :: tl => if (V_eq_dec x c2) then leader_same x tl else false
   end.
+
+Lemma leader_same_correct : forall (x a b: Component) (l : list (Component * Component * nat)) (c : nat),
+  leader_same x l = true -> In (a, b, c) l -> b = x.
+Proof.
+  intros.
+  induction l ; simpl in * ; intuition.
+  destruct a1. destruct p. inversion H1 ; subst ; intuition.
+  destruct (V_eq_dec x b) ; intuition. inversion H.
+  destruct a1. destruct p.
+  destruct (V_eq_dec x c2) ; intuition.
+Qed.
 
 Function is_leader (x : Component) : bool :=
   if V_eq_dec x (construct_checker_input x).(leader_i) then true else false.
@@ -307,8 +330,6 @@ Proof.
   destruct (Nat.odd n) ; intuition.
   destruct (eqb (Nat.odd (distance_i (construct_checker_input x))) (Nat.odd n)) ; subst ; intuition.
 Qed.
-
-Variable dummy : Component.
 
 Lemma neighborhood_correct : forall (v : V_set) a c x y,
   In y (A_in_neighborhood x (CA_list v a c)) ->
@@ -412,7 +433,7 @@ Proof.
     destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
     inversion H1. clear H1.
     apply is_in_correct in H3.
-    assert (forall y : Component, a (A_ends x y) -> leader_i (construct_checker_input y) = leader_i (construct_checker_input x)).
+    assert (forall x y : Component, a (A_ends x y) -> leader_i (construct_checker_input y) = leader_i (construct_checker_input x)).
     admit.
     unfold neighbours in *.
     unfold construct_local_input in *.
@@ -420,48 +441,64 @@ Proof.
     apply neighborhood_correct in H3.
 
     intuition. clear H0 H2.
-    specialize (H1 (parent_i (construct_checker_input x))).
+(*     specialize (H1 (parent_i (construct_checker_input x))). *)
     intuition.
-    clear H3.
     generalize H1 H3 n H. generalize x. clear H1 H3 n H x dummy.
-    induction c ; simpl in * ; intuition.
+    induction c ; simpl in * ;intros.
     + inversion H3.
-    + inversion H0. inversion H2. subst.
+    + intuition.
+      inversion H. inversion H2. subst.
       inversion H3. inversion H4 ; subst ; intuition.
-      specialize (H1 (parent_i (construct_checker_input x))).
-      intuition.
-      
-      
-
-    destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
-    rewrite <- e. apply In_single.
-    inversion H1.
-  - apply andb_true_iff in H2.
-    destruct H2.
-    apply andb_true_iff in H1. intuition. inversion H4.
-  - inversion H. inversion H3 ; subst.
-    apply andb_true_iff in H2.
-    destruct H2.
-    apply andb_true_iff in H2.
-    destruct H2.
-    unfold is_leader in H2.
-    destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
-    rewrite <- e. apply In_left. apply In_single.
-    inversion H2.
-    subst.
-    apply andb_true_iff in H2.
-    destruct H2.
-    apply andb_true_iff in H2.
-    destruct H2.
-    unfold is_leader in H2.
-    destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
-    rewrite <- e. apply In_right. auto.
-    inversion H2.
-  - inversion H. inversion H3 ; subst.
-    destruct (V_eq_dec x x) ; intuition.
-    destruct (V_eq_dec x x0) ; subst ; intuition.
-    
+      apply In_right.
+      assert (H1' := H1).
+      specialize (H1 x0 (parent_i (construct_checker_input x0))).
+      intuition. rewrite <- H5.
+      apply (H0 (parent_i (construct_checker_input x0))) ; intuition.
+      apply (H1' x y) ; auto. apply In_right. auto.
 Admitted.
+
+Lemma all_leader_same : forall x v_random,
+  (forall x : Component, v x -> checker_tree x = true) ->
+  v v_random -> v x -> 
+  leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
+Proof.
+  unfold checker_tree.
+  unfold neighbours.
+  simpl in *. unfold neighbors. intros.
+  assert ({vl : V_list & {el : E_list & Walk v a v_random x vl el}}).
+  apply Connected_walk ; auto.
+  destruct H2. destruct s.
+  induction w.
+  + reflexivity.
+  + apply W_endx_inv in w.
+    intuition.
+    rewrite H3.
+    specialize (H x) ; intuition.
+    apply andb_true_iff in H2.
+    destruct H2.
+    apply orb_true_iff in H2.
+    apply local_input_correct in a0.
+    clear H3 H2.
+    assert (a1 := a0).
+    apply checker_input_correct1 in a0.
+    apply checker_input_correct4 in a0.
+    destruct a0. destruct H2.
+    apply checker_input_correct5 in a1.
+    rewrite <- a1. clear a1.
+    assert (a0 := H2).
+    apply (leader_same_correct (leader_i (construct_checker_input x))) in H2 ; auto.
+    rewrite <- H2. clear H2.
+    induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
+    destruct a1. destruct p.
+    destruct (V_eq_dec y c0) ; subst ; intuition.
+    inversion H2. subst. intuition. inversion H2. subst. intuition.
+    destruct a1. destruct p.
+    destruct (V_eq_dec y c0) ; subst ; intuition.
+    destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
+    apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
+    inversion H.
+    destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
+Qed.
 
 
 Theorem checker_correct :
@@ -484,18 +521,7 @@ Proof.
     assert (forall (x : Component), v x -> (construct_checker_input x).(leader_i) = (construct_checker_input v_random).(leader_i)).
     destruct H. clear H0.
     intros.
-    assert (gamma_2 get_parent get_distance v a (leader_i (construct_checker_input x)) x).
-    apply checker_tree_correct ; auto.
-    assert (gamma_2 get_parent get_distance v a (leader_i (construct_checker_input v_random)) v_random).
-    apply checker_tree_correct ; auto.
-    unfold gamma_2 in *.
-    destruct H1.
-    destruct H2.
-      admit.
-(*       leader_same (leader_i (construct_checker_input x))
-       (neighbor_leader_distance (construct_checker_input x)) &&
-      weil x und some_component mit einem weg verbunden sind
- *)
+    apply all_leader_same ; auto.
     assert (spanning_tree v a (leader_i (construct_checker_input v_random)) get_parent get_distance c) as G1.
     apply G2'G2. unfold Gamma_2'.
     exists (leader_i (construct_checker_input v_random)). unfold root_prop'.
@@ -505,7 +531,6 @@ Proof.
     specialize (H1 x).
     apply checker_tree_correct in H1 ; auto.
     specialize (H0 x) ; intuition. rewrite <- H3. auto.
-    
 
 
 
