@@ -448,11 +448,23 @@ Proof.
     destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
 Qed.
 
-Lemma leader_i_local : forall x,
-  v x -> checker_tree x = true ->
+Lemma leader_i_local : forall x, (forall x,
+  v x -> checker_tree x = true) -> v x ->
   v (leader_i (construct_checker_input x)).
 Proof.
   intros.
+  assert (forall x : Component, v x -> checker_tree x = true ->
+          forall v_random,
+  v v_random ->
+  leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random)) as leader_same_lemma.
+  intros.
+  apply all_leader_same ; auto.
+  specialize (leader_same_lemma x). intuition.
+  assert (H' := H).
+  specialize (H' x). intuition.
+  rename H3 into leader_same_lemma.
+  rename H0 into Hx. rename H2 into H0.
+
   unfold checker_tree in H0.
   apply andb_true_iff in H0.
   destruct H0.
@@ -476,6 +488,16 @@ Proof.
     destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
     inversion H1. clear H1.
     apply is_in_correct in H3.
+
+
+    clear H2 H0 n.
+
+
+
+
+
+
+
     assert (forall x y : Component, a (A_ends x y) -> leader_i (construct_checker_input y) = leader_i (construct_checker_input x)).
     admit.
     unfold neighbours in *.
