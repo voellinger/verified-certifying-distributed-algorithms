@@ -453,6 +453,25 @@ Lemma leader_i_local : forall x, (forall x,
   v (leader_i (construct_checker_input x)).
 Proof.
   intros.
+  assert ({al : A_list & Connection v a get_parent x (leader_i (construct_checker_input x)) al (get_distance x)}).
+  apply (path_to_root2 v a c) ; auto.
+  apply G2'G2. unfold Gamma_2'.
+    exists (leader_i (construct_checker_input x)). unfold root_prop'.
+    split ; intuition.
+    admit.
+    apply checker_tree_correct.
+    specialize (H0 x) ; intuition. rewrite <- H3. auto.
+
+
+
+  destruct H1.
+  apply Connection_to_walk in c0.
+  destruct c0. destruct s. destruct s.
+  apply W_endy_inv in x3. auto.
+
+
+
+  
   assert (forall x : Component, v x -> checker_tree x = true ->
           forall v_random,
   v v_random ->
@@ -491,7 +510,32 @@ Proof.
 
 
     clear H2 H0 n.
+    assert (exists v_r, v v_r /\ v_r = leader_i (construct_checker_input v_r)).
+    unfold checker_tree in H.
+    unfold neighbours in *.
+    unfold construct_local_input in *.
+    unfold neighbors in *.
+    apply neighborhood_correct in H3.
+    assert (forall x : Vertex, v x -> (is_leader x && is_parent x && (distance_i (construct_checker_input x) =? 0)
+     || negb (is_leader x) &&
+        is_in (parent_i (construct_checker_input x)) (A_in_neighborhood x (CA_list v a c)) &&
+        (distance_i (construct_checker_input x) =?
+         distance_i (construct_checker_input (parent_i (construct_checker_input x))) + 1)) = true).
+    intros. specialize (H x0). intuition.
+    apply andb_true_iff in H1. destruct H1 ; auto.
+    clear H.
 
+    induction c ; intuition.
+    + inversion H3. 
+    + inversion Hx. inversion H0 ; subst ; intuition.
+      specialize (leader_same_lemma x0).
+      assert (V_union (V_single x) v x0). apply In_right. auto.
+      intuition.
+
+    destruct H0.
+    destruct H0.
+    specialize (leader_same_lemma x0) ; subst ; intuition.
+    rewrite H2. rewrite <- H1. auto.
 
 
 

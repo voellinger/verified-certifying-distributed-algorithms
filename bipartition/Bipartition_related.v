@@ -59,7 +59,7 @@ Definition gamma_2 (v:V_set) (a:A_set) (root x : Component) :=
  parent_prop v a root parent x /\ distance_prop root parent distance x.
 (* Prop: is this the root component or not? *)
 Definition root_prop' (v : V_set) (c : Component) :=
-  v c /\ root = c.
+  root = c.
 (* there is a root such that (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
   (exists (r: Component), root_prop' v r  /\ forall (x : Component), v x -> gamma_2 v a r x).
@@ -87,8 +87,88 @@ Proof.
   destruct H.
   destruct H.
   unfold root_prop' in H.
-  destruct H. subst.
-  split ; intros ; auto. specialize (H0 x0) ; intuition.
+  subst.
+  split ; intros ; auto.
+  unfold root_prop.
+
+  unfold parent_prop in H0.
+  unfold distance_prop in H0.
+
+
+  assert (forall x0 : Component, v x0 -> v (parent x0)) as new.
+  intros. induction c ; intuition.
+  specialize (H0 x0). intuition.
+  subst. inversion H. subst. rewrite H3. apply In_single.
+  inversion H. inversion H1 ; subst.
+  specialize (H0 x0). intuition.
+  rewrite H4. apply In_left. auto.
+  subst.
+  specialize (H0 x0).
+  assert (V_union (V_single y) v x0). apply In_right. auto.
+  intuition. subst.
+  rewrite H5. apply In_right. auto.
+  specialize (H0 x0).
+  intuition. rewrite H3. auto.
+  rewrite e in *. rewrite e0 in *. specialize (H0 x0).
+  intuition. rewrite H3. auto.
+    
+    induction c ; simpl in * ; intuition.
+  + specialize (H0 x0).
+    assert (V_single x0 x0). apply In_single. intuition.
+    inversion H3.
+    subst. apply In_single.
+  + destruct (V_eq_dec x y) ; subst ; intuition.
+    apply In_left. apply In_single.
+    destruct (V_eq_dec x x0) ; subst ; intuition.
+    apply In_right. auto.
+
+    apply In_right. apply IHc.
+    intros.
+    specialize (H0 x1).
+    assert (V_union (V_single y) v x1).
+    apply In_right. auto.
+    intuition.
+    inversion H4. inversion H5 ; subst ; intuition.
+    
+
+
+    assert (a (A_ends x1 (parent x1))).
+    admit.
+    
+    admit.
+    assert (Graph v a).
+    apply Connected_Isa_Graph. auto.
+    intuition.
+    apply (G_ina_inv2 _ _ H5 _ _ H1) ; auto.
+    apply (G_non_directed _ _ H5 _ _ H1) ; auto.
+
+    inversion H4. inversion H1 ; subst ; intuition.
+    
+ intuition.
+    inversion H1. inversion H5. subst. intuition.
+    subst.
+    
+    admit. subst. intuition.
+
+    admit.
+    specialize (H0 x1).
+    assert (V_union (V_single y) v x1).
+    apply In_right. auto.
+    intuition.
+
+    assert (H0' := H0).
+    specialize (H0 x0).
+    assert (V_union (V_single y) v x0). apply In_right. auto. intuition.
+    specialize (H0' y).
+    assert (V_union (V_single y) v y). apply In_left. apply In_single.
+    intuition.
+    specialize (IHc x0).
+
+    subst. apply In_left. apply In_single.
+    subst. intuition.
+    
+ 
+  specialize (H0 x0) ; intuition.
 Qed.
 
 (* 
