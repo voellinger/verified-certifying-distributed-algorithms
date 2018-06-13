@@ -527,76 +527,56 @@ Proof.
     exists (leader_i (construct_checker_input v_random)). unfold root_prop'.
     split ; intuition.
     apply leader_i_local ; auto.
-
     specialize (H1 x).
     apply checker_tree_correct in H1 ; auto.
     specialize (H0 x) ; intuition. rewrite <- H3. auto.
 
 
+    destruct H. clear H H0.
+    destruct H1. destruct H.
 
 
-
-
-
-
-    specialize (H0 v_random) ; intuition.
-    specialize (leader_prop v_random) ; intuition.
-    rewrite <- H0.
-    apply (checker_tree_correct x) ; auto.
-    destruct H.
-    destruct H0.
-    destruct H0.
-    specialize (H x).
-    assert (forall (v2 : Component), is_in_once v2 (neighbor_leader_distance (construct_checker_input x)) -> a (A_ends x v2)).
-    intros.
-    apply local_input_correct.
-    apply <- checker_input_correct1 in H2.
-    auto.
-    assert (exists (v2 : Component), is_in_once v2 (neighbor_leader_distance (construct_checker_input x)) /\
-                                      Nat.odd (get_distance x) = Nat.odd (get_distance v2)).
-    clear H dummy G1 leader_prop root H2.
-    assert (forall (x y z: Component) (n : nat),
-        In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) -> 
-        (construct_checker_input y).(distance_i) = n).
-    apply checker_input_correct3.
-    specialize (H x).
-    assert (forall (x y z: Component) (n : nat),
-        In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) -> 
-        is_in_once y (construct_checker_input x).(neighbor_leader_distance)).
-    apply checker_input_correct0.
-    specialize (H2 x).
-
-
-(* rewrite: checker_input_correct1 *)
-
-(*     induction (neighbor_leader_distance (construct_checker_input x)).
-    + inversion H1.
-    + destruct a0. destruct p.
-      simpl in *.
-      destruct (eqb (Nat.odd (distance_i (construct_checker_input x))) (Nat.odd n)) ; subst ; intuition.
-      specialize (H c0 c1 n).
-      specialize (H2 c0 c1 n).
-      assert (In (c0, c1, n) ((c0, c1, n) :: l)). intuition. intuition. clear H3.
-      exists c0.
-      simpl in *.
-      split. auto. *)
-  
-      
-      
-      
-      
-    admit.
-    destruct H3 as [v2 H3].
-    specialize (H2 v2).
-    intuition.
-
-    apply (Gamma_implies_Psi root get_parent get_distance v a c) ; auto.
-    apply (Gamma_2_Gamma_3_Gamma root get_parent get_distance v a c G1).
+    apply (Gamma_implies_Psi (leader_i (construct_checker_input v_random)) get_parent get_distance v a c) ; auto.
+    apply (Gamma_2_Gamma_3_Gamma (leader_i (construct_checker_input v_random)) get_parent get_distance v a c G1).
     unfold Gamma_3.
     unfold gamma_3.
     unfold neighbors_with_same_color.
-    clear leader_prop G1 root.
-    exists x. exists v2. intuition.
+    clear G1 v_random v_r.
+    exists x.
+
+    unfold checker_local_bipartition in H0.
+    assert (forall (x y z : Component) (n : nat),
+      In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
+      a (A_ends x y)).
+    intros.
+    apply local_input_correct.
+    apply checker_input_correct1. apply checker_input_correct0 in H1 ; auto.
+    specialize (H1 x).
+    assert (forall (x y z : Component) (n : nat),
+      In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
+      get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
+    intros.
+    apply checker_input_correct2. apply checker_input_correct1. apply checker_input_correct0 in H2. auto.
+    specialize (H2 x).
+    unfold get_distance in *. (* clear H1 H2. *)
+
+    induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
+    + inversion H0.
+    + destruct a0. destruct p.
+(*       specialize (H1 c0 c1 n).
+      specialize (H2 c0 c1 n). *)
+      destruct (eqb (Nat.odd (distance_i (construct_checker_input x))) (Nat.odd n)) ; subst ; intuition.
+      admit.
+      specialize (H1 c0 c1 n).
+      specialize (H2 c0 c1 n).
+      intuition.
+      destruct (V_eq_dec c0 c0) ; subst ; intuition.
+      exists c0 ; intuition. admit.
+      
+      
+
+
+    exists v2. intuition.
     assert (Graph v a).
     apply (Connected_Isa_Graph v a c).
     apply (G_ina_inv2 v a H2 _ _ H).
