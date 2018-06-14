@@ -550,9 +550,6 @@ Proof.
       simpl. right. apply is_in_correct in H9. auto.
       auto.
       apply In_right. auto.
-
-
-
       intros.
       specialize (H' x1).
       assert (V_union (V_single x0) v x1). apply In_right. auto.
@@ -590,26 +587,31 @@ Proof.
       intuition.
 
 
+
+
+
       subst.
-      apply In_right. (* ?? *)
+      assert (forall x0 : Component,
+                    V_union (V_single y) v x0 ->
+              forall v_random : Vertex,
+                    V_union (V_single y) v v_random ->
+                    leader_i (construct_checker_input x0) = leader_i (construct_checker_input v_random)) as lsl.
+      intros.
+      apply leader_same_lemma ; auto.
+      clear leader_same_lemma.
+
+      destruct (V_eq_dec y (leader_i (construct_checker_input x0))) ; subst.
+      apply In_left. apply In_single.
+
+      apply In_right.
       apply (H x0) ; auto ; intros.
-      apply leader_same_lemma.
+      apply (lsl) ; auto.
       apply In_right. auto.
-      specialize (H0 x).
-      destruct (V_eq_dec x1 y) ; subst ; intuition.
-      destruct (V_eq_dec x1 x) ; subst ; intuition.
-      apply andb_true_iff in H3. destruct H3.
-      apply andb_true_iff. split ; auto.
-      apply orb_true_iff.
-      apply orb_true_iff in H5. destruct H5.
-      left. auto. right.
-      apply andb_true_iff in H5. destruct H5.
-      apply andb_true_iff in H5. destruct H5.
-      apply andb_true_iff. split ; auto.
-      apply andb_true_iff. split ; auto.
-      apply is_in_correct in H7.
-      apply is_in_correct. simpl. right. auto.
       apply In_right. auto.
+
+      clear H Hx.
+      assert (x = y -> False) as H.
+      intros. subst. intuition.
 
       assert (H0' := H0).
       specialize (H0 x1).
@@ -630,18 +632,54 @@ Proof.
       apply is_in_correct. simpl in H6.
       destruct H6 ; auto.
       rewrite <- H6 in *.
+
+      (* assert (H0'' := H0'). *)
       specialize (H0' y).
       assert (V_union (V_single y) v y). apply In_left. apply In_single.
       intuition.
       destruct (V_eq_dec y y) ; subst ; intuition.
       destruct (V_eq_dec (parent_i (construct_checker_input x)) x) ; subst ; intuition.
-      rewrite e0 in *.
+      symmetry in e0. intuition.
+
+      assert (leader_i (construct_checker_input x0) = leader_i (construct_checker_input x)).
+      apply lsl ; auto. apply In_right ; auto.
+      rewrite H6 in *. clear H6 H1 x0.
+      clear H3 H2 n2 e H7.
+
+      apply andb_true_iff in H8. destruct H8.
+      apply orb_true_iff in H2. destruct H2.
+      apply andb_true_iff in H2. destruct H2.
+      apply andb_true_iff in H2. destruct H2.
+      unfold is_leader in H2.
+      specialize (lsl (parent_i (construct_checker_input x))).
+      destruct (V_eq_dec (parent_i (construct_checker_input x))
+         (leader_i (construct_checker_input (parent_i (construct_checker_input x))))) ; subst ; intuition.
+      rewrite <- e in *.
+      assert (parent_i (construct_checker_input x) = leader_i (construct_checker_input x)).
+      apply lsl ; auto. apply In_left. apply In_single.
+      apply In_right. auto.
+      intuition.
+      inversion H2.
+
+      apply andb_true_iff in H2. destruct H2.
+      apply andb_true_iff in H2. destruct H2.
+      apply is_in_correct in H6. simpl in H6.
+      destruct H6.
+      apply beq_nat_true in H3.
+      rewrite <- H6 in *.
+      rewrite H3 in H5.
       apply beq_nat_true in H5.
-      clear H8.
-      induction (distance_i (construct_checker_input x)). inversion H5.
-      inversion H5. intuition.
-      destruct (parent_i (construct_checker_input x)) as [(index px)].
-      admit. (* maybe another H0 for y *)
+      induction (distance_i (construct_checker_input x)) ; simpl in H5 ; intuition.
+      inversion H5.
+      apply neighborhood_correct in H6.
+      assert (Graph v a).
+      apply (Connected_Isa_Graph v a c0).
+      apply (G_ina_inv1 v a H7) in H6.
+      intuition.
+    + apply (H x0) ; intuition.
+      admit.
+    + 
+      
       
 
 
