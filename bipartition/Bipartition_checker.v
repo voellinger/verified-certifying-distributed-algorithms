@@ -611,7 +611,37 @@ Proof.
       apply is_in_correct. simpl. right. auto.
       apply In_right. auto.
 
-
+      assert (H0' := H0).
+      specialize (H0 x1).
+      destruct (V_eq_dec x1 y) ; subst ; intuition.
+      assert (V_union (V_single y) v x1). apply In_right. auto.
+      intuition.
+      destruct (V_eq_dec x1 x) ; subst ; intuition.
+      apply andb_true_iff in H4. destruct H4.
+      apply andb_true_iff. split ; auto.
+      apply orb_true_iff.
+      apply orb_true_iff in H4. destruct H4.
+      left. auto. right.
+      apply andb_true_iff in H4. destruct H4.
+      apply andb_true_iff in H4. destruct H4.
+      apply andb_true_iff. split ; auto.
+      apply andb_true_iff. split ; auto.
+      apply is_in_correct in H6.
+      apply is_in_correct. simpl in H6.
+      destruct H6 ; auto.
+      rewrite <- H6 in *.
+      specialize (H0' y).
+      assert (V_union (V_single y) v y). apply In_left. apply In_single.
+      intuition.
+      destruct (V_eq_dec y y) ; subst ; intuition.
+      destruct (V_eq_dec (parent_i (construct_checker_input x)) x) ; subst ; intuition.
+      rewrite e0 in *.
+      apply beq_nat_true in H5.
+      clear H8.
+      induction (distance_i (construct_checker_input x)). inversion H5.
+      inversion H5. intuition.
+      destruct (parent_i (construct_checker_input x)) as [(index px)].
+      admit. (* maybe another H0 for y *)
       
 
 
