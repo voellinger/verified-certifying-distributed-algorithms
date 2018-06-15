@@ -500,6 +500,95 @@ Proof.
     clear n H3 H2.
 
 
+
+    assert (forall x y : Component, v x -> v y -> leader_i (construct_checker_input x) = leader_i (construct_checker_input y)) as lsl.
+    intros. apply (leader_same_lemma) ; auto.
+    clear leader_same_lemma.
+    assert (forall x : Component, v x ->
+        leader_same (leader_i (construct_checker_input x)) (neighbor_leader_distance (construct_checker_input x)) = true /\
+        ((is_leader x = true /\ is_parent x = true /\ distance_i (construct_checker_input x) = 0) \/
+        (is_leader x <> true /\ a (A_ends x (parent_i (construct_checker_input x))) /\
+          (distance_i (construct_checker_input x) = distance_i (construct_checker_input (parent_i (construct_checker_input x))) + 1)))).
+    intros.
+    specialize (H x0) ; intuition.
+    apply andb_true_iff in H1. destruct H1. auto.
+    apply andb_true_iff in H1. destruct H1.
+    apply orb_true_iff in H1. destruct H1.
+    left.
+    apply andb_true_iff in H1. destruct H1.
+    apply andb_true_iff in H1. destruct H1.
+    apply beq_nat_true in H2.
+    intuition.
+    right.
+    apply andb_true_iff in H1. destruct H1.
+    apply andb_true_iff in H1. destruct H1.
+    apply beq_nat_true in H2.
+    apply negb_true_iff in H1.
+    apply is_in_correct in H3.
+    apply neighborhood_correct in H3.
+    intuition. rewrite H4 in H1. inversion H1.
+    clear H.
+    
+    induction c ; simpl in * ; subst ; intuition.
+    + inversion Hx. subst.
+      specialize (H0 x).
+      intuition.
+      unfold is_leader in H1.
+      destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
+      rewrite <- e. apply In_single.
+      inversion H1.
+    + admit.
+    + assert (H0' := H0). assert (H0'' := H0).
+      rewrite (lsl x x0) ; auto.
+      rewrite (lsl x x0) in H ; auto.
+      clear Hx x. rename x0 into x.
+
+      specialize (H0 x).
+      intuition ; subst ; intuition.
+      unfold is_leader in H2.
+      destruct (V_eq_dec x (leader_i (construct_checker_input x))) ; subst ; intuition.
+      rewrite <- e. auto. inversion H2.
+      
+      specialize (H0' y).
+      intuition ; subst ; intuition.
+      unfold is_leader in H6.
+      destruct (V_eq_dec y (leader_i (construct_checker_input y))) ; subst ; intuition.
+      rewrite (lsl x y) ; auto.
+      rewrite <- e. auto. inversion H6.
+
+
+      apply H ; intuition.
+      apply (H0'' x0) ; intuition. clear H.
+      specialize (H0'' x0) ; intuition.
+      right. intuition.
+      destruct (V_eq_dec y y) ; subst ; intuition.
+      destruct (V_eq_dec x x) ; subst ; intuition.
+      destruct (V_eq_dec x y) ; subst ; intuition.
+      destruct (V_eq_dec y x) ; subst ; intuition.
+      destruct (V_eq_dec x0 y) ; subst ; intuition.
+      destruct (V_eq_dec y x) ; subst ; intuition.
+      simpl in *.
+      intuition ; subst ; intuition.
+      rewrite <- H1 in *.
+      rewrite H4 in H8.
+      induction (distance_i (construct_checker_input (parent_i (construct_checker_input x)))).
+      inversion H8. simpl in H8. inversion H8. intuition.
+      subst.
+      admit.
+      destruct (V_eq_dec x0 x) ; subst ; intuition.
+      simpl in *.
+      intuition ; subst ; intuition.
+      rewrite <- H1 in *. rewrite H4 in *.
+      induction (distance_i (construct_checker_input (parent_i (construct_checker_input x)))).
+      
+      inversion H8. simpl in H8. inversion H8. intuition.
+      rewrite (lsl (parent_i (construct_checker_input x)) x) in * ; auto.
+      
+    
+
+
+
+
     generalize leader_same_lemma Hx H.
     generalize x.
     clear leader_same_lemma Hx H x.
@@ -676,9 +765,48 @@ Proof.
       apply (Connected_Isa_Graph v a c0).
       apply (G_ina_inv1 v a H7) in H6.
       intuition.
-    + apply (H x0) ; intuition.
-      admit.
-    + 
+    + assert (forall x0 : Component,
+                    v x0 ->
+              forall v_random : Vertex,
+                    v v_random ->
+                    leader_i (construct_checker_input x0) = leader_i (construct_checker_input v_random)) as lsl.
+      intros.
+      apply leader_same_lemma ; auto.
+      clear leader_same_lemma.
+
+      rewrite (lsl x0 Hx x v0). clear Hx x0.
+
+      apply (H x) ; intuition.
+      assert (H0' := H0).
+
+
+      specialize (H0 x0).
+      intuition.
+      apply andb_true_iff.
+      apply andb_true_iff in H2. destruct H2.
+      split ; auto.
+      apply orb_true_iff. apply orb_true_iff in H2. destruct H2.
+      left. auto.
+      right.
+      apply andb_true_iff in H2. destruct H2.
+      apply andb_true_iff in H2. destruct H2.
+      apply andb_true_iff. split ; auto.
+      apply andb_true_iff. split ; auto.
+      apply is_in_correct. apply is_in_correct in H4.
+      destruct (V_eq_dec x0 y) ; subst ; intuition.
+      destruct (V_eq_dec y x) ; subst ; intuition.
+      simpl in H4. destruct H4 ; auto.
+      subst.
+
+      specialize (H0' (parent_i (construct_checker_input y))).
+      intuition.
+      apply andb_true_iff in H4. destruct H4.
+      apply orb_true_iff in H5. destruct H5.
+      apply andb_true_iff in H5. destruct H5.
+      apply andb_true_iff in H5. destruct H5.
+      
+      
+    + subst. intuition.
       
       
 
