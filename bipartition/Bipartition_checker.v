@@ -603,6 +603,32 @@ Proof.
       clear Hx x0.
 
       destruct (V_eq_dec x (parent_i (construct_checker_input y))).
+      clear H.
+      subst.
+      assert (H0' := H0). specialize (H0 y). specialize (H0' (parent_i (construct_checker_input y))).
+      intuition ; subst ; intuition.
+      symmetry in H0. intuition.
+      rewrite <- H. auto.
+      rewrite <- H0 in *. intuition.
+      inversion H1 ; auto.
+      inversion H4 ; subst ; intuition.
+      rewrite <- H8 in *. rewrite H3 in H5. clear H3.
+      admit.
+      rewrite <- H8 in *. rewrite <- H8 in *. intuition.
+      subst.
+      clear H0 H1.
+      rewrite (lsl (parent_i (construct_checker_input y)) y) in * ; auto.
+
+checker_true -> aufdr\u00f6seln
+v parent 
+exists parent_walk to leader
+v leader
+
+
+      
+      assert (Graph v a). apply (Connected_Isa_Graph v a c0).
+      apply (G_ina_in
+
       admit.
       destruct (V_eq_dec y (parent_i (construct_checker_input x))).
       admit.
