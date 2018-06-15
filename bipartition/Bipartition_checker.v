@@ -451,17 +451,110 @@ Proof.
     destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
 Qed.
 
+Lemma checker_true' : 
+  (forall x, v x -> checker_tree x = true) ->
+  (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
+         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
+          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
+Proof.
+  intros. rename x into x0.
+  unfold checker_tree in H.
+  specialize (H x0) ; intuition.
+  apply andb_true_iff in H1. destruct H1.
+  apply orb_true_elim in H1. destruct H1.
+  left.
+  apply andb_true_iff in e. destruct e.
+  apply andb_true_iff in H1. destruct H1.
+  apply beq_nat_true in H2.
+  unfold is_leader in H1. unfold is_parent in H3.
+  destruct (V_eq_dec x0 (leader_i (construct_checker_input x0))) ; subst ; intuition.
+  destruct (V_eq_dec x0 (parent_i (construct_checker_input x0))) ; subst ; intuition.
+  inversion H3. inversion H1. inversion H1.
+  right.
+  apply andb_true_iff in e. destruct e.
+  apply andb_true_iff in H1. destruct H1.
+  apply beq_nat_true in H2.
+  apply negb_true_iff in H1.
+  apply is_in_correct in H3.
+  apply neighborhood_correct in H3.
+  unfold is_leader in H1.
+  destruct (V_eq_dec x0 (leader_i (construct_checker_input x0))) ; subst ; intuition.
+Qed.
+
+Lemma parent_i_local : forall x, (forall x,
+  v x -> checker_tree x = true) -> v x ->
+  v (parent_i (construct_checker_input x)).
+Proof.
+  intros.
+  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
+         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
+          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
+  apply checker_true' ; auto.
+  clear H.
+  specialize (H1 x).
+  intuition.
+  rewrite <- H2. auto.
+  assert (Graph v a). apply Connected_Isa_Graph ; auto.
+  apply (G_ina_inv2 v a H1 x); auto.
+Qed.
+
 Lemma leader_i_local : forall x, (forall x,
   v x -> checker_tree x = true) -> v x ->
   v (leader_i (construct_checker_input x)).
 Proof.
+  intros.
 
-(* checker_true -> aufdr\u00f6seln
-v parent 
-exists parent_walk to leader
-v leader
- *)
+  assert ((forall x v_random,
+  v v_random -> v x -> 
+  leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random))) as lsl.
+  intros.
+  apply (all_leader_same x0 v_random) in H ; intuition.
+
+
+  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
+         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
+          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
+  apply checker_true' ; auto.
+  clear H.
+
+  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
+         {x <> leader_i (construct_checker_input x) /\ v (parent_i (construct_checker_input x)) /\ x <> parent_i (construct_checker_input x) /\
+          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
+  intros. specialize (H1 x0) ; intuition.
+  assert (Graph v a). apply Connected_Isa_Graph ; auto.
+  assert (H3' := H3).
+  apply (Connected_no_loops v a c _ ) in H3'.
+  apply (G_ina_inv2 v a H2 x0) in H3 ; auto.
+  clear H1.
+
+  generalize H H0 lsl. generalize x.
+  clear H H0 lsl x.
+  induction c ; simpl in * ; subst ; intuition.
+  + inversion H0.
+    subst.
+    specialize (H x0). intuition.
+    rewrite <- H.
+    apply In_single.
+    inversion H2. intuition.
+  + admit.
+  + 
 Admitted.
+
+(* Lemma parent_walk : forall x,
+  (forall x, v x -> checker_tree x = true) ->
+  {vl : V_list & {el : E_list & {w : Walk v a x (leader_i (construct_checker_input x)) vl el & 
+      forall v1 v2, In (E_ends v1 v2) el -> v2 = parent_i (construct_checker_input v1)}}}. *)
+
+Lemma leader_i_local : forall x, (forall x,
+  v x -> checker_tree x = true) -> v x ->
+  v (leader_i (construct_checker_input x)).
+Proof.
+  intros.
+  apply parent_walk in H0 ; auto.
+  destruct H0. destruct s.
+  apply W_endy_inv in w.
+  auto.
+Qed.
 
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
@@ -593,6 +686,6 @@ Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construc
     apply (Connected_Isa_Graph v a c).
     apply (G_ina_inv2 v a H5 _ _ H3).
     intuition.
-Qed.
+Admitted.
 
 End Checker.
