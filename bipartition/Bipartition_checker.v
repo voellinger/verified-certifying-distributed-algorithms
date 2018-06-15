@@ -518,13 +518,17 @@ Proof.
   clear H.
 
   assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
-         {x <> leader_i (construct_checker_input x) /\ v (parent_i (construct_checker_input x)) /\ x <> parent_i (construct_checker_input x) /\
+         {x <> leader_i (construct_checker_input x) /\ v (parent_i (construct_checker_input x)) /\ x <> parent_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
           (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
   intros. specialize (H1 x0) ; intuition.
+  right. intuition.
   assert (Graph v a). apply Connected_Isa_Graph ; auto.
   assert (H3' := H3).
   apply (Connected_no_loops v a c _ ) in H3'.
   apply (G_ina_inv2 v a H2 x0) in H3 ; auto.
+  rewrite <- H2 in *.
+  apply (Connected_no_loops v a c _ ) in H3.
+  intuition.
   clear H1.
 
   generalize H H0 lsl. generalize x.
@@ -536,13 +540,74 @@ Proof.
     rewrite <- H.
     apply In_single.
     inversion H2. intuition.
-  + inversion H1.
-    inversion H2 ; subst.
-    admit.
-    subst.
-    rewrite (lsl x0 x) in * ; auto.
-    clear H2 H1 x0.
-    
+  + destruct (V_eq_dec y (leader_i (construct_checker_input x0))).
+      subst. apply In_left. apply In_single.
+      apply In_right.
+      inversion H1.
+      inversion H2 ; subst ; intuition.
+      assert (V_union (V_single x0) v x0) as a1. apply In_left. auto.
+      assert (V_union (V_single x0) v x) as a2. apply In_right. auto.
+      rewrite (lsl x0 x) in * ; auto ; clear a1 a2.
+      apply (H x) ; auto ; intuition ; clear H.
+      assert (H0' := H0). assert (H0'' := H0).
+      specialize (H0 x1). specialize (H0' x0). specialize (H0'' x).
+      assert (V_union (V_single x0) v x1) as a3. apply In_right. auto.
+      assert (V_union (V_single x0) v x0) as a2. apply In_left. apply In_single.
+      assert (V_union (V_single x0) v x) as a1. apply In_right. auto.
+      rewrite (lsl x1 x) in * ; auto.
+      rewrite (lsl x0 x) in * ; auto.
+      clear H2 H1.
+      assert (Graph v a) as graph. apply Connected_Isa_Graph ; auto.
+      intuition ; subst ; intuition ; right ; intuition ; clear a1 a2 a3.
+
+      inversion H7 ; inversion H1 ; intuition.
+      inversion H11 ; inversion H15 ; subst ; intuition.
+      inversion H15 ; subst ; intuition.
+      inversion H2 ; inversion H8 ; intuition.
+      inversion H14 ; inversion H17 ; subst ; intuition.
+      apply (G_ina_inv1 v a graph) in H17 ; auto.
+      inversion H17 ; subst ; intuition.
+      apply (G_ina_inv2 v a graph) in H14 ; auto.
+      apply (G_ina_inv1 v a graph) in H17 ; auto.
+
+      inversion H2 ; inversion H8 ; auto.
+      inversion H11 ; inversion H16 ; subst ; intuition.
+      inversion H11 ; subst ; intuition.
+
+      inversion H13 ; inversion H8.
+      inversion H14 ; inversion H17 ; subst ; intuition.
+      admit. admit. admit. admit. admit. admit. admit.
+    + rewrite (lsl x0 x) in * ; auto.
+      clear H1 x0.
+
+      destruct (V_eq_dec x (parent_i (construct_checker_input y))).
+      admit.
+      destruct (V_eq_dec y (parent_i (construct_checker_input x))).
+      admit.
+
+
+      apply H ; intuition.
+      assert (H0' := H0). assert (H0'' := H0). (* assert (H0''' := H0). *) clear H.
+      specialize (H0 x). specialize (H0' y). specialize (H0'' x0).
+      intuition.
+      right. intuition.
+      inversion H9 ; auto. inversion H10 ; subst ; intuition.
+      right. intuition.
+      inversion H11 ; inversion H6 ; auto.
+      inversion H12 ; inversion H15 ; subst ; intuition.
+      inversion H12 ; subst ; intuition.
+
+      right. intuition.
+      inversion H11 ; inversion H3 ; auto.
+      inversion H12 ; inversion H15 ; subst ; intuition.
+      inversion H12 ; subst ; intuition.
+
+      right. intuition.
+      inversion H3 ; inversion H8 ; inversion H13 ; auto.
+      inversion H14 ; inversion H17 ; inversion H19 ; subst ; intuition.
+      inversion H14 ; inversion H19 ; subst ; intuition.
+      inversion H19 ; inversion H17 ; subst ; intuition.
+      inversion H19 ; subst ; intuition.
 Admitted.
 
 (* Lemma parent_walk : forall x,
