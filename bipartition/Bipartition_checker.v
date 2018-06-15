@@ -575,9 +575,33 @@ Proof.
       apply (G_ina_inv1 v ) in H13 ; auto. intuition.
       apply (lsl x1 y) ; auto. apply In_right. auto. apply In_right. auto.
       apply In_right. auto.
-      
-      
 
+      subst.
+      assert (V_union (V_single y) v x). apply In_right. auto.
+      rewrite (lsl x0 x) in * ; auto.
+      clear H1 Hx x0.
+      apply H ; intuition ; clear H.
+      assert (V_union (V_single y) v x0). apply In_right. auto.
+      assert (V_union (V_single y) v y). apply In_left. apply In_single.
+      assert (H0' := H0). specialize (H0' y).
+      specialize (H0 x0) ; intuition.
+      right. intuition.
+      inversion H0 ; auto.
+      inversion H8 ; subst ; intuition.
+      rewrite (lsl (parent_i (construct_checker_input x0)) x0) in * ; auto.
+      intuition.
+      right. intuition.
+      inversion H0 ; auto. inversion H8 ; subst ; intuition.
+      inversion H7 ; auto. inversion H10 ; subst ; intuition.
+      rewrite <- H13 in *. rewrite <- H13 in *. rewrite <- H13 in *. intuition.
+      rewrite <- H13 in *.
+      rewrite H6 in H9. clear H6.
+      rewrite Nat.add_comm in H9. simpl in H9.
+      induction (distance_i (construct_checker_input (parent_i (construct_checker_input x0)))).
+      inversion H9. inversion H9. intuition.
+      assert (Graph v a). apply (Connected_Isa_Graph v a c0) ; auto.
+      apply (G_ina_inv1 v ) in H10 ; auto. intuition.
+      apply lsl ; apply In_right ; auto.
       
     + (* assert (H0' := H0). assert (H0'' := H0). *)
       rewrite (lsl x x0) ; auto.
