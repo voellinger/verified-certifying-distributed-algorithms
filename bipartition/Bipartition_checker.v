@@ -536,8 +536,13 @@ Proof.
     rewrite <- H.
     apply In_single.
     inversion H2. intuition.
-  + admit.
-  + 
+  + inversion H1.
+    inversion H2 ; subst.
+    admit.
+    subst.
+    rewrite (lsl x0 x) in * ; auto.
+    clear H2 H1 x0.
+    
 Admitted.
 
 (* Lemma parent_walk : forall x,
