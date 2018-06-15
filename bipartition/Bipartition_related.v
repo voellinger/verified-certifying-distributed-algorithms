@@ -59,7 +59,7 @@ Definition gamma_2 (v:V_set) (a:A_set) (root x : Component) :=
  parent_prop v a root parent x /\ distance_prop root parent distance x.
 (* Prop: is this the root component or not? *)
 Definition root_prop' (v : V_set) (c : Component) :=
-  root = c.
+  v c /\ root = c.
 (* there is a root such that (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
   (exists (r: Component), root_prop' v r  /\ forall (x : Component), v x -> gamma_2 v a r x).
@@ -75,24 +75,6 @@ Definition Gamma_3 (v:V_set) (a:A_set)(c: Connected v a) (t : spanning_tree v a 
 (* there exists a closed walk of odd length in the graph *)
 Definition Gamma v a := {x:Component & {vl:V_list & {el : E_list & {w: Walk v a x x vl el & odd_closed_walk x x vl el w}}}}.
 
-Lemma root_inside : forall (v:V_set) (a:A_set) (c: Connected v a) x x0 y,
-~ v y ->
-(forall x1 : Component,
-      V_union (V_single y) v x1 ->
-      ((x1 = x -> False) /\
-       V_union (V_single y) v (parent x1) /\
-       A_union (E_set x0 y) a (A_ends x1 (parent x1)) /\ A_union (E_set x0 y) a (A_ends (parent x1) x1) \/
-       x1 = x /\ parent x1 = x1) /\
-      ((x1 = x -> False) /\ distance x1 = distance (parent x1) + 1 \/ x1 = x /\ distance x1 = 0)) ->
-(forall x, v x -> y <> parent x).
-Proof.
-  intros v a c.
-  induction c ; intuition.
-  + inversion H1. subst.
-    specialize (H0 x2).
-    assert (V_union (V_single (parent x2)) (V_single x2) x2). apply In_right. auto.
-    intuition.
-Admitted.
 
 Lemma G2'G2 : forall (v:V_set) (a:A_set) (c: Connected v a),
   Gamma_2' v a c -> Gamma_2 v a c.
@@ -105,69 +87,8 @@ Proof.
   destruct H.
   destruct H.
   unfold root_prop' in H.
-  rewrite H. clear H.
-  split ; intros ; auto.
-  unfold root_prop.
-
-  unfold parent_prop in H0.
-  unfold distance_prop in H0.
-
-
-
-
-  assert (exists x0, v x0 /\ parent x0 = x).
-  induction c ; simpl in * ; intuition.
-  + exists x0.
-    specialize (H0 x0). intuition.
-    assert (V_single x0 x0). intuition.
-    intuition.
-    inversion H3. subst. auto.
-  + assert (H0' := H0). specialize (H0' y).
-    destruct (V_eq_dec x y) ; subst ; intuition.
-    exists y. split. apply In_left. apply In_single.
-    assert (V_union (V_single y) v y). apply In_left. apply In_single.
-    intuition. clear H0'.
-
-
-    assert ((exists x0 : Vertex, v x0 /\ parent x0 = x) -> exists x1 : Vertex, V_union (V_single y) v x1 /\ parent x1 = x).
-    intros. destruct H. exists x1. split ; intuition. apply In_right. auto.
-    apply H. clear H.
-    apply IHc.
-    intros x1 vx1. assert (H0' := H0).
-    specialize (H0 x1).
-    assert (V_union (V_single y) v x1). apply In_right. auto. intuition.
-    left.
-    assert (forall x, v x -> y <> parent x).
-    apply (root_inside v a c x x0) ; auto.
-    specialize (H4 x1).
-    assert (vx1' := vx1).
-    eapply H4 in vx1'. clear H4.
-    inversion H1. inversion H4. subst. intuition.
-    inversion H3. inversion H8 ; subst ; intuition.
-    inversion H5. inversion H10 ; subst ; intuition.
-    intuition.
-  + admit.
-  + admit.
-
- +   assert (forall x0 : Component, v x0 -> v (parent x0)) as new.
-  intros. induction c ; intuition.
-  specialize (H0 x0). intuition.
-  subst. inversion H1. subst. rewrite H4. apply In_single.
-  inversion H1. inversion H2 ; subst.
-  specialize (H0 x0). intuition.
-  rewrite H5. apply In_left. auto.
-  subst.
-  specialize (H0 x0).
-  assert (V_union (V_single y) v x0). apply In_right. auto.
-  intuition. subst.
-  rewrite H6. apply In_right. auto.
-  specialize (H0 x0).
-  intuition. rewrite H4. auto.
-  rewrite e in *. rewrite e0 in *. specialize (H0 x0).
-  intuition. rewrite H4. auto. 
-    destruct H. destruct H. specialize (new x0). rewrite H1 in new.
-    intuition.
-  +  specialize (H0 x0) ; intuition.
+  destruct H. subst.
+  split ; intros ; auto. specialize (H0 x0) ; intuition.
 Qed.
 
 (* 
