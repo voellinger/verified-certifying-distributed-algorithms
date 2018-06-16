@@ -498,179 +498,6 @@ Proof.
   apply (G_ina_inv2 v a H1 x); auto.
 Qed.
 
-Lemma leader_i_local : forall x, (forall x,
-  v x -> checker_tree x = true) -> v x ->
-  v (leader_i (construct_checker_input x)).
-Proof.
-  intros.
-
-  assert ((forall x v_random,
-  v v_random -> v x -> 
-  leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random))) as lsl.
-  intros.
-  apply (all_leader_same x0 v_random) in H ; intuition.
-
-
-  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
-         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
-          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
-  apply checker_true' ; auto.
-  clear H.
-
-  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
-         {x <> leader_i (construct_checker_input x) /\ v (parent_i (construct_checker_input x)) /\ x <> parent_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
-          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
-  intros. specialize (H1 x0) ; intuition.
-  right. intuition.
-  assert (Graph v a). apply Connected_Isa_Graph ; auto.
-  assert (H3' := H3).
-  apply (Connected_no_loops v a c _ ) in H3'.
-  apply (G_ina_inv2 v a H2 x0) in H3 ; auto.
-  rewrite <- H2 in *.
-  apply (Connected_no_loops v a c _ ) in H3.
-  intuition.
-  clear H1.
-
-  generalize H H0 lsl. generalize x.
-  clear H H0 lsl x.
-  induction c ; simpl in * ; subst ; intuition.
-  + inversion H0.
-    subst.
-    specialize (H x0). intuition.
-    rewrite <- H.
-    apply In_single.
-    inversion H2. intuition.
-  + destruct (V_eq_dec y (leader_i (construct_checker_input x0))).
-      subst. apply In_left. apply In_single.
-      apply In_right.
-      inversion H1.
-      inversion H2 ; subst ; intuition.
-      assert (V_union (V_single x0) v x0) as a1. apply In_left. auto.
-      assert (V_union (V_single x0) v x) as a2. apply In_right. auto.
-      rewrite (lsl x0 x) in * ; auto ; clear a1 a2.
-      apply (H x) ; auto ; intuition ; clear H.
-      assert (H0' := H0). assert (H0'' := H0).
-      specialize (H0 x1). specialize (H0' x0). specialize (H0'' x).
-      assert (V_union (V_single x0) v x1) as a3. apply In_right. auto.
-      assert (V_union (V_single x0) v x0) as a2. apply In_left. apply In_single.
-      assert (V_union (V_single x0) v x) as a1. apply In_right. auto.
-      rewrite (lsl x1 x) in * ; auto.
-      rewrite (lsl x0 x) in * ; auto.
-      clear H2 H1.
-      assert (Graph v a) as graph. apply Connected_Isa_Graph ; auto.
-      intuition ; subst ; intuition ; right ; intuition ; clear a1 a2 a3.
-
-      inversion H7 ; inversion H1 ; intuition.
-      inversion H11 ; inversion H15 ; subst ; intuition.
-      inversion H15 ; subst ; intuition.
-      inversion H2 ; inversion H8 ; intuition.
-      inversion H14 ; inversion H17 ; subst ; intuition.
-      apply (G_ina_inv1 v a graph) in H17 ; auto.
-      inversion H17 ; subst ; intuition.
-      apply (G_ina_inv2 v a graph) in H14 ; auto.
-      apply (G_ina_inv1 v a graph) in H17 ; auto.
-
-      inversion H2 ; inversion H8 ; auto.
-      inversion H11 ; inversion H16 ; subst ; intuition.
-      inversion H11 ; subst ; intuition.
-
-      inversion H13 ; inversion H8.
-      inversion H14 ; inversion H17 ; subst ; intuition.
-      admit. admit. admit. admit. admit. admit. admit.
-    + rewrite (lsl x0 x) in * ; auto.
-      clear H1 x0.
-
-(*       apply H ; intuition.
-      assert (H0' := H0). assert (H0'' := H0).
-      specialize (H0 x). specialize (H0' y). specialize (H0'' x0).
-      clear H.
-      intuition ; subst ; intuition.
-      right. intuition.
-      inversion H9 ; auto. inversion H10 ; subst ; intuition.
-      right. intuition.
-(*       inversion H11 ; inversion H6 ; auto.
-      inversion H12 ; inversion H15 ; subst ; intuition. *)
-      admit.
-      right. intuition.
-      inversion H3 ; inversion H11 ; auto.
-      inversion H15 ; inversion H12 ; subst ; intuition.
-      admit. admit.
-      right. intuition.
-      inversion H3 ; inversion H8 ; inversion H13 ; auto.
-      inversion H14 ; inversion H17 ; inversion H19 ; subst ; intuition.
-      rewrite <- H23 in *. rewrite H15 in H10. admit.
-      rewrite <- H23 in *. rewrite H5 in H10. admit.
-      inversion H14 ; inversion H19 ; subst ; intuition.
-      inversion H8 ; auto. inversion H16 ; subst ; intuition.
-      rewrite <- H21 in *. admit. *)
-
-      
-
-
-
-      destruct (V_eq_dec x (parent_i (construct_checker_input y))).
-      clear H. assert (H0' := H0).
-      specialize (H0 x). specialize (H0' y).
-      intuition.
-      rewrite <- H. auto.
-      rewrite <- H. auto.
-      rewrite <- H6 in *. intuition.
-      rewrite <- e in *.
-      inversion H2. inversion H8 ; subst ; intuition.
-      rewrite (lsl (parent_i (construct_checker_input y)) y) in * ; auto.
-      rewrite <- H12 in *.
-      rewrite H9 in H4. admit.
-      clear H0 H2 H6 H5 H7 H10 x0.
-      rewrite e in *.
-      clear e x.
-      rewrite (lsl (parent_i (construct_checker_input y)) y) in * ; auto.
-      
-
-      admit.
-      destruct (V_eq_dec y (parent_i (construct_checker_input x))).
-      admit.
-
-
-      apply H ; intuition.
-      assert (H0' := H0). assert (H0'' := H0). (* assert (H0''' := H0). *) clear H.
-      specialize (H0 x). specialize (H0' y). specialize (H0'' x0).
-      intuition.
-      right. intuition.
-      inversion H9 ; auto. inversion H10 ; subst ; intuition.
-      right. intuition.
-      inversion H11 ; inversion H6 ; auto.
-      inversion H12 ; inversion H15 ; subst ; intuition.
-      inversion H12 ; subst ; intuition.
-
-      right. intuition.
-      inversion H11 ; inversion H3 ; auto.
-      inversion H12 ; inversion H15 ; subst ; intuition.
-      inversion H12 ; subst ; intuition.
-
-      right. intuition.
-      inversion H3 ; inversion H8 ; inversion H13 ; auto.
-      inversion H14 ; inversion H17 ; inversion H19 ; subst ; intuition.
-      inversion H14 ; inversion H19 ; subst ; intuition.
-      inversion H19 ; inversion H17 ; subst ; intuition.
-      inversion H19 ; subst ; intuition.
-Admitted.
-
-(* Lemma parent_walk : forall x,
-  (forall x, v x -> checker_tree x = true) ->
-  {vl : V_list & {el : E_list & {w : Walk v a x (leader_i (construct_checker_input x)) vl el & 
-      forall v1 v2, In (E_ends v1 v2) el -> v2 = parent_i (construct_checker_input v1)}}}. *)
-
-Lemma leader_i_local : forall x, (forall x,
-  v x -> checker_tree x = true) -> v x ->
-  v (leader_i (construct_checker_input x)).
-Proof.
-  intros.
-  apply parent_walk in H0 ; auto.
-  destruct H0. destruct s.
-  apply W_endy_inv in w.
-  auto.
-Qed.
-
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
 Proof.
@@ -704,9 +531,8 @@ Proof.
     apply all_leader_same ; auto.
     assert (spanning_tree v a (leader_i (construct_checker_input v_random)) get_parent get_distance c) as G1.
     apply G2'G2. unfold Gamma_2'.
-    exists (leader_i (construct_checker_input v_random)). unfold root_prop'.
+    exists (leader_i (construct_checker_input v_random)). unfold root_prop''.
     split ; intuition.
-    apply leader_i_local ; auto.
     specialize (H1 x).
     apply checker_tree_correct in H1 ; auto.
     specialize (H0 x) ; intuition. rewrite <- H3. auto.
@@ -801,6 +627,6 @@ Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construc
     apply (Connected_Isa_Graph v a c).
     apply (G_ina_inv2 v a H5 _ _ H3).
     intuition.
-Admitted.
+Qed.
 
 End Checker.
