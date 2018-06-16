@@ -35,6 +35,96 @@ Definition distance_prop (x: Vertex) :=
 x <> root /\ distance x = distance (parent x) + 1
 \/
 (x=root) /\ distance x = 0.
+
+
+Lemma root_prop' : (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> v root.
+Proof.
+  unfold parent_prop. unfold distance_prop.
+  intros.
+  assert (forall x : Vertex,
+    v x ->
+    (x <> root /\ a (A_ends x (parent x)) /\
+    distance x = 1 + distance (parent x) \/ x = root /\ parent x = x /\ distance x = 0)).
+  intros.
+  specialize (H x). intuition.
+
+  clear H.
+
+  assert (distance root = 0).
+  induction g ; subst ; simpl in * ; intuition.
+  + specialize (H0 x).
+    assert (V_single x x). apply In_single. intuition.
+    inversion H0.
+    subst. auto.
+  + assert (y = root \/ y <> root). apply classic. destruct H1 as [new|new].
+    subst. clear H.
+    assert (H0' := H0). specialize (H0' root).
+    specialize (H0 x). assert (V_union (V_single root) v x). apply In_right. auto.
+    assert (V_union (V_single root) v root). apply In_left. apply In_single.
+    intuition.
+    apply H. clear H.
+    intros. assert (H0' := H0). specialize (H0' y).
+    specialize (H0 x0). assert (V_union (V_single y) v x0). apply In_right. auto.
+    assert (V_union (V_single y) v y). apply In_left. apply In_single.
+    intuition. left. intuition. inversion H0 ; inversion H6 ; auto. inversion H7 ; inversion H10 ; subst ; intuition.
+    rewrite <- H15 in *. intuition.
+    rewrite <- H15 in *. rewrite H5 in H8.
+    clear H5. induction (distance (parent x0)). inversion H8. inversion H8. auto.
+    inversion H7 ; subst ; intuition.
+    assert (Graph v a). apply Connected_Isa_Graph ; auto.
+    apply (G_ina_inv1 v a H9) in H10. intuition.
+  + assert (y = root \/ y <> root). apply classic. destruct H1 as [newy|newy].
+    subst.
+    assert (H0' := H0). specialize (H0' root).
+    specialize (H0 x). assert (V_union (V_single root) v x). apply In_right. auto.
+    intuition.
+    assert (x = root \/ x <> root). apply classic. destruct H1 as [newx|newx].
+    subst.
+    assert (H0' := H0). specialize (H0' root).
+    specialize (H0 y). assert (V_union (V_single root) v y). apply In_right. auto.
+    intuition.
+
+    destruct (V_eq_dec x (parent y)) as [newxx|newxx].
+    subst. clear H.
+    assert (H0' := H0). specialize (H0' y). specialize (H0 (parent y)).
+    intuition.
+
+
+    destruct (V_eq_dec y (parent x)) as [newyy|newyy].
+
+    apply H ; intuition. clear H.
+    assert (H0' := H0). specialize (H0' x). assert (H0'' := H0). specialize (H0'' x0).
+    specialize (H0 y).
+
+    intuition.
+    left. intuition.
+    inversion H2 ; inversion H0 ; inversion H7 ; auto.
+    inversion H8 ; inversion H11 ; inversion H13 ; subst ; intuition.
+    rewrite <- H17 in *. rewrite H4 in H6. admit.
+    rewrite <- H17 in *. rewrite H4 in H6. admit.
+    inversion H13 ; inversion H8 ; subst ; intuition.
+    
+
+
+(*  generalize H0. clear H0.
+
+  induction g ; subst ; simpl in * ; intuition.
+  + specialize (H0 x).
+    assert (V_single x x). apply In_single. intuition.
+    inversion H0.
+    subst. apply In_single.
+  + admit.
+  + assert ((root = x \/ root = y) \/ ~ (root = x \/ root = y)).
+    apply classic.
+    destruct H1.
+    destruct H1. subst. auto. subst. auto.
+    assert (root <> x /\ root <> y).
+    intuition.
+    clear H1. destruct H2. *)
+
+
+
 (* This is Gamma 1: there is a root component and the distance and 
    parent functions are correct in the whole network. *)
 Definition spanning_tree (c: Connected v a) :=

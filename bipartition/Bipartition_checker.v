@@ -580,7 +580,52 @@ Proof.
     + rewrite (lsl x0 x) in * ; auto.
       clear H1 x0.
 
+(*       apply H ; intuition.
+      assert (H0' := H0). assert (H0'' := H0).
+      specialize (H0 x). specialize (H0' y). specialize (H0'' x0).
+      clear H.
+      intuition ; subst ; intuition.
+      right. intuition.
+      inversion H9 ; auto. inversion H10 ; subst ; intuition.
+      right. intuition.
+(*       inversion H11 ; inversion H6 ; auto.
+      inversion H12 ; inversion H15 ; subst ; intuition. *)
+      admit.
+      right. intuition.
+      inversion H3 ; inversion H11 ; auto.
+      inversion H15 ; inversion H12 ; subst ; intuition.
+      admit. admit.
+      right. intuition.
+      inversion H3 ; inversion H8 ; inversion H13 ; auto.
+      inversion H14 ; inversion H17 ; inversion H19 ; subst ; intuition.
+      rewrite <- H23 in *. rewrite H15 in H10. admit.
+      rewrite <- H23 in *. rewrite H5 in H10. admit.
+      inversion H14 ; inversion H19 ; subst ; intuition.
+      inversion H8 ; auto. inversion H16 ; subst ; intuition.
+      rewrite <- H21 in *. admit. *)
+
+      
+
+
+
       destruct (V_eq_dec x (parent_i (construct_checker_input y))).
+      clear H. assert (H0' := H0).
+      specialize (H0 x). specialize (H0' y).
+      intuition.
+      rewrite <- H. auto.
+      rewrite <- H. auto.
+      rewrite <- H6 in *. intuition.
+      rewrite <- e in *.
+      inversion H2. inversion H8 ; subst ; intuition.
+      rewrite (lsl (parent_i (construct_checker_input y)) y) in * ; auto.
+      rewrite <- H12 in *.
+      rewrite H9 in H4. admit.
+      clear H0 H2 H6 H5 H7 H10 x0.
+      rewrite e in *.
+      clear e x.
+      rewrite (lsl (parent_i (construct_checker_input y)) y) in * ; auto.
+      
+
       admit.
       destruct (V_eq_dec y (parent_i (construct_checker_input x))).
       admit.
