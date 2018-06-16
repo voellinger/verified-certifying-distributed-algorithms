@@ -22,10 +22,8 @@ Variable root: Vertex.
 Variable parent : Vertex -> Vertex.
 (* Distance to root. *)
 Variable distance : Vertex -> nat.
-(* Root is in the set of components. *)
-Definition root_prop(c: Connected v a) := v root.
-(* Property defining the parent function. *)
 
+(* Property defining the parent function. *)
 Definition parent_prop (x :Vertex) :=
 x <> root /\ v (parent x) /\ a (A_ends x (parent x)) /\ a (A_ends (parent x) x)
 \/
@@ -35,6 +33,19 @@ Definition distance_prop (x: Vertex) :=
 x <> root /\ distance x = distance (parent x) + 1
 \/
 (x=root) /\ distance x = 0.
+
+
+
+(* This is Gamma 1: there is a root component and the distance and 
+   parent functions are correct in the whole network. *)
+Definition spanning_tree (c: Connected v a) :=
+(forall x, v x -> distance_prop x /\ parent_prop x).
+
+(* The global spanning tree of this file. *)
+Variable s : spanning_tree g.
+(************ Definitions of the tree with distance ************)
+
+
 
 
 Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
@@ -49,6 +60,7 @@ Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
 Lemma CV_list_complete : forall (v : V_set) (a : A_set) (c : Connected v a) (x : Vertex),
   v x <-> In x (CV_list v a c).
 Proof.
+  clear s.
   rename v into v'. rename a into a'.
   intros v a c x.
   split ; intros.
@@ -92,6 +104,7 @@ Qed.
 Lemma root_prop' : (forall x,
   v x -> parent_prop x /\ distance_prop x) -> v root.
 Proof.
+  clear s.
   unfold parent_prop. unfold distance_prop.
   intros.
   assert (forall x : Vertex,
@@ -170,18 +183,16 @@ assert (exists x, v x) as vx.
   destruct H2. destruct H0. inversion H2. subst. intuition.
 Qed.
 
-  
+Lemma root_prop : v root.
+Proof.
+  unfold spanning_tree in s.
+  assert (forall x : Vertex, v x -> parent_prop x /\ distance_prop x).
+  intros. specialize (s x). intuition.
+  apply root_prop' in H.
+  auto.
+Qed.
 
 
-
-(* This is Gamma 1: there is a root component and the distance and 
-   parent functions are correct in the whole network. *)
-Definition spanning_tree (c: Connected v a) :=
-root_prop c /\ (forall x, v x -> distance_prop x /\ parent_prop x).
-
-(* The global spanning tree of this file. *)
-Variable s : spanning_tree g.
-(************ Definitions of the tree with distance ************)
 
 
 (************ Some Lemmata that follow easily ************)
@@ -190,19 +201,15 @@ Lemma parent_root : v root -> parent root = root.
 Proof.
   intros rooted.
   unfold spanning_tree in s.
-  destruct s.
-  specialize (H0 root).
-  assert (v root).
-  apply rooted.
-  apply H0 in H1.
-  destruct H1.
-  unfold parent_prop in H2.
-
-  destruct H2.
-  destruct H2.
+  specialize (s root).
   intuition.
-  destruct H2.
-  apply H3.
+  unfold parent_prop in H1.
+
+  destruct H1.
+  destruct H.
+  intuition.
+  destruct H.
+  auto.
 Qed.
 
 (* The parent is part of the network. *)
@@ -210,19 +217,19 @@ Lemma parent_exists_ : forall (x :Vertex) (prop: v x), v (parent x).
 Proof.
   intros.
   unfold spanning_tree in s.
-  destruct s.
+  rename s into H0.
   specialize (H0 x).
   assert (propp := prop).
   apply H0 in prop.
   destruct prop.
-  unfold parent_prop in H2.
+  unfold parent_prop in H1.
+  destruct H1.
+  destruct H1.
   destruct H2.
-  destruct H2.
-  destruct H3.
-  apply H3.
-  destruct H2.
-  rewrite H3.
-  apply propp.
+  apply H2.
+  destruct H1.
+  rewrite H2.
+  auto.
 Qed.
 
 (* For all components (not root) the parent of it is a neighbor. *)
@@ -230,8 +237,9 @@ Lemma parent_arc: forall (c k:Vertex)(prop: v c)(prop2: v k),
   c <> root -> parent c = k -> a (A_ends c k) /\ a (A_ends k c).
 Proof.
   intros.
+  assert (v root). apply root_prop ; auto.
   unfold spanning_tree in s.
-  destruct s.
+  rename s into H2.
   assert (H3 := H2).
   specialize (H2 c).
   specialize (H3 k).
@@ -252,10 +260,10 @@ Qed.
 Lemma distance_root : distance root = 0.
 Proof.
   intros.
+  assert (v root) as H. apply root_prop ; auto.
   unfold spanning_tree in s.
-  destruct s.
+  rename s into H0.
   specialize (H0 root).
-  unfold root_prop in H.
   apply H0 in H.
   destruct H.
   unfold distance_prop in H.
@@ -270,8 +278,9 @@ Lemma distance_prop2 : forall (x:Vertex)(prop :v x),
 x <>root -> distance x = distance (parent x) + 1.
 Proof.
   intros.
+  assert (v root) as H0. apply root_prop ; auto.
   unfold spanning_tree in s.
-  destruct s.
+  rename s into H1.
   specialize (H1 x).
   apply H1 in prop.
   destruct prop.
@@ -521,8 +530,9 @@ split with A_nil.
 apply distance_root_ in H.
 rewrite H.
 apply self.
-unfold spanning_tree in *.
-destruct s.
+assert (v root) as H0. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H1.
 apply rooted.
 apply prop1.
 
@@ -534,8 +544,9 @@ apply parent_exists_ in prop1.
 apply prop1.
 apply rooted.
 
-unfold spanning_tree in s.
-destruct s.
+assert (v root) as H0. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H1.
 specialize (H1 x).
 apply H1 in prop1.
 destruct prop1.
@@ -554,8 +565,9 @@ exists (A_ends (parent x) x :: k).
 apply i.
 apply prop1.
 reflexivity.
-unfold spanning_tree in s.
-destruct s.
+assert (v root) as H0. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H1.
 specialize (H1 x).
 apply H1 in prop1.
 destruct prop1.
@@ -570,8 +582,9 @@ destruct H2.
 rewrite H4 in H.
 inversion H.
 
-unfold spanning_tree in s.
-destruct s.
+assert (v root) as H0. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H1.
 specialize (H1 x).
 apply H1 in prop1.
 destruct prop1.
@@ -656,8 +669,9 @@ apply H'.
 apply path_to_root with (x:=parent x).
 apply parent_exists_.
 apply prop1.
-unfold spanning_tree in s.
-destruct s.
+assert (v root) as H2. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H3.
 apply H2.
 reflexivity.
 Qed.
@@ -701,8 +715,9 @@ Proof.
   apply path_to_root.
   specialize (H (distance x) x prop1).
   unfold spanning_tree in s.
-  destruct s.
-  unfold root_prop in H0.
+  assert (v root) as H0. apply root_prop ; auto.
+  unfold spanning_tree in s.
+  rename s into H1.
   apply H in H0.
   apply H0.
   reflexivity.
