@@ -146,7 +146,7 @@ Proof.
   clear H.
 
 
-  assert (forall x, v x -> (x = root \/ x <> root /\ exists p, v p /\ distance x = 1 + (distance p))).
+  assert (forall x, v x -> (x = root /\ distance x = 0 \/ x <> root /\ exists p, v p /\ distance x = 1 + (distance p))).
   intros. specialize (H0 x). intuition. right. intuition.
   exists (parent x). intuition. admit.
   clear H0.
@@ -157,231 +157,42 @@ assert (exists x, v x) as vx.
     + exists y. apply In_left. apply In_single.
  -
 
-  assert (g' := g).
-  apply Connected_Isa_Graph in g'.
+
   assert (exists vl : V_list, forall v1, v v1 <-> In v1 vl). admit.
   destruct H0 as [vl vll].
   assert (forall x : Vertex,
     In x vl ->
-    x = root \/
+    x = root /\ distance x = 0 \/
     x <> root /\ (exists p : Vertex, In p vl /\ distance x = 1 + distance p)).
   intros. specialize (H x). assert (vlll := vll). specialize (vll x). intuition.
   destruct H5. intuition. right. intuition. exists x0. intuition. apply (vlll x0). auto.
   apply (vll root). destruct vx as [x vx]. apply vll in vx.
-  clear H. clear vll g' g v a parent.
+  clear H. clear vll g v a parent.
 
-  assert (exists x, In x vl /\ 
+  assert (forall x, In x vl -> distance x = 0 \/ (exists p : Vertex, In p vl /\ distance x = 1 + distance p)).
+  intros. specialize (H0 x0). intuition.
 
-  generalize H0 vx. generalize x. generalize vl. clear H0 vx x vl.
-  intro vl.
+(*   assert ((exists x, In x vl /\ distance x = 0) \/ ~(exists x, In x vl /\ distance x = 0)).
+  apply classic. destruct H1.
+  clear H.
+  destruct H1. specialize (H0 x0). intuition. subst. auto.
+  destruct H3. rewrite H2 in H0. destruct H0. inversion H3.
 
-  induction vl ; intros ; intuition.
-  simpl in *.
-  destruct (V_eq_dec a root) as [aroot|aroot].
-    subst. simpl. auto. simpl in *. right.
-    assert (H0' := H0 x vx).
-    intuition. subst. intuition.
-    subst. auto.
-    
+  intuition.
+  assert (forall x, In x vl -> distance x <> 0).
+  intros. intuition. apply H1. exists x0. auto.
+  clear H1. clear H.
+  induction vl.
+  inversion vx. simpl in *.
+  intuition.
+  subst. specialize (H0 root). intuition.  *)
 
-    destruct vx. subst.
 
-    simpl in *.
-    destruct vx.
-    subst.
-    specialize (H0 x). intuition.
-    right. destruct H2. destruct H. destruct H. subst.
-    symmetry in H2. admit.
-    
-    
+
+  assert (forall n, n <= distance x -> (exists p, In p vl /\ n = distance p)).
+  clear H0.
+
   
-
-
-  induction x.
-  assert (exists x, v x).
-  - induction g ; simpl in * ; subst ; intuition.
-    + exists x. apply In_single.
-    + exists y. apply In_left. apply In_single.
-    + exists x. auto.
-  - destruct H1. apply H0 in H1. inversion H1.
-  - simpl in *. intuition. clear H1.
-    
-  GV_list
-
-(* assert (exists x, v x).
-  - induction g ; simpl in * ; subst ; intuition.
-    + exists x. apply In_single.
-    + exists y. apply In_left. apply In_single.
-  -  *)
-    (* destruct H0.
-    
-    destruct (V_eq_dec x root). subst. auto.
-    assert ((* forall x, v x -> x <> root -> *) (exists l: list (Vertex * Vertex), forall v1 v2, In (v1,v2) l -> v v1 /\ v v2 /\ 
-            fst (hd (root, root) l) = x /\ snd (last l (x,x)) = root /\ 1 + (distance v1) = distance v2)).
-    
-    
- *)
- V_list
-
-  induction g ; subst ; intuition.
-  + admit.
-  + destruct (V_eq_dec y root). subst. apply In_left. apply In_single.
-    apply In_right.
-    assert (H' := H x). assert (V_union (V_single y) v x). apply In_right. auto.
-    specialize (H y). assert (V_union (V_single y) v y). apply In_left. apply In_single.
-    intuition. subst. auto.
-    clear H2 H3 H5.
-    destruct H5 as [parx [disparx1 disparx2]].
-    
-  
-  
-
-  assert (exists x, v x /\ distance x = 0).
-
-
-
-  assert (forall x:Vertex, v x -> parent_iteration (distance x) x = root).
-  intros.
-  assert (H0' := H0 x).  assert (H0'' := H0 (parent x)).
-  assert (v (parent x)) as vp. admit.
-  apply H0'' in vp. clear H0''.
-  induction (distance x) ; intuition ; subst ; intuition.
-  inversion H7. inversion H7.
-  simpl. inversion H7. subst.
-  
-
-
-
-
-  admit.
-  assert (exists x, v x).
-  - induction g ; simpl in * ; subst ; intuition.
-    + exists x. apply In_single.
-    + exists y. apply In_left. apply In_single.
-    + exists x. auto.
-  - destruct H1.
-    specialize (H x).
-    intuition.
-    rewrite <- H2.
-    apply parent_it_closed ; auto. intro x0.
-    assert (H0' := H0 x0).
-    unfold parent_prop. unfold distance_prop.
-    intuition.
-    left. intuition.
-    admit. admit.
-
-(* exists, ..... -> Walk v a x root vl el *)
-  assert(forall x, v x -> {vl : V_list & {el : E_list & {w : Walk v a x root vl el &
-          ((forall v1 v2, In (E_ends v1 v2) el -> (v1 = parent v2 \/ v2 = parent v1)) /\
-           length vl = distance x)}}}).
-    intros.
-    assert (H0' := H0 x).
-    induction (distance x).
-    + intuition. inversion H4. subst. admit.
-    + 
-
-    destruct (V_eq_dec x root) as [rx|rx] ; intuition.
-    admit.
-    induction H4.
-    intuition.
-    
-
-
-  assert (exists x, v x).
-  - induction g ; simpl in * ; subst ; intuition.
-    + exists x. apply In_single.
-    + exists y. apply In_left. apply In_single.
-    + exists x. auto.
-  - destruct H.
-    assert (H0' := H0). specialize (H0' x).
-    intuition.
-    
-    admit.
-    subst. auto.
-    
-
-    apply IHn. intuition.
-    specialize (H0 x). intuition.
-    apply (H0 x).
-
-    specialize (H0 root).
-    intuition.
-    
-    induction (distance x) ; simpl in * ; subst ; intuition.
-    
-    
-
-  assert (distance root = 0).
-  induction g ; subst ; simpl in * ; intuition.
-  + specialize (H0 x).
-    assert (V_single x x). apply In_single. intuition.
-    inversion H0.
-    subst. auto.
-  + assert (y = root \/ y <> root). apply classic. destruct H1 as [new|new].
-    subst. clear H.
-    assert (H0' := H0). specialize (H0' root).
-    specialize (H0 x). assert (V_union (V_single root) v x). apply In_right. auto.
-    assert (V_union (V_single root) v root). apply In_left. apply In_single.
-    intuition.
-    apply H. clear H.
-    intros. assert (H0' := H0). specialize (H0' y).
-    specialize (H0 x0). assert (V_union (V_single y) v x0). apply In_right. auto.
-    assert (V_union (V_single y) v y). apply In_left. apply In_single.
-    intuition. left. intuition. inversion H0 ; inversion H6 ; auto. inversion H7 ; inversion H10 ; subst ; intuition.
-    rewrite <- H15 in *. intuition.
-    rewrite <- H15 in *. rewrite H5 in H8.
-    clear H5. induction (distance (parent x0)). inversion H8. inversion H8. auto.
-    inversion H7 ; subst ; intuition.
-    assert (Graph v a). apply Connected_Isa_Graph ; auto.
-    apply (G_ina_inv1 v a H9) in H10. intuition.
-  + assert (y = root \/ y <> root). apply classic. destruct H1 as [newy|newy].
-    subst.
-    assert (H0' := H0). specialize (H0' root).
-    specialize (H0 x). assert (V_union (V_single root) v x). apply In_right. auto.
-    intuition.
-    assert (x = root \/ x <> root). apply classic. destruct H1 as [newx|newx].
-    subst.
-    assert (H0' := H0). specialize (H0' root).
-    specialize (H0 y). assert (V_union (V_single root) v y). apply In_right. auto.
-    intuition.
-
-    destruct (V_eq_dec x (parent y)) as [newxx|newxx].
-    subst. clear H.
-    assert (H0' := H0). specialize (H0' y). specialize (H0 (parent y)).
-    intuition.
-
-
-    destruct (V_eq_dec y (parent x)) as [newyy|newyy].
-
-    apply H ; intuition. clear H.
-    assert (H0' := H0). specialize (H0' x). assert (H0'' := H0). specialize (H0'' x0).
-    specialize (H0 y).
-
-    intuition.
-    left. intuition.
-    inversion H2 ; inversion H0 ; inversion H7 ; auto.
-    inversion H8 ; inversion H11 ; inversion H13 ; subst ; intuition.
-    rewrite <- H17 in *. rewrite H4 in H6. admit.
-    rewrite <- H17 in *. rewrite H4 in H6. admit.
-    inversion H13 ; inversion H8 ; subst ; intuition.
-    
-
-
-(*  generalize H0. clear H0.
-
-  induction g ; subst ; simpl in * ; intuition.
-  + specialize (H0 x).
-    assert (V_single x x). apply In_single. intuition.
-    inversion H0.
-    subst. apply In_single.
-  + admit.
-  + assert ((root = x \/ root = y) \/ ~ (root = x \/ root = y)).
-    apply classic.
-    destruct H1.
-    destruct H1. subst. auto. subst. auto.
-    assert (root <> x /\ root <> y).
-    intuition.
-    clear H1. destruct H2. *)
 
 
 
