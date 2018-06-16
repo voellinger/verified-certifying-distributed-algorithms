@@ -37,6 +37,102 @@ x <> root /\ distance x = distance (parent x) + 1
 (x=root) /\ distance x = 0.
 
 
+
+
+
+
+
+Lemma parent_exists_ : (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> forall (x :Vertex) (prop: v x), v (parent x).
+Proof.
+  intros.
+  specialize (H x). intuition. unfold parent_prop in H. unfold distance_prop in H1.
+  intuition. subst. rewrite H2. auto.
+Qed.
+
+Fixpoint parent_iteration (n: nat) (c: Vertex) :Vertex:= match n with
+| 0  =>  c
+|(S n)  => parent (parent_iteration n  c) 
+end.
+
+(* "parent iteration" works one time as intented. *)
+Lemma parent_it_prop : forall (n : nat) (c:Vertex),
+parent_iteration (S n) c = parent (parent_iteration n c).
+Proof.
+intros.
+auto.
+Qed.
+
+(* "parent iteration" always goes to components of the network. *)
+Lemma parent_it_closed : (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> forall (x :Vertex)(n:nat) (prop: v x), v (parent_iteration n x).
+Proof.
+  intro spann.
+intros. intuition. 
+induction n.
+unfold parent_iteration.
+apply prop.
+rewrite parent_it_prop.
+apply parent_exists_ with (x:=parent_iteration n x) ; auto. 
+Qed.
+
+(* parent iteration only follows arcs existing in the network. *)
+Lemma parent_it_arcs_induced: (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
+(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x) (parent_iteration (S n) x)) /\ a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
+Proof.
+  intros spann.
+intros.
+assert (spann' := spann (parent_iteration n x)).
+assert (v (parent_iteration n x)). apply parent_it_closed ; auto. intuition.
+unfold parent_prop in H2. intuition.
+unfold parent_prop in H2. intuition.
+Qed.
+
+(* parent iteration only follows arcs existing in the network. *)
+Lemma parent_it_arcs_induced_left: (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
+(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x) (parent_iteration (S n) x)).
+Proof.
+  intro spann.
+intros. 
+apply parent_it_arcs_induced with (n:=n)in prop.
+destruct prop as [b c] .
+apply b. auto.
+apply H.
+Qed.
+
+(* parent iteration only follows arcs existing in the network. *)
+Lemma parent_it_arcs_induced_right: (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
+(parent_iteration n x) <> root -> a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
+Proof.
+  intro spann.
+intros. 
+apply parent_it_arcs_induced with (n:=n)in prop.
+destruct prop as [b c] .
+apply c. auto.
+apply H.
+Qed.
+
+(* Parent and parent_iteration are commutative together. *)
+Lemma parent_it_commut: (forall x,
+  v x -> parent_prop x /\ distance_prop x) -> 
+(forall (x:Vertex) (n:nat) (prop1: v x),
+(parent (parent_iteration  n x)) = (parent_iteration n (parent x))).
+Proof.
+  intros spann.
+intros.
+induction n.
+unfold parent_iteration.
+reflexivity.
+rewrite parent_it_prop.
+rewrite IHn.
+rewrite parent_it_prop.
+reflexivity.
+Qed.
+
+
 Lemma root_prop' : (forall x,
   v x -> parent_prop x /\ distance_prop x) -> v root.
 Proof.
@@ -44,12 +140,176 @@ Proof.
   intros.
   assert (forall x : Vertex,
     v x ->
-    (x <> root /\ a (A_ends x (parent x)) /\
-    distance x = 1 + distance (parent x) \/ x = root /\ parent x = x /\ distance x = 0)).
-  intros.
-  specialize (H x). intuition.
-
+    {x <> root /\ a (A_ends x (parent x)) /\
+    distance x = 1 + distance (parent x)} + {x = root /\ parent x = x /\ distance x = 0}).
+  intro x. destruct (V_eq_dec x root) as [rx|rx] ; specialize (H x) ; intuition.
   clear H.
+
+
+  assert (forall x, v x -> (x = root \/ x <> root /\ exists p, v p /\ distance x = 1 + (distance p))).
+  intros. specialize (H0 x). intuition. right. intuition.
+  exists (parent x). intuition. admit.
+  clear H0.
+
+assert (exists x, v x) as vx.
+  - induction g ; simpl in * ; subst ; intuition.
+    + exists x. apply In_single.
+    + exists y. apply In_left. apply In_single.
+ -
+
+  assert (g' := g).
+  apply Connected_Isa_Graph in g'.
+  assert (exists vl : V_list, forall v1, v v1 <-> In v1 vl). admit.
+  destruct H0 as [vl vll].
+  assert (forall x : Vertex,
+    In x vl ->
+    x = root \/
+    x <> root /\ (exists p : Vertex, In p vl /\ distance x = 1 + distance p)).
+  intros. specialize (H x). assert (vlll := vll). specialize (vll x). intuition.
+  destruct H5. intuition. right. intuition. exists x0. intuition. apply (vlll x0). auto.
+  apply (vll root). destruct vx as [x vx]. apply vll in vx.
+  clear H. clear vll g' g v a parent.
+
+  assert (exists x, In x vl /\ 
+
+  generalize H0 vx. generalize x. generalize vl. clear H0 vx x vl.
+  intro vl.
+
+  induction vl ; intros ; intuition.
+  simpl in *.
+  destruct (V_eq_dec a root) as [aroot|aroot].
+    subst. simpl. auto. simpl in *. right.
+    assert (H0' := H0 x vx).
+    intuition. subst. intuition.
+    subst. auto.
+    
+
+    destruct vx. subst.
+
+    simpl in *.
+    destruct vx.
+    subst.
+    specialize (H0 x). intuition.
+    right. destruct H2. destruct H. destruct H. subst.
+    symmetry in H2. admit.
+    
+    
+  
+
+
+  induction x.
+  assert (exists x, v x).
+  - induction g ; simpl in * ; subst ; intuition.
+    + exists x. apply In_single.
+    + exists y. apply In_left. apply In_single.
+    + exists x. auto.
+  - destruct H1. apply H0 in H1. inversion H1.
+  - simpl in *. intuition. clear H1.
+    
+  GV_list
+
+(* assert (exists x, v x).
+  - induction g ; simpl in * ; subst ; intuition.
+    + exists x. apply In_single.
+    + exists y. apply In_left. apply In_single.
+  -  *)
+    (* destruct H0.
+    
+    destruct (V_eq_dec x root). subst. auto.
+    assert ((* forall x, v x -> x <> root -> *) (exists l: list (Vertex * Vertex), forall v1 v2, In (v1,v2) l -> v v1 /\ v v2 /\ 
+            fst (hd (root, root) l) = x /\ snd (last l (x,x)) = root /\ 1 + (distance v1) = distance v2)).
+    
+    
+ *)
+ V_list
+
+  induction g ; subst ; intuition.
+  + admit.
+  + destruct (V_eq_dec y root). subst. apply In_left. apply In_single.
+    apply In_right.
+    assert (H' := H x). assert (V_union (V_single y) v x). apply In_right. auto.
+    specialize (H y). assert (V_union (V_single y) v y). apply In_left. apply In_single.
+    intuition. subst. auto.
+    clear H2 H3 H5.
+    destruct H5 as [parx [disparx1 disparx2]].
+    
+  
+  
+
+  assert (exists x, v x /\ distance x = 0).
+
+
+
+  assert (forall x:Vertex, v x -> parent_iteration (distance x) x = root).
+  intros.
+  assert (H0' := H0 x).  assert (H0'' := H0 (parent x)).
+  assert (v (parent x)) as vp. admit.
+  apply H0'' in vp. clear H0''.
+  induction (distance x) ; intuition ; subst ; intuition.
+  inversion H7. inversion H7.
+  simpl. inversion H7. subst.
+  
+
+
+
+
+  admit.
+  assert (exists x, v x).
+  - induction g ; simpl in * ; subst ; intuition.
+    + exists x. apply In_single.
+    + exists y. apply In_left. apply In_single.
+    + exists x. auto.
+  - destruct H1.
+    specialize (H x).
+    intuition.
+    rewrite <- H2.
+    apply parent_it_closed ; auto. intro x0.
+    assert (H0' := H0 x0).
+    unfold parent_prop. unfold distance_prop.
+    intuition.
+    left. intuition.
+    admit. admit.
+
+(* exists, ..... -> Walk v a x root vl el *)
+  assert(forall x, v x -> {vl : V_list & {el : E_list & {w : Walk v a x root vl el &
+          ((forall v1 v2, In (E_ends v1 v2) el -> (v1 = parent v2 \/ v2 = parent v1)) /\
+           length vl = distance x)}}}).
+    intros.
+    assert (H0' := H0 x).
+    induction (distance x).
+    + intuition. inversion H4. subst. admit.
+    + 
+
+    destruct (V_eq_dec x root) as [rx|rx] ; intuition.
+    admit.
+    induction H4.
+    intuition.
+    
+
+
+  assert (exists x, v x).
+  - induction g ; simpl in * ; subst ; intuition.
+    + exists x. apply In_single.
+    + exists y. apply In_left. apply In_single.
+    + exists x. auto.
+  - destruct H.
+    assert (H0' := H0). specialize (H0' x).
+    intuition.
+    
+    admit.
+    subst. auto.
+    
+
+    apply IHn. intuition.
+    specialize (H0 x). intuition.
+    apply (H0 x).
+
+    specialize (H0 root).
+    intuition.
+    
+    induction (distance x) ; simpl in * ; subst ; intuition.
+    
+    
 
   assert (distance root = 0).
   induction g ; subst ; simpl in * ; intuition.
