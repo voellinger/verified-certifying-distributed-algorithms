@@ -567,12 +567,12 @@ Proof.
     specialize (H2 x).
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
-              Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
+      Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
 
 
     assert (forall (y z : Component) (n : nat),
-  In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
-    is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
+      In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
+      is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
     apply checker_input_correct0.
     clear H1.
 
@@ -589,15 +589,13 @@ Proof.
     exists c0. exists c1.
     rewrite e0 in *. intuition.
     unfold eqb in H0.
-    assert ({y : Component &
-      {z : Component &
+    assert ({y : Component & {z : Component &
       In (y, z, distance_i (construct_checker_input y)) l /\
       Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}} -> 
-            {y : Component &
-{z : Component &
-((c0, c1, distance_i (construct_checker_input c0)) = (y, z, distance_i (construct_checker_input y)) \/
- In (y, z, distance_i (construct_checker_input y)) l) /\
-Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
+      {y : Component & {z : Component &
+      ((c0, c1, distance_i (construct_checker_input c0)) = (y, z, distance_i (construct_checker_input y)) \/
+      In (y, z, distance_i (construct_checker_input y)) l) /\
+      Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
     intros. destruct H1. destruct s. exists x0. exists x1. intuition.
     apply H1. clear H1.
     apply IHl ; auto.
