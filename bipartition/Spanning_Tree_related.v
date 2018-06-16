@@ -52,7 +52,6 @@ Proof.
   intros rooted.
   unfold spanning_tree in s.
   destruct s.
-  unfold root_prop in H0.
   specialize (H0 root).
   assert (v root).
   apply rooted.
@@ -73,7 +72,6 @@ Proof.
   intros.
   unfold spanning_tree in s.
   destruct s.
-  unfold root_prop in H0.
   specialize (H0 x).
   assert (propp := prop).
   apply H0 in prop.
@@ -386,7 +384,6 @@ rewrite H.
 apply self.
 unfold spanning_tree in *.
 destruct s.
-unfold root_prop. 
 apply rooted.
 apply prop1.
 
