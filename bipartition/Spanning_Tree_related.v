@@ -714,7 +714,6 @@ Proof.
   assert (forall (n:nat) (x:Vertex) (prop1 : v x), v root ->  distance x = n -> {al : A_list & Connection x root al n }).
   apply path_to_root.
   specialize (H (distance x) x prop1).
-  unfold spanning_tree in s.
   assert (v root) as H0. apply root_prop ; auto.
   unfold spanning_tree in s.
   rename s into H1.

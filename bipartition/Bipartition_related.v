@@ -58,11 +58,11 @@ Definition neighbors_with_same_color (v:V_set) (a:A_set)(c: Connected v a) (t : 
 Definition gamma_2 (v:V_set) (a:A_set) (root x : Component) := 
  parent_prop v a root parent x /\ distance_prop root parent distance x.
 (* Prop: is this the root component or not? *)
-Definition root_prop' (v : V_set) (c : Component) :=
-  v c /\ root = c.
+Definition root_prop'' (v : V_set) (c : Component) :=
+  root = c.
 (* there is a root such that (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2' (v:V_set) (a:A_set) (c: Connected v a) :=
-  (exists (r: Component), root_prop' v r  /\ forall (x : Component), v x -> gamma_2 v a r x).
+  (exists (r: Component), root_prop'' v r  /\ forall (x : Component), v x -> gamma_2 v a r x).
 (* (root, parent, distance) form a correct spanning tree *)
 Definition Gamma_2 (v:V_set) (a:A_set) (c: Connected v a) :=
   spanning_tree v a root parent distance c.
@@ -86,9 +86,10 @@ Proof.
   intros.
   destruct H.
   destruct H.
-  unfold root_prop' in H.
-  destruct H. subst.
-  split ; intros ; auto. specialize (H0 x0) ; intuition.
+  unfold root_prop'' in H.
+  subst.
+  specialize (H1 x).
+  intuition.
 Qed.
 
 (* 
@@ -281,9 +282,11 @@ Proof.
   assert (H4 := H2).
 
   assert (temp'' := t).
+  assert (v root) as H3. apply (root_prop v a c root parent distance) ; auto.
   unfold spanning_tree in t.
-  destruct t.
-  unfold root_prop in H3.
+  rename t into H5.
+
+
   rename H3 into rooted.
 
   apply (path_to_root2 v a c root parent distance) in H.
