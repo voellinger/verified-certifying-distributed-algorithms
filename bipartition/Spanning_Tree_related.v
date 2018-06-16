@@ -37,100 +37,56 @@ x <> root /\ distance x = distance (parent x) + 1
 (x=root) /\ distance x = 0.
 
 
+Fixpoint CV_list (v : V_set) (a : A_set) (c: Connected v a) {struct c} :
+ V_list :=
+  match c with
+  | C_isolated x => x::V_nil
+  | C_leaf v' a' c' x y _ _ => y :: CV_list v' a' c'
+  | C_edge v' a' c' x y _ _ _ _ _  => CV_list v' a' c'
+  | C_eq v' _ a' _ _ _ c' => CV_list v' a' c'
+  end.
 
-
-
-
-
-Lemma parent_exists_ : (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> forall (x :Vertex) (prop: v x), v (parent x).
+Lemma CV_list_complete : forall (v : V_set) (a : A_set) (c : Connected v a) (x : Vertex),
+  v x <-> In x (CV_list v a c).
 Proof.
-  intros.
-  specialize (H x). intuition. unfold parent_prop in H. unfold distance_prop in H1.
-  intuition. subst. rewrite H2. auto.
+  rename v into v'. rename a into a'.
+  intros v a c x.
+  split ; intros.
+  - induction c.
+    + simpl.
+      inversion H.
+      auto.
+    + simpl.
+      inversion H.
+      inversion H0.
+      auto.
+      right.
+      apply (IHc H0).
+    + simpl.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
+  - induction c.
+    + simpl in H.
+      destruct H.
+      rewrite H.
+      apply In_single.
+      inversion H.
+    + simpl in H.
+      destruct H.
+      rewrite <- H.
+      apply In_left.
+      apply In_single.
+      apply In_right.
+      apply (IHc H).
+    + simpl in H.
+      apply (IHc H).
+    + rewrite <- e in *.
+      rewrite <- e0 in *.
+      apply (IHc H).
 Qed.
 
-Fixpoint parent_iteration (n: nat) (c: Vertex) :Vertex:= match n with
-| 0  =>  c
-|(S n)  => parent (parent_iteration n  c) 
-end.
-
-(* "parent iteration" works one time as intented. *)
-Lemma parent_it_prop : forall (n : nat) (c:Vertex),
-parent_iteration (S n) c = parent (parent_iteration n c).
-Proof.
-intros.
-auto.
-Qed.
-
-(* "parent iteration" always goes to components of the network. *)
-Lemma parent_it_closed : (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> forall (x :Vertex)(n:nat) (prop: v x), v (parent_iteration n x).
-Proof.
-  intro spann.
-intros. intuition. 
-induction n.
-unfold parent_iteration.
-apply prop.
-rewrite parent_it_prop.
-apply parent_exists_ with (x:=parent_iteration n x) ; auto. 
-Qed.
-
-(* parent iteration only follows arcs existing in the network. *)
-Lemma parent_it_arcs_induced: (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
-(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x) (parent_iteration (S n) x)) /\ a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
-Proof.
-  intros spann.
-intros.
-assert (spann' := spann (parent_iteration n x)).
-assert (v (parent_iteration n x)). apply parent_it_closed ; auto. intuition.
-unfold parent_prop in H2. intuition.
-unfold parent_prop in H2. intuition.
-Qed.
-
-(* parent iteration only follows arcs existing in the network. *)
-Lemma parent_it_arcs_induced_left: (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
-(parent_iteration n x) <> root -> a (A_ends (parent_iteration n x) (parent_iteration (S n) x)).
-Proof.
-  intro spann.
-intros. 
-apply parent_it_arcs_induced with (n:=n)in prop.
-destruct prop as [b c] .
-apply b. auto.
-apply H.
-Qed.
-
-(* parent iteration only follows arcs existing in the network. *)
-Lemma parent_it_arcs_induced_right: (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> forall (x:Vertex)(prop: v x)(n:nat), 
-(parent_iteration n x) <> root -> a (A_ends (parent_iteration (S n) x)(parent_iteration n x)).
-Proof.
-  intro spann.
-intros. 
-apply parent_it_arcs_induced with (n:=n)in prop.
-destruct prop as [b c] .
-apply c. auto.
-apply H.
-Qed.
-
-(* Parent and parent_iteration are commutative together. *)
-Lemma parent_it_commut: (forall x,
-  v x -> parent_prop x /\ distance_prop x) -> 
-(forall (x:Vertex) (n:nat) (prop1: v x),
-(parent (parent_iteration  n x)) = (parent_iteration n (parent x))).
-Proof.
-  intros spann.
-intros.
-induction n.
-unfold parent_iteration.
-reflexivity.
-rewrite parent_it_prop.
-rewrite IHn.
-rewrite parent_it_prop.
-reflexivity.
-Qed.
 
 
 Lemma root_prop' : (forall x,
@@ -148,17 +104,21 @@ Proof.
 
   assert (forall x, v x -> (x = root /\ distance x = 0 \/ x <> root /\ exists p, v p /\ distance x = 1 + (distance p))).
   intros. specialize (H0 x). intuition. right. intuition.
-  exists (parent x). intuition. admit.
+  exists (parent x). intuition.
+  assert (Graph v a). apply Connected_Isa_Graph ; auto.
+  apply (G_ina_inv2 v a) in H2 ; auto.
   clear H0.
 
 assert (exists x, v x) as vx.
-  - induction g ; simpl in * ; subst ; intuition.
+  {induction g ; simpl in * ; subst ; intuition.
     + exists x. apply In_single.
-    + exists y. apply In_left. apply In_single.
- -
+    + exists y. apply In_left. apply In_single. }
 
 
-  assert (exists vl : V_list, forall v1, v v1 <-> In v1 vl). admit.
+
+  assert (exists vl : V_list, forall v1, v v1 <-> In v1 vl).
+  exists (CV_list v a g).
+  apply CV_list_complete.
   destruct H0 as [vl vll].
   assert (forall x : Vertex,
     In x vl ->
@@ -172,25 +132,43 @@ assert (exists x, v x) as vx.
   assert (forall x, In x vl -> distance x = 0 \/ (exists p : Vertex, In p vl /\ distance x = 1 + distance p)).
   intros. specialize (H0 x0). intuition.
 
-(*   assert ((exists x, In x vl /\ distance x = 0) \/ ~(exists x, In x vl /\ distance x = 0)).
-  apply classic. destruct H1.
-  clear H.
-  destruct H1. specialize (H0 x0). intuition. subst. auto.
-  destruct H3. rewrite H2 in H0. destruct H0. inversion H3.
+  assert ((exists x, In x vl /\ distance x = 0) -> In root vl).
+  intros. destruct H1. specialize (H0 x0). intuition. subst. auto.
+  destruct H4. destruct H0. rewrite H3 in H4. inversion H4.
+  apply H1.
+  clear H1 H0.
 
-  intuition.
-  assert (forall x, In x vl -> distance x <> 0).
-  intros. intuition. apply H1. exists x0. auto.
-  clear H1. clear H.
+  assert (exists l : list nat, map distance vl = l).
+  {clear H vx x.
   induction vl.
-  inversion vx. simpl in *.
-  intuition.
-  subst. specialize (H0 root). intuition.  *)
+  + exists nil. auto.
+  + destruct IHvl. exists ((distance a) :: x). simpl. subst. auto. }
+  destruct H0.
+  assert (In 0 x0 -> (exists x1 : Vertex, In x1 vl /\ distance x1 = 0)).
+  intuition. rewrite <- H0 in H1. apply in_map_iff in H1.
+  destruct H1. exists x1. intuition.
+  apply H1. clear H1.
 
+  assert (exists n, In n x0). exists (distance x). rewrite <- H0. apply in_map_iff.
+  exists x. intuition.
+  clear vx. destruct H1.
+  assert (forall n : nat,
+    In n x0 ->
+    n = 0 \/
+    (exists n' : nat, In n' x0 /\ n = 1 + n')).
+  intros. rewrite <- H0 in H2. apply in_map_iff in H2.
+  destruct H2. specialize (H x2). intuition.
+  destruct H.
+  right. exists (distance x3). subst. intuition. apply in_map_iff. exists x3. auto.
+  clear H H0 vl x.
 
+  rename x0 into nl. rename x1 into x.
 
-  assert (forall n, n <= distance x -> (exists p, In p vl /\ n = distance p)).
-  clear H0.
+  induction x.
+  auto.
+  specialize (H2 (S x)). intuition. inversion H2.
+  destruct H2. destruct H0. inversion H2. subst. intuition.
+Qed.
 
   
 
