@@ -164,11 +164,11 @@ Axiom checker_input_correct1 : forall (x1 x2 : Component),
     is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
 
 Axiom checker_input_correct2 : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
+  In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 
 Axiom checker_input_correct5 : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
+  In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 
 Lemma checker_input_correct4 : forall (x y : Component),
@@ -312,8 +312,6 @@ Proof.
   rewrite <- H2 in *.
   apply checker_input_correct1 in H3.
   rewrite checker_input_correct2 in * ; auto.
-  rewrite H3 in *.
-  clear H3.
   subst.
   clear H1 H2.
   apply local_input_correct in H2'.
@@ -630,3 +628,8 @@ Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construc
 Qed.
 
 End Checker.
+
+
+
+Recursive Extraction checker_local_bipartition.
+Recursive Extraction checker_tree.
