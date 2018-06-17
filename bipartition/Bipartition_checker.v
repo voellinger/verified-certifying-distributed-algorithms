@@ -9,6 +9,7 @@ Extraction Language Haskell.
 
 Section Checker.
 
+(******** Interface of checker *********)
 Variable v : V_set.
 Variable a : A_set.
 Variable c : Connected v a.
@@ -17,9 +18,8 @@ Variable bipartite_answer : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
+(******** /Interface of checker *********)
 
-
-Variable dummy : Component.
 
 Record local_input: Set := mk_local_input {
   i : Component;
@@ -27,11 +27,11 @@ Record local_input: Set := mk_local_input {
 }.
 
 Record checker_input : Set := mk_checker_input {
-algo_answer : bool;
-leader_i : Component;
-distance_i : nat;
-parent_i : Component;
-neighbor_leader_distance : list (Component * Component * nat)
+  algo_answer : bool;
+  leader_i : Component;
+  distance_i : nat;
+  parent_i : Component;
+  neighbor_leader_distance : list (Component * Component * nat)
 }.
 
 (*CA_list: all arcs of a Connected-graph*)
@@ -43,6 +43,30 @@ Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
   | C_edge v' a' c' x y _ _ _ _ _ => A_ends x y :: A_ends y x :: CA_list v' a' c'
   | C_eq v' _ a' _ _ _ c' => CA_list v' a' c'
   end.
+
+Definition neighbors (x: Component) : list Component :=
+  (A_in_neighborhood x (CA_list v a c)).
+
+Definition construct_local_input (x: Component) : local_input :=
+  mk_local_input x (neighbors x).
+
+Fixpoint construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
+  match l with
+  | nil => nil
+  | hd :: tl => (hd, leader hd, distance hd) :: (construct_checker_input_neighbor_list tl)
+  end.
+
+Definition construct_checker_input (x : Component) : checker_input :=
+  mk_checker_input 
+    bipartite_answer 
+    (leader x) 
+    (distance x) 
+    (parent x)
+    (construct_checker_input_neighbor_list (nodup V_eq_dec (construct_local_input x).(neighbours))).
+
+
+
+
 
 Lemma CA_list_complete : forall (v : V_set) (a : A_set) (c : Connected v a) (x : Arc),
   a x <-> In x (CA_list v a c).
@@ -85,12 +109,6 @@ Proof. clear v a c.
       rewrite <- e0 in *.
       apply (IHc0 ) ; auto.
 Qed.
-
-Definition neighbors (x: Component) : list Component :=
-(A_in_neighborhood x (CA_list v a c)).
-
-Definition construct_local_input (x: Component) : local_input :=
-mk_local_input x (neighbors x).
 
 Lemma local_input_correct: forall (x1 x2: Component),
   In x2 (construct_local_input x1).(neighbours) <-> a (A_ends x1 x2).
@@ -135,21 +153,6 @@ Proof.
     intuition.
 Qed.
 
-Fixpoint construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
-  match l with
-  | nil => nil
-  | hd :: tl => (hd, leader hd, distance hd) :: (construct_checker_input_neighbor_list tl)
-  end.
-
-
-Definition construct_checker_input (x : Component) : checker_input :=
-  mk_checker_input 
-    bipartite_answer 
-    (leader x) 
-    (distance x) 
-    (parent x)
-    (construct_checker_input_neighbor_list (nodup V_eq_dec (neighbors x))).
-
 Fixpoint is_not_in (x : Component) (l : list (Component * Component * nat)) : Prop :=
   match l with
   | nil => True
@@ -168,9 +171,17 @@ Fixpoint get_distance_in_list (x : Component) (l : list (Component * Component *
   | (y,z,n) :: tl => if V_eq_dec x y then n else get_distance_in_list x tl
   end.
 
+Fixpoint get_root (v : V_set) (a : A_set) (c : Connected v a) : Component :=
+  match c with
+  | C_isolated x => x
+  | C_leaf v' a' c' x y _ _ => get_root v' a' c'
+  | C_edge v' a' c' x y _ _ _ _ _ => get_root v' a' c'
+  | C_eq v' _ a' _ _ _ c' => get_root v' a' c'
+  end.
+
 Fixpoint get_leader_in_list (x : Component) (l : list (Component * Component * nat)) : Component :=
   match l with
-  | nil => dummy
+  | nil => (get_root v a c)
   | (y,z,n) :: tl => if V_eq_dec x y then z else get_leader_in_list x tl
   end.
 
@@ -184,6 +195,16 @@ Proof.
   destruct (V_eq_dec x c0) ; subst ; intuition.
   exists c1. exists n. auto.
   destruct H3. destruct H3. exists x0. exists x1. auto.
+Qed.
+
+Lemma is_not_in_correct : forall l a b c,
+  is_not_in a l -> ~ In (a,b,c) l.
+Proof.
+  intro l.
+  induction l ; simpl in * ; intuition.
+  inversion H4. subst. destruct (V_eq_dec a1 a1) ; intuition.
+  destruct (V_eq_dec a1 a0) ; intuition.
+  specialize (IHl a1 b1 c0) ; intuition.
 Qed.
 
 Lemma is_not_in_correct' : forall l x,
@@ -383,7 +404,6 @@ Definition get_parent (x : Component) : Component :=
 Definition get_leader (x : Component) : Component :=
   (construct_checker_input x).(leader_i).
 
-
 Lemma checker_bipartite_correct : forall x : Component,
   v x ->
   checker_local_bipartition x = true ->
@@ -554,16 +574,6 @@ Proof.
     destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
 Qed.
 
-Lemma is_not_in_correct : forall l a b c,
-  is_not_in a l -> ~ In (a,b,c) l.
-Proof.
-  intro l.
-  induction l ; simpl in * ; intuition.
-  inversion H4. subst. destruct (V_eq_dec a1 a1) ; intuition.
-  destruct (V_eq_dec a1 a0) ; intuition.
-  specialize (IHl a1 b1 c0) ; intuition.
-Qed.
-
 Theorem checker_correct :
  ((forall (x : Component), v x ->
   (checker_local_bipartition x) = true) -> bipartite a) /\
@@ -574,7 +584,7 @@ Theorem checker_correct :
   (checker_local_bipartition x) = false)) -> ~ bipartite a).
 Proof.
   split ; intros.
-  - apply (Gamma_1_Psi1 dummy get_parent get_distance v a c get_color).
+  - apply (Gamma_1_Psi1 (get_root v a c) get_parent get_distance v a c get_color).
     unfold Gamma_1.
     intros.
     apply checker_bipartite_correct ; intros ; auto.
