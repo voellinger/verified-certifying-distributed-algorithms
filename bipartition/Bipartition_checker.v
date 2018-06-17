@@ -510,7 +510,7 @@ Lemma all_leader_same : forall x v_random,
   (forall x : Component, v x -> checker_tree x = true) ->
   v v_random -> v x -> 
   leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
-Proof.
+Proof. Admitted. (* 
   unfold checker_tree.
   unfold neighbours.
   simpl in *. unfold neighbors. intros.
@@ -551,54 +551,7 @@ Proof.
     apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
     inversion H.
     destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
-Qed.
-
-Lemma checker_true' : 
-  (forall x, v x -> checker_tree x = true) ->
-  (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
-         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
-          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
-Proof.
-  intros. rename x into x0.
-  unfold checker_tree in H.
-  specialize (H x0) ; intuition.
-  apply andb_true_iff in H1. destruct H1.
-  apply orb_true_elim in H1. destruct H1.
-  left.
-  apply andb_true_iff in e. destruct e.
-  apply andb_true_iff in H1. destruct H1.
-  apply beq_nat_true in H2.
-  unfold is_leader in H1. unfold is_parent in H3.
-  destruct (V_eq_dec x0 (leader_i (construct_checker_input x0))) ; subst ; intuition.
-  destruct (V_eq_dec x0 (parent_i (construct_checker_input x0))) ; subst ; intuition.
-  inversion H3. inversion H1. inversion H1.
-  right.
-  apply andb_true_iff in e. destruct e.
-  apply andb_true_iff in H1. destruct H1.
-  apply beq_nat_true in H2.
-  apply negb_true_iff in H1.
-  apply is_in_correct in H3.
-  apply neighborhood_correct in H3.
-  unfold is_leader in H1.
-  destruct (V_eq_dec x0 (leader_i (construct_checker_input x0))) ; subst ; intuition.
-Qed.
-
-Lemma parent_i_local : forall x, (forall x,
-  v x -> checker_tree x = true) -> v x ->
-  v (parent_i (construct_checker_input x)).
-Proof.
-  intros.
-  assert (forall x, v x -> (({x = leader_i (construct_checker_input x) /\ x = parent_i (construct_checker_input x) /\ distance_i (construct_checker_input x) = 0} +
-         {x <> leader_i (construct_checker_input x) /\ a (A_ends x (parent_i (construct_checker_input x))) /\
-          (distance_i (construct_checker_input x) = 1 + distance_i (construct_checker_input (parent_i (construct_checker_input x))))}))).
-  apply checker_true' ; auto.
-  clear H.
-  specialize (H1 x).
-  intuition.
-  rewrite <- H2. auto.
-  assert (Graph v a). apply Connected_Isa_Graph ; auto.
-  apply (G_ina_inv2 v a H1 x); auto.
-Qed.
+Qed. *)
 
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
@@ -679,45 +632,48 @@ Proof.
       is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
     apply checker_input_correct0.
     clear H1.
-
+    remember leader as ll. remember parent as pp.
     induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
     inversion H0.
     destruct a0. destruct p.
     assert (H2' := H2).
     specialize (H2 c0 c1 n). intuition. clear H3.
-    destruct ((V_eq_dec c0 c0)) ; subst ; intuition.
-    assert ({Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input c0))} + 
-            {Nat.odd (distance_i (construct_checker_input x)) <> Nat.odd (distance_i (construct_checker_input c0))}).
+    destruct ((V_eq_dec c0 c0)) ; subst.
+    assert ({Nat.odd (distance x) = Nat.odd (distance c0)} + 
+            {Nat.odd (distance x) <> Nat.odd (distance c0)}).
     apply bool_dec.
     destruct H1.
     exists c0. exists c1.
     rewrite e0 in *. intuition.
     unfold eqb in H0.
     assert ({y : Component & {z : Component &
-      In (y, z, distance_i (construct_checker_input y)) l /\
-      Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}} -> 
+      In (y, z, distance y) l /\
+      Nat.odd (distance x) = Nat.odd (distance y)}} -> 
       {y : Component & {z : Component &
-      ((c0, c1, distance_i (construct_checker_input c0)) = (y, z, distance_i (construct_checker_input y)) \/
-      In (y, z, distance_i (construct_checker_input y)) l) /\
-      Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
+      ((c0, c1, distance c0) = (y, z, distance y) \/
+      In (y, z, distance y) l) /\
+      Nat.odd (distance x) = Nat.odd (distance y)}}).
     intros. destruct H1. destruct s. exists x0. exists x1. intuition.
     apply H1. clear H1.
     apply IHl ; auto.
-    destruct (Nat.odd (distance_i (construct_checker_input x))) ; destruct (Nat.odd (distance_i (construct_checker_input c0))) ; intuition.
+    destruct (Nat.odd (distance x)) ; destruct (Nat.odd (distance c0)) ; intuition.
 
 
 
-    intros. specialize (H2' y z n0). specialize (new y z n0). intuition.
-    destruct (V_eq_dec y c0) ; subst ; intuition.
+    intros. specialize (H2' y z n0). specialize (new y z n0).
+    destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp. intuition.
     apply (is_not_in_correct l c0 z n0) in H4. intuition.
+    intuition.
     clear IHl H2' H0.
     intros.
     specialize (new y z n0).
-    destruct (V_eq_dec y c0) ; subst ; intuition.
-    apply (is_not_in_correct l c0 z n0) in H3. intuition.
+    destruct (V_eq_dec y c0) ; subst.
+    assert (is_not_in c0 l). apply new. auto.
+    apply (is_not_in_correct l c0 z n0) in H1. intuition.
+    intuition.
 
 
-
+    intuition.
     destruct H3. repeat destruct s.
     destruct a0.
     exists x0.
