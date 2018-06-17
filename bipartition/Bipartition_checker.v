@@ -510,7 +510,7 @@ Lemma all_leader_same : forall x v_random,
   (forall x : Component, v x -> checker_tree x = true) ->
   v v_random -> v x -> 
   leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
-Proof. Admitted. (* 
+Proof. 
   unfold checker_tree.
   unfold neighbours.
   simpl in *. unfold neighbors. intros.
@@ -539,19 +539,20 @@ Proof. Admitted. (*
     simpl in *.
     rewrite <- H2. clear H2.
 
-    unfold neighbors in a0.
-    induction (construct_checker_input_neighbor_list (A_in_neighborhood x (CA_list v a c))) ; simpl in * ; intuition.
-  
+    unfold neighbors in *.
+
+    remember leader as ll. remember parent as pp. remember distance as dd.
+    induction (construct_checker_input_neighbor_list (nodup V_eq_dec (A_in_neighborhood x (CA_list v a c)))) ; simpl in * ; intuition.
     destruct a1. destruct p.
-    destruct (V_eq_dec y c0) ; subst ; intuition.
+    destruct (V_eq_dec y c0) ; subst.
     inversion H2. subst. intuition. inversion H2. subst. intuition.
     destruct a1. destruct p.
-    destruct (V_eq_dec y c0) ; subst ; intuition.
-    destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
+    destruct (V_eq_dec y c0) ; subst.
+    destruct (V_eq_dec (leader x) c1) ; subst.
     apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
     inversion H.
-    destruct (V_eq_dec (leader_i (construct_checker_input x)) c1) ; subst ; intuition.
-Qed. *)
+    destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
+Qed.
 
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
