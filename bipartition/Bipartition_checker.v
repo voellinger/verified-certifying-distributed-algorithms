@@ -35,8 +35,7 @@ Record checker_input : Set := mk_checker_input {
 }.
 
 (*CA_list: all arcs of a Connected-graph*)
-Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} :
- A_list :=
+Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} : A_list :=
   match c with
   | C_isolated x => A_nil
   | C_leaf v' a' c' x y _ _ => A_ends x y :: A_ends y x :: CA_list v' a' c'
@@ -48,7 +47,9 @@ Definition neighbors (x: Component) : list Component :=
   (A_in_neighborhood x (CA_list v a c)).
 
 Definition construct_local_input (x: Component) : local_input :=
-  mk_local_input x (neighbors x).
+  mk_local_input 
+    x 
+    (neighbors x).
 
 Fixpoint construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
   match l with
