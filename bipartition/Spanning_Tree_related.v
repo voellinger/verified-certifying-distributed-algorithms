@@ -3,7 +3,7 @@ Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Prop.
 
 
-(* Edited and improved file of Samira Akilis Master's thesis (2018) - also in this git:
+(* Edited and improved file of Samira Akili - also in this git:
   leader-election/composition_witness_prop_leader_election.v *)
 
 Section Spanning_Tree.
