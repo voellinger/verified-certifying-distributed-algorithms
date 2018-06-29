@@ -2,10 +2,33 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Connected.
 Require Import Coq.Logic.Classical_Prop.
 
-
+Require FunInd.
 
 
 Section Help.
+
+
+Function get_end_vertex (a : Arc) (b : bool) : Vertex :=
+  match a with
+  | A_ends x y => match b with
+	      | true => x
+	      | false => y
+        end
+  end.
+
+Lemma get_end_vertex_correct : forall (a : Arc) (b : bool) (x y : Vertex),
+  a = A_ends x y ->
+  get_end_vertex a b = x \/ get_end_vertex a b = y.
+Proof.
+  intros.
+  rewrite H.
+  simpl.
+  destruct b.
+  + left.
+    reflexivity.
+  + right.
+    reflexivity.
+Qed.
 
 (* Our terminology for members of a network (graph). *)
 Definition Component := Vertex.
