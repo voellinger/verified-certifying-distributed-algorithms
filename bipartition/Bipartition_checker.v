@@ -9,16 +9,18 @@ Extraction Language Haskell.
 
 Section Checker.
 
-(******** Interface of checker *********)
+(******** Network of the algorithm *********)
 Variable v : V_set.
 Variable a : A_set.
 Variable c : Connected v a.
+(********/Network of the algorithm *********)
 
+(******** Interface of checker *********)
 Variable bipartite_answer : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
-(******** /Interface of checker *********)
+(********/Interface of checker *********)
 
 
 Record local_input: Set := mk_local_input {
