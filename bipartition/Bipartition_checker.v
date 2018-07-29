@@ -576,6 +576,7 @@ Proof.
     inversion H.
     destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
 Qed.
+  
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->

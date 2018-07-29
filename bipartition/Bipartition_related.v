@@ -27,7 +27,6 @@ Section Bipartion_related.
 
 (* a special component of a tree - its own parent, see next function *)
 Variable root: Component.
-
 (* a function that points towards the root of a tree *)
 Variable parent : Component -> Component.
 (* a function that holds the distance of the parent-path from this component to the root of a tree *)
