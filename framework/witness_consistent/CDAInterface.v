@@ -98,7 +98,7 @@ Proof.
   rewrite e.
   destruct var_eq_dec ; auto ; intuition.
   destruct var_eq_dec ; intuition.
-Qed.var_eq_diff
+Qed.
 
 Lemma var_eq_diff : forall x y : Var, x <> y -> var_beq x y = false.
 Proof.
