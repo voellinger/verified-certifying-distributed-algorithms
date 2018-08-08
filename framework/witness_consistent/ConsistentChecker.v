@@ -1224,7 +1224,7 @@ Proof.
       apply eqb_false_iff in Heqb. intuition.
 Qed.
 
-Lemma not_parent_in_packets : forall x' tr,
+(* Lemma not_parent_in_packets : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
   forall pSrc pDst pBody pDst2 pBody2,
@@ -1277,7 +1277,7 @@ intros net tr H.
       apply in_or_app. simpl. apply in_app_or in H2. destruct H2 ; auto.
       apply in_or_app. simpl. apply in_app_or in H3. destruct H3 ; auto.
     - 
-Admitted.
+Admitted. *)
 
 Lemma pbody_is_asslist : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
@@ -1351,7 +1351,7 @@ Proof.
       inversion H0. subst. intuition.
 Qed.
 
-Lemma pSrc_in_child_todo : forall x' tr,
+(* Lemma pSrc_in_child_todo : forall x' tr,
   step_async_star (params := Checker_MultiParams) step_async_init x' tr ->
   (
   forall pSrc pDst pBody,
@@ -1475,7 +1475,7 @@ Proof.
     inversion H0. subst. symmetry in H4. intuition.
     inversion H0. subst.
     admit.
-Admitted.
+Admitted. *)
 
 Lemma child_done_in_ass_list: forall net tr,
   step_async_star (params := Checker_MultiParams) step_async_init net tr -> (forall c d,
