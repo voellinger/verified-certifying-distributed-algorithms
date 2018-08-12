@@ -67,22 +67,20 @@ Record Data := mkData{
 
 (* initialization of the network *)
 Definition init_Data (me: Name) := 
-  mkData (combined (init_Checkerinput me))
+  mkData []
          (children me).
 
 
-(* This input starts a checker *)
-Inductive Input := start_comp : Input.
 
-(* kann weggelassen werden? *)
+Definition Input := Msg.
 Definition Output := bool.
 
-(* Sendet zu Beginn hoch, falls *me* ein Blatt ist *)
+
 Definition InputHandler (me : Name) (i : Input) (data: Data) :
             (list Output) * Data * list (Name * Certificate) :=
 	match (children me) with
-  | [] => ([], data, [(parent me, (assign_list data))])
-  |  _ => ([], data, [])
+  | [] => ([], (mkData ((assign_list data) ++ i) (children me)), [(parent me, i)])
+  |  _ => ([], (mkData ((assign_list data) ++ i) (children me)), [])
   end.
 
 
