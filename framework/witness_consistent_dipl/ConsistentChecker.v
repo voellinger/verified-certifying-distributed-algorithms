@@ -462,6 +462,31 @@ Theorem terminates_after_2n : forall (net : network) (b : bool) (tr : Trace),
   
 
 
+Axiom input_to_every_comp : forall (net : network) (tr : Trace),
+  net_reachable' net tr ->
+  exists (net2 : network), exists (tr2 : Trace),
+    refl_trans_1n_trace step_async net net2 tr2 /\
+    forall (c : Name) (cert : Certificate), v (name_component c) ->
+      In (c, inl cert) tr.
+
+
+Function filter_inputs (tr : Trace) : list (Name * Input) :=
+  match tr with
+  | [] => []
+  | (c, inl cert) :: tl => (c, cert) :: filter_inputs tl
+  | (c, inr cert) :: tl => filter_inputs tl
+  end.
+
+Axiom no_duplicate_inputs : forall (net : network) (tr : Trace),
+  net_reachable' net tr ->
+  NoDup (filter_inputs tr).
+
+
+
+
+
+
+
 
 
 
