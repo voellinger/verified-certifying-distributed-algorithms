@@ -221,78 +221,78 @@ Qed.
 
 
 
-Axiom checker_input_correct0' : forall (x y z : Component) (n : nat),
+Axiom neighbors_leader_distance_correct0' : forall (x y z : Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x) ->
     is_in_once y (neighbors_leader_distance x).
 
-Lemma checker_input_correct0 : forall (x y z : Component) (n : nat),
+Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
     is_in_once y (construct_checker_input x).(neighbor_leader_distance).
 Proof.
   simpl in * ; intros.
-  apply (checker_input_correct0' x y z n) ; auto.
+  apply (neighbors_leader_distance_correct0' x y z n) ; auto.
 Qed.
 
-Axiom checker_input_correct1' : forall (x1 x2 : Component),
+Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) <-> 
     is_in_once x2 (neighbors_leader_distance x1).
 
-Lemma checker_input_correct1 : forall (x1 x2 : Component),
+Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) <-> 
     is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
 Proof.
   intros.
-  apply (checker_input_correct1' x1 x2) ; auto.
+  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
 Qed.
 
-Axiom checker_input_correct2' : forall (x1 x2 : Component),
+Axiom neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i).
 
-Lemma checker_input_correct2 : forall (x1 x2 : Component),
+Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
   intros.
-  apply (checker_input_correct2' x1 x2) ; auto.
+  apply (neighbors_leader_distance_correct2' x1 x2) ; auto.
 Qed.
 
-Axiom checker_input_correct5' : forall (x1 x2 : Component),
+Axiom neighbors_leader_distance_correct5' : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
 
-Lemma checker_input_correct5 : forall (x1 x2 : Component),
+Lemma neighbors_leader_distance_correct5 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 Proof.
   intros.
-  apply (checker_input_correct5' x1 x2) ; auto.
+  apply (neighbors_leader_distance_correct5' x1 x2) ; auto.
 Qed.
 
-Axiom checker_input_correct4' : forall (x y : Component),
+Axiom neighbors_leader_distance_correct4' : forall (x y : Component),
   is_in_once y (neighbors_leader_distance x) ->
   (exists (z : Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x)).
 
-Lemma checker_input_correct4 : forall (x y : Component),
+Lemma neighbors_leader_distance_correct4 : forall (x y : Component),
   is_in_once y (construct_checker_input x).(neighbor_leader_distance) ->
   (exists (z : Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance)).
 Proof.
   intros.
-  apply (checker_input_correct4' x y) ; auto.
+  apply (neighbors_leader_distance_correct4' x y) ; auto.
 Qed.
 
-Axiom checker_input_correct3' : forall (x y z: Component) (n : nat),
+Axiom neighbors_leader_distance_correct3' : forall (x y z: Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x) -> 
     (construct_checker_input y).(distance_i) = n.
 
-Lemma checker_input_correct3 : forall (x y z: Component) (n : nat),
+Lemma neighbors_leader_distance_correct3 : forall (x y z: Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) -> 
     (construct_checker_input y).(distance_i) = n.
 Proof.
   intros.
-  apply (checker_input_correct3' x y z n) ; auto.
+  apply (neighbors_leader_distance_correct3' x y z n) ; auto.
 Qed.
 
 Fixpoint leader_same (x : Component) (l : list (Component * Component * nat)) : bool :=
@@ -385,23 +385,23 @@ Proof.
   apply (G_ina_inv2 v a H2) in H3 ; auto.
   apply local_input_correct in H3.
   assert (H2 := H3).
-  apply checker_input_correct1 in H3.
-  apply checker_input_correct2 in H2.
+  apply neighbors_leader_distance_correct1 in H3.
+  apply neighbors_leader_distance_correct2 in H2.
   intuition.
   rewrite <- H2 in *.
-  apply checker_input_correct1 in H3.
-  rewrite checker_input_correct2 in * ; auto.
+  apply neighbors_leader_distance_correct1 in H3.
+  rewrite neighbors_leader_distance_correct2 in * ; auto.
   subst.
   clear H1 H2.
   apply local_input_correct in H2'.
-  apply checker_input_correct1 in H2'.
+  apply neighbors_leader_distance_correct1 in H2'.
   unfold checker_local_bipartition in H0.
   assert (H2'' := H2').
-  apply checker_input_correct4 in H2'.
+  apply neighbors_leader_distance_correct4 in H2'.
   destruct H2'. destruct H1.
-  apply checker_input_correct0 in H1.
-  apply checker_input_correct1 in H1.
-  apply checker_input_correct2 in H1.
+  apply neighbors_leader_distance_correct0 in H1.
+  apply neighbors_leader_distance_correct1 in H1.
+  apply neighbors_leader_distance_correct2 in H1.
   rewrite <- H1 in *. clear H1.
   induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
   destruct a0. destruct p.
@@ -508,10 +508,10 @@ Proof.
     apply local_input_correct in a0.
     clear H3 H2.
     assert (a1 := a0).
-    apply checker_input_correct1 in a0.
-    apply checker_input_correct4 in a0.
+    apply neighbors_leader_distance_correct1 in a0.
+    apply neighbors_leader_distance_correct4 in a0.
     destruct a0. destruct H2.
-    apply checker_input_correct5 in a1.
+    apply neighbors_leader_distance_correct5 in a1.
     rewrite <- a1. clear a1.
     assert (a0 := H2).
     apply (leader_same_correct (leader_i (construct_checker_input x))) in H2 ; auto.
@@ -581,7 +581,7 @@ Proof.
       a (A_ends x y)).
     intros.
     apply local_input_correct.
-    apply checker_input_correct1. apply checker_input_correct0 in H1 ; auto.
+    apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H1 ; auto.
     specialize (H1 x).
 
 
@@ -591,7 +591,7 @@ Proof.
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
-    apply checker_input_correct2. apply checker_input_correct1. apply checker_input_correct0 in H2. auto.
+    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H2. auto.
     specialize (H2 x).
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
@@ -601,7 +601,7 @@ Proof.
     assert (forall (y z : Component) (n : nat),
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
-    apply checker_input_correct0.
+    apply neighbors_leader_distance_correct0.
     clear H1.
     remember leader as ll. remember parent as pp. remember neighbors_leader_distance as rr.
     induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
