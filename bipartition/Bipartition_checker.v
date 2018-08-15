@@ -20,6 +20,7 @@ Variable bipartite_answer : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
+Variable neighbors_leader_distance : Component -> list (Component * Component * nat).
 (********/Interface of checker *********)
 
 
@@ -65,7 +66,7 @@ Definition construct_checker_input (x : Component) : checker_input :=
     (leader x) 
     (distance x) 
     (parent x)
-    (construct_checker_input_neighbor_list (nodup V_eq_dec (construct_local_input x).(neighbours))).
+    (neighbors_leader_distance x).
 
 
 
@@ -132,11 +133,11 @@ Proof.
     apply In_right. auto.
   - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
     inversion H ; subst.
-    inversion H3 ; subst ; intuition.
+    inversion H4 ; subst ; intuition.
     intuition. inversion H ; subst.
-    inversion H3 ; subst ; intuition. intuition.
+    inversion H4 ; subst ; intuition. intuition.
     inversion H ; subst.
-    inversion H3 ; subst ; intuition.
+    inversion H4 ; subst ; intuition.
     intuition.
   - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
     inversion H ; subst ; auto.
@@ -148,11 +149,11 @@ Proof.
     apply In_right. auto.
   - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
     inversion H ; subst.
-    inversion H3 ; subst ; intuition.
+    inversion H4 ; subst ; intuition.
     intuition. inversion H ; subst.
-    inversion H3 ; subst ; intuition. intuition.
+    inversion H4 ; subst ; intuition. intuition.
     inversion H ; subst.
-    inversion H3 ; subst ; intuition.
+    inversion H4 ; subst ; intuition.
     intuition.
 Qed.
 
@@ -197,7 +198,7 @@ Proof.
   simpl in *. destruct a0. destruct p.
   destruct (V_eq_dec x c0) ; subst ; intuition.
   exists c1. exists n. auto.
-  destruct H3. destruct H3. exists x0. exists x1. auto.
+  destruct H4. destruct H4. exists x0. exists x1. auto.
 Qed.
 
 Lemma is_not_in_correct : forall l a b c,
@@ -205,7 +206,7 @@ Lemma is_not_in_correct : forall l a b c,
 Proof.
   intro l.
   induction l ; simpl in * ; intuition.
-  inversion H4. subst. destruct (V_eq_dec a1 a1) ; intuition.
+  inversion H5. subst. destruct (V_eq_dec a1 a1) ; intuition.
   destruct (V_eq_dec a1 a0) ; intuition.
   specialize (IHl a1 b1 c0) ; intuition.
 Qed.
@@ -218,82 +219,60 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
+
+
+Axiom checker_input_correct0' : forall (x y z : Component) (n : nat),
+  In (y,z,n) (neighbors_leader_distance x) ->
+    is_in_once y (neighbors_leader_distance x).
+
 Lemma checker_input_correct0 : forall (x y z : Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
     is_in_once y (construct_checker_input x).(neighbor_leader_distance).
 Proof.
-  simpl in *. intros.
-  assert (NoDup (nodup V_eq_dec (neighbors x))). apply NoDup_nodup.
-  induction (nodup V_eq_dec (neighbors x)) ; simpl in *.
-  inversion H.
-  apply NoDup_cons_iff in H0. destruct H0.
-  destruct (V_eq_dec y a0) ; destruct H ; subst ; simpl in *.
-  inversion H. subst.
-  apply is_not_in_correct' in H0. auto.
-  apply is_not_in_correct' in H0. auto.
-  inversion H. subst. intuition.
-  intuition.
+  simpl in * ; intros.
+  apply (checker_input_correct0' x y z n) ; auto.
 Qed.
+
+Axiom checker_input_correct1' : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) <-> 
+    is_in_once x2 (neighbors_leader_distance x1).
 
 Lemma checker_input_correct1 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) <-> 
     is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
 Proof.
-  split ; intros ; simpl in *.
-  + remember parent as pp.
-    induction (neighbors x1) ; simpl in * ; intuition.
-    destruct (in_dec V_eq_dec a0 l) ; subst ; simpl in *.
-    intuition.
-    destruct (V_eq_dec x2 x2) ; subst.
-    apply is_not_in_correct' in n.
-    clear IHl e.
-    induction l ; simpl in * ; intuition.
-      destruct (in_dec V_eq_dec a0 l) ; subst ; intuition.
-      destruct (V_eq_dec x2 a0) ; subst ; intuition.
-      simpl in *. destruct (V_eq_dec x2 a0) ; subst ; intuition.
-    intuition.
-    destruct (in_dec V_eq_dec a0 l) ; subst ; simpl in * ; intuition.
-    destruct (V_eq_dec x2 a0) ; subst ; intuition.
-  + apply is_in_once_correct in H.
-    destruct H. destruct H.
-    assert (In (x2, x, x0) (construct_checker_input_neighbor_list (neighbors x1))).
-    induction (neighbors x1) ; simpl in * ; intuition.
-    destruct (in_dec V_eq_dec a0 l) ; subst ; intuition ; simpl in *.
-    intuition.
-    clear H.
-    induction (neighbors x1) ; simpl in * ; intuition.
-    inversion H ; intuition.
+  intros.
+  apply (checker_input_correct1' x1 x2) ; auto.
 Qed.
+
+Axiom checker_input_correct2' : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) -> 
+     get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i).
 
 Lemma checker_input_correct2 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
-  intros. simpl in *.
-  unfold neighbors in *.
-  induction (A_in_neighborhood x1 (CA_list v a c)).
-  inversion H.
-  simpl in *.
-  destruct (in_dec V_eq_dec a0 v0) ; subst ; intuition.
-  subst. intuition.
-  subst. simpl in *. destruct (V_eq_dec x2 x2) ; subst ; intuition.
-  simpl in *. destruct (V_eq_dec x2 a0) ; subst ; intuition.
+  intros.
+  apply (checker_input_correct2' x1 x2) ; auto.
 Qed.
+
+Axiom checker_input_correct5' : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) -> 
+     get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
 
 Lemma checker_input_correct5 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 Proof.
-  intros. simpl in *.
-  unfold neighbors in *.
-  induction (A_in_neighborhood x1 (CA_list v a c)).
-  inversion H.
-  simpl in *.
-  destruct (in_dec V_eq_dec a0 v0) ; subst ; intuition.
-  subst. intuition.
-  subst. simpl in *. destruct (V_eq_dec x2 x2) ; subst ; intuition.
-  simpl in *. destruct (V_eq_dec x2 a0) ; subst ; intuition.
+  intros.
+  apply (checker_input_correct5' x1 x2) ; auto.
 Qed.
+
+Axiom checker_input_correct4' : forall (x y : Component),
+  is_in_once y (neighbors_leader_distance x) ->
+  (exists (z : Component) (n : nat),
+  In (y,z,n) (neighbors_leader_distance x)).
 
 Lemma checker_input_correct4 : forall (x y : Component),
   is_in_once y (construct_checker_input x).(neighbor_leader_distance) ->
@@ -301,42 +280,19 @@ Lemma checker_input_correct4 : forall (x y : Component),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance)).
 Proof.
   intros.
-  induction (neighbor_leader_distance (construct_checker_input x)) ; intros ; simpl in * ; intuition.
-  destruct a0. destruct p.
-  destruct (V_eq_dec y c0) ; intuition.
-  subst.
-  exists (c1). exists n. auto.
-  destruct H3. destruct H3.
-  exists x0. exists x1. auto.
+  apply (checker_input_correct4' x y) ; auto.
 Qed.
+
+Axiom checker_input_correct3' : forall (x y z: Component) (n : nat),
+  In (y,z,n) (neighbors_leader_distance x) -> 
+    (construct_checker_input y).(distance_i) = n.
 
 Lemma checker_input_correct3 : forall (x y z: Component) (n : nat),
   In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) -> 
     (construct_checker_input y).(distance_i) = n.
 Proof.
   intros.
-  assert (H' := H).
-  apply checker_input_correct0 in H'.
-  apply checker_input_correct1 in H'.
-  apply checker_input_correct2 in H'.
-  rewrite <- H'. clear H'.
-  assert (H' := H).
-  apply checker_input_correct0 in H.
-  induction (neighbor_leader_distance (construct_checker_input x)) ; intros ; simpl in * ; intuition.
-  - destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst ; intuition.
-    inversion H0. intuition.
-    inversion H0. symmetry in H6. intuition.
-  - destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst ; intuition.
-    exfalso.
-    clear IHl H1 n0 c1 x v a c.
-    induction l ; simpl in * ; intuition.
-    destruct a. destruct p.
-    inversion H1 ; subst.
-    destruct (V_eq_dec c0 c0) ; intuition.
-    destruct a. destruct p.
-    destruct (V_eq_dec c0 c) ; intuition.
+  apply (checker_input_correct3' x y z n) ; auto.
 Qed.
 
 Fixpoint leader_same (x : Component) (l : list (Component * Component * nat)) : bool :=
@@ -468,24 +424,24 @@ Proof.
       intuition.
       subst. apply In_left. apply E_left.
       apply In_right.
-      specialize (H2 y y0) ; auto.
+      specialize (H3 y y0) ; auto.
     - destruct (V_eq_dec x0 x) ; subst ; intuition.
       simpl in *. intuition ; subst.
       apply In_left. apply E_right.
-      apply In_right. apply (H2 x y0) ; auto.
-      apply In_right. apply (H2 x0 y0) ; auto.
+      apply In_right. apply (H3 x y0) ; auto.
+      apply In_right. apply (H3 x0 y0) ; auto.
   + destruct (V_eq_dec x0 y) ; subst ; intuition.
     - destruct (V_eq_dec y x) ; subst ; intuition.
       simpl in *.
       intuition.
       subst. apply In_left. apply E_left.
       apply In_right.
-      specialize (H2 y y0) ; auto.
+      specialize (H3 y y0) ; auto.
     - destruct (V_eq_dec x0 x) ; subst ; intuition.
       simpl in *. intuition ; subst.
       apply In_left. apply E_right.
-      apply In_right. apply (H2 x y0) ; auto.
-      apply In_right. apply (H2 x0 y0) ; auto.
+      apply In_right. apply (H3 x y0) ; auto.
+      apply In_right. apply (H3 x0 y0) ; auto.
   + subst. intuition.
 Qed.
 
@@ -536,7 +492,7 @@ Lemma all_leader_same : forall x v_random,
 Proof. 
   unfold checker_tree.
   unfold neighbours.
-  simpl in *. unfold neighbors. intros.
+  intros.
   assert ({vl : V_list & {el : E_list & Walk v a v_random x vl el}}).
   apply Connected_walk ; auto.
   destruct H2. destruct s.
@@ -555,20 +511,21 @@ Proof.
     apply checker_input_correct1 in a0.
     apply checker_input_correct4 in a0.
     destruct a0. destruct H2.
-    apply checker_input_correct5 in a1. simpl in *.
+    apply checker_input_correct5 in a1.
     rewrite <- a1. clear a1.
     assert (a0 := H2).
     apply (leader_same_correct (leader_i (construct_checker_input x))) in H2 ; auto.
-    simpl in *.
-    rewrite <- H2. clear H2.
+    rewrite <- H2. clear H2 v0.
 
     unfold neighbors in *.
 
-    remember leader as ll. remember parent as pp. remember distance as dd.
-    induction (construct_checker_input_neighbor_list (nodup V_eq_dec (A_in_neighborhood x (CA_list v a c)))) ; simpl in * ; intuition.
+    remember leader as ll. remember parent as pp. remember distance as dd. remember neighbors_leader_distance as rr.
+    induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
+
     destruct a1. destruct p.
     destruct (V_eq_dec y c0) ; subst.
-    inversion H2. subst. intuition. inversion H2. subst. intuition.
+    inversion H2 ; subst. reflexivity.
+    inversion H2. subst. intuition.
     destruct a1. destruct p.
     destruct (V_eq_dec y c0) ; subst.
     destruct (V_eq_dec (leader x) c1) ; subst.
@@ -576,7 +533,6 @@ Proof.
     inversion H.
     destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
 Qed.
-  
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->
@@ -647,7 +603,7 @@ Proof.
       is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
     apply checker_input_correct0.
     clear H1.
-    remember leader as ll. remember parent as pp.
+    remember leader as ll. remember parent as pp. remember neighbors_leader_distance as rr.
     induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
     inversion H0.
     destruct a0. destruct p.
@@ -676,7 +632,8 @@ Proof.
 
 
     intros. specialize (H2' y z n0). specialize (new y z n0).
-    destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp. intuition.
+    destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp.
+    remember neighbors_leader_distance as rr. intuition.
     apply (is_not_in_correct l c0 z n0) in H4. intuition.
     intuition.
     clear IHl H2' H0.
