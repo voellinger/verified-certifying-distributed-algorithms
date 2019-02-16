@@ -691,14 +691,14 @@ Proof.
   specialize (H1 x H {| pSrc := pSrc; pDst := pDst; pBody := pBody |} H0).
   simpl in *.
   auto.
-Qed.
+Qed.  
 
 Lemma terminated_child_todo_null_null: forall net,
   net_reachable net -> (forall c,
-  children (Checker c) = [] -> 
-  child_todo (nwState net (Checker c)) = []).
+  children c = [] -> 
+  c_finished net c).
 Proof.
-  unfold net_reachable.
+  unfold net_reachable. unfold c_finished.
   intros net H. destruct H.
   remember step_async_init as y in *.
   induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
@@ -710,13 +710,13 @@ Proof.
     invc H0 ; simpl in *.
     - unfold NetHandler in H5.
       repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition.
-      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      subst ; auto. apply H3 in H2. subst.
       rewrite H2 in Heql0.
       inversion Heql0.
-      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      subst ; auto. apply H3 in H2. subst.
       rewrite H2 in Heql0.
       inversion Heql0.
-      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      subst ; auto. apply H3 in H2. subst.
       rewrite H2 in Heql0.
       inversion Heql0.
     - unfold InputHandler in H4.
@@ -732,7 +732,55 @@ Proof.
   unfold c_finished. auto.
 Qed.
 
-
+Lemma child_done_terminated: forall net,
+  net_reachable net -> (forall c d,
+    In d (children c) -> (~In d (child_todo (nwState net c))) ->
+    c_finished net d).
+Proof.
+  unfold net_reachable. unfold c_finished.
+  intros net H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros c d H_new ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition.
+      unfold children in H_new. apply children_not_reflexive in H_new. inversion H_new.
+      apply cinc in Heqb. subst. apply (H3 c (pDst p) H_new) in H2. rewrite Heql0 in H2. inversion H2.
+      apply cinc in Heqb0. subst. 
+      apply eqb_prop in Heqb ; auto.
+      apply eqb_prop in Heqb ; auto.
+      apply (H3 (pDst p) (pDst p) ) ; auto.
+      apply (H3 c (pDst p)) ; auto.
+      assert (terminated (nwState x' (pSrc p)) = true).
+      destruct p. simpl in *.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto. 
+        destruct p. simpl in *. subst. apply eqb_false_iff in Heqb. intuition.
+      apply (H3 (pDst p) (pDst p) ) ; auto.
+      apply (H3 c (pDst p)) ; auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d) ; auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d) ; auto.
+      destruct p. simpl in *. rewrite <- H0 in *.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d ) ; auto.
+      destruct p. simpl in *. rewrite <- H0 in *.
+        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+      apply (H3 (pDst p) d) ; auto.
+      apply (H3 c d ) ; auto.
+    - specialize (H3 c d).
+      unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+Qed.
 
 
 
