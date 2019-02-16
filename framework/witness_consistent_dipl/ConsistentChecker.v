@@ -348,6 +348,12 @@ Definition net_reachable (net : network) : Prop :=
 Definition net_reachable' (net : network) (tr : Trace) : Prop :=
   refl_trans_1n_trace step_async step_async_init net tr.
 
+Definition net_reachable_from (net : network) (net2 : network) : Prop :=
+  exists (tr : Trace), refl_trans_1n_trace step_async net net2 tr.
+
+Definition net_reachable_from' (net : network) (net2 : network) (tr : Trace) : Prop :=
+  refl_trans_1n_trace step_async net net2 tr.
+
 Definition c_finished net c : Prop :=
   (nwState net c).(child_todo) = [].
 
@@ -436,6 +442,87 @@ Proof.
   intros. destruct assign1. destruct assign2. intros. inversion H.
 Qed.
 
+Lemma cert_stays_in_ass_list : forall net net2 c a,
+  net_reachable_from net net2 ->
+  In a (nwState net c).(assign_list) ->
+  In a (nwState net2 c).(assign_list).
+Proof.
+  intros net net2 c a reachable infirst.
+  unfold net_reachable_from in reachable.
+  destruct reachable.
+  remember net as y in *.
+  induction H using refl_trans_1n_trace_n1_ind.
+  + auto.
+  + subst.
+    apply IHrefl_trans_1n_trace1 in infirst ; auto.
+    clear H1 IHrefl_trans_1n_trace1 H tr1.
+    invc H0 ; simpl in * ; break_match ; subst ; intuition.
+    - unfold NetHandler in H1.
+      repeat break_match ; simpl in * ; inversion H1 ; subst ; auto ; simpl in *.
+      apply in_or_app ; auto.
+      apply in_or_app ; auto.
+    - unfold InputHandler in H.
+      repeat break_match ; simpl in * ; inversion H ; subst ; auto ; simpl in *.
+      apply in_or_app ; auto.
+Qed.
+
+Lemma Nethandler_nil_one: forall x' pDst pSrc pBody out d  l,
+  NetHandler pDst pSrc pBody (nwState x' pDst) = (out, d, l) ->
+  (l = [] \/ exists p, l = [p]).
+Proof.
+  intros.
+  unfold NetHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H ; auto).
+  subst.
+  right. exists (parent pDst, assign_list (nwState x' pDst) ++ pBody).
+  auto.
+Qed.
+
+Lemma Nethandler_correct: forall x' p out d nextDst msg,
+  NetHandler (pDst p) (pSrc p) (pBody p) (nwState x' (pDst p)) = (out, d, [(nextDst, msg)]) ->
+  (parent (pDst p) = nextDst) /\ (msg = (assign_list (nwState x' (pDst p))) ++ pBody p).
+Proof.
+  intros.
+  destruct p.
+  unfold NetHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H ; subst).
+  auto.
+Qed.
+
+Lemma Inputhandler_nil_one : forall inp0 x' h out d l,
+  InputHandler h inp0 (nwState x' h) = (out, d, l) ->
+  (l = [] \/ exists p, l = [p]).
+Proof.
+  intros.
+  unfold InputHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H).
+  auto.
+  right.
+  exists ((parent h, assign_list (nwState x' h) ++ inp0)). auto.
+  left. auto.
+Qed.
+
+Lemma Inputhandler_correct: forall inp0 x' h out d nextDst msg,
+  InputHandler h inp0 (nwState x' h) = (out, d, [(nextDst, msg)]) ->
+  (parent h = nextDst) /\ (msg = (assign_list (nwState x' h) ++ inp0)).
+Proof.
+  intros.
+  unfold InputHandler in H.
+  repeat (break_match ; subst ; simpl in * ; inversion H).
+  split ; auto.
+Qed.
+
+Lemma only_child_in_ass_list: forall net c a,
+  net_reachable net ->
+  In a (assign_list (nwState net c)) -> 
+  exists d : Name, In d (c :: (children c)) /\ In a (assign_list (nwState net d)).
+Proof.
+  intros.
+  exists c.
+  split.
+  simpl ; auto.
+  auto.
+Qed.
 
 
 
