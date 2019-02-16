@@ -748,10 +748,29 @@ Proof.
     intuition.
     invc H0 ; simpl in *.
     - unfold NetHandler in H5.
-      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition ; clear H5.
       unfold children in H_new. apply children_not_reflexive in H_new. inversion H_new.
       apply cinc in Heqb. subst. apply (H3 c (pDst p) H_new) in H2. rewrite Heql0 in H2. inversion H2.
-      apply cinc in Heqb0. subst. 
+      apply cinc in Heqb0. subst. unfold children in H_new. apply children_not_reflexive in H_new. inversion H_new.
+      apply cinc in Heqb0. subst. apply (H3 c (pDst p) H_new) in H2. rewrite Heql0 in H2. inversion H2.
+      unfold children in H_new. apply children_not_reflexive in H_new. inversion H_new.
+      apply (H3 c (pDst p) H_new) in H2. rewrite Heql0 in H2. inversion H2.
+      apply (H3 (pDst p) d H_new) in H2. auto.
+      apply (H3 c d H_new) in H2. auto.
+      assert (c_finished x' (pSrc p)).
+        destruct p. simpl in *.
+        assert (net_reachable x') as H'.
+          unfold net_reachable. exists tr1. auto.
+        apply (packet_source_terminated' x' H' pSrc pDst pBody) ; auto.
+        rewrite H4. apply in_or_app. simpl. auto.
+        destruct p. simpl in *. subst. unfold c_finished in H0.
+        assert (d = pSrc). admit.
+        subst. auto. 
+      apply (H3 c d H_new) in H2. auto.
+      apply cinc in Heqb. subst. apply (H3) in H_new ; auto.
+      intros. rewrite Heql0 in H2. simpl in H2. destruct H2 ; intuition. subst.
+
+
       apply eqb_prop in Heqb ; auto.
       apply eqb_prop in Heqb ; auto.
       apply (H3 (pDst p) (pDst p) ) ; auto.
