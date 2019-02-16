@@ -524,7 +524,83 @@ Proof.
   auto.
 Qed.
 
+Lemma packet_source_terminated : forall x,
+  net_reachable x -> forall p,
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  c_finished x pSrc.
+Proof.
+  unfold net_reachable. unfold c_finished. intros x H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+  + inversion H.
+  + destruct p.
+    intuition. specialize (H3 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      rewrite H4 in *.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition.
+        assert (In {| pSrc := Net.pDst p; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. inversion H0.
+        assert (In {| pSrc := Net.pDst p; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. inversion H0.
+        assert (In {| pSrc := Net.pDst p; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. inversion H0.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. auto.
+        inversion H0. subst. intuition.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H0. destruct H0.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H2. auto.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. auto.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. auto.
+        assert (In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (xs ++ p :: ys)).
+        apply in_app_or in H2. destruct H2.
+        apply in_or_app. left. auto.
+        apply in_or_app. right. simpl. auto.
+        apply H3 in H0. auto.
+    - unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      rewrite Heql0 in H0. inversion H0.
+      inversion H0. subst. intuition.
+Qed.
 
+Lemma packet_source_terminated' : forall x,
+  net_reachable x -> forall (pSrc pDst : Name) pBody,
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x) -> 
+  c_finished x pSrc.
+Proof.
+  intros.
+  assert (forall x,
+  net_reachable x -> forall p,
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  c_finished x pSrc).
+  apply (packet_source_terminated).
+  specialize (H1 x H).
+  specialize (H1 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
+  auto.
+Qed.
 
 
 
