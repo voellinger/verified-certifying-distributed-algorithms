@@ -602,6 +602,138 @@ Proof.
   auto.
 Qed.
 
+Lemma silly_lemma2 : forall pSrc pDst pBody (p : packet) xs ys, 
+  In p (xs ++ ys) -> In p (xs ++ {| pSrc := pSrc; pDst := pDst; pBody := pBody |} :: ys).
+Proof.
+  intros src dst bod p xs ys H.
+  apply in_app_or in H.
+  apply in_or_app.
+  simpl.
+  destruct H ; auto.
+Qed.
+
+Lemma net_reachable_app : forall net net2,
+  net_reachable net -> net_reachable_from net net2 ->
+  net_reachable net2.
+Proof.
+  intros net net2 reach1 reach2.
+  unfold net_reachable in *.
+  unfold net_reachable_from in reach2.
+  destruct reach1. destruct reach2.
+  exists (x ++ x0).
+  apply (refl_trans_1n_trace_trans H H0).
+Qed.
+
+Lemma p_dst_eq_psrc : forall x,
+  net_reachable x -> forall p,
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  pDst = parent pSrc.
+Proof.
+  unfold net_reachable.
+  intros x H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; subst ; simpl in *.
+  + inversion H.
+  + assert (H2' := H2).
+    apply (packet_source_terminated x'') in H2' ; auto.
+    unfold c_finished in *.
+    simpl in *.
+    destruct p.
+    simpl in *.
+    invc H0 ; simpl in *.
+    - rewrite H3 in *. intuition.
+      assert (H0' := H0).
+      specialize (H0 p).
+      assert (let (pSrc, pDst, _) := p in pDst = parent pSrc).
+      apply H0.
+      apply in_or_app. right. simpl. auto.
+      clear H0.
+      specialize (H0' {| pSrc := pSrc; pDst := pDst; pBody := pBody |}).
+      destruct p. simpl in *. subst.
+      unfold NetHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition ; clear H4.
+      apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0) in H2. intuition.
+      inversion H0. auto.
+      apply H0'. apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0). intuition.
+      apply H0'. apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0). intuition.
+      apply H0'. apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0). intuition.
+      inversion H0. auto.
+      apply H0'. apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0). intuition.
+      apply H0'. apply (silly_lemma2 pSrc0 (parent pSrc0) pBody0). intuition.
+    - intuition.
+      unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+      inversion H4. auto.
+      specialize (H0 {| pSrc := h; pDst := pDst; pBody := pBody |}). intuition.
+      inversion H4. auto.
+      specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
+      specialize (H0 {| pSrc := h; pDst := pDst; pBody := pBody |}). intuition.
+      specialize (H0 {| pSrc := pSrc; pDst := pDst; pBody := pBody |}). intuition.
+    - apply (net_reachable_app x' x'') ; auto.
+      unfold net_reachable. exists tr1. auto.
+      unfold net_reachable_from. exists tr2.
+      assert (tr2 = [] ++ tr2). simpl. auto.
+      rewrite H3. assert (refl_trans_1n_trace step_async x' x' []).
+      apply RT1nTBase. apply (RT1n_step x'' tr2 H4 H0).
+Qed.
+
+Lemma packets_dst_eq_src : forall x,
+  net_reachable x -> forall (pSrc pDst: Name) (pBody : Msg),
+  In {| pSrc := pSrc; pDst := pDst; pBody := pBody |} (nwPackets x) -> 
+  pDst = parent pSrc.
+Proof.
+  intros.
+  assert (forall x,
+  net_reachable x -> forall p,
+  In p (nwPackets x) -> let (pSrc, pDst, pBody) := p in
+  pDst = parent pSrc).
+  apply p_dst_eq_psrc.
+  specialize (H1 x H {| pSrc := pSrc; pDst := pDst; pBody := pBody |} H0).
+  simpl in *.
+  auto.
+Qed.
+
+Lemma terminated_child_todo_null_null: forall net,
+  net_reachable net -> (forall c,
+  children (Checker c) = [] -> 
+  child_todo (nwState net (Checker c)) = []).
+Proof.
+  unfold net_reachable.
+  intros net H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    auto.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition.
+      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      rewrite H2 in Heql0.
+      inversion Heql0.
+      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      rewrite H2 in Heql0.
+      inversion Heql0.
+      rewrite <- e in * ; auto. apply H3 in H2. subst.
+      rewrite H2 in Heql0.
+      inversion Heql0.
+    - unfold InputHandler in H4.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+Qed.
+
+Lemma terminated_child_todo_null: forall net,
+  net_reachable net -> (forall c,
+  c_finished net c ->
+  child_todo (nwState net c) = []).
+Proof.
+  intros net H.
+  unfold c_finished. auto.
+Qed.
+
+
+
 
 
 

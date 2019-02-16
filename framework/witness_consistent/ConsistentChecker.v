@@ -1072,7 +1072,6 @@ Proof.
       inversion Heql0.
     - unfold InputHandler in H4.
       repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
-      
 Qed.
 
 Lemma terminated_child_todo_null: forall net tr,
