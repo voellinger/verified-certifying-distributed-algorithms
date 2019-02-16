@@ -732,6 +732,53 @@ Proof.
   unfold c_finished. auto.
 Qed.
 
+Lemma child_parent: forall d h,
+ In d (children h) -> h = parent d.
+Proof.
+  unfold children. unfold parent. intros.
+  induction g ; simpl in * ; auto.
+  + inversion H.
+  + repeat (break_match ; subst ; intuition).
+    apply children_help2 in H. simpl in *. intuition.
+    simpl in H. destruct H. subst. intuition.
+    apply IHc ; auto.
+Qed.
+
+Lemma only_children_in_child_todo : forall x,
+  net_reachable x -> (forall (c d : Name),
+  In d (child_todo (nwState x c)) ->
+  c = parent d).
+Proof.
+  intros x H. unfold net_reachable in H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; intros ; simpl in *.
+  + subst.
+    simpl in *.
+    unfold children in H.
+    apply (parent_children_holds) in H.
+    unfold parent.
+    auto.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in *.
+    - unfold NetHandler in H5.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H5 ; subst ; simpl in * ; intuition ; subst ; clear H5.
+      apply (H3 (pDst p) d) ; auto. rewrite Heql0. simpl ; auto.
+      apply (H3 (pDst p) d) ; auto. rewrite Heql0. simpl ; auto.
+      apply cinc in Heqb0 ; subst. apply (H3 (pDst p) d) ; auto. rewrite Heql0. simpl ; auto.
+      apply cinc in Heqb0 ; subst. apply (H3 (pDst p) d) ; auto. rewrite Heql0. simpl ; auto.
+      apply H3. rewrite Heql0. simpl ; auto.
+      apply H3. rewrite Heql0. simpl ; auto.
+      apply H3. rewrite Heql0. simpl. right. right. apply remove_src_before in H2. auto.
+    - unfold InputHandler in H4.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition).
+      inversion H4. subst. simpl in *. intuition.
+      inversion H4. subst. simpl in *. intuition.
+      unfold parent. unfold children in H2.
+      apply child_parent ; auto.
+Qed.
+
+
 Lemma child_done_terminated: forall net,
   net_reachable net -> (forall c d,
     In d (children c) -> (~In d (child_todo (nwState net c))) ->
@@ -767,38 +814,54 @@ Proof.
         assert (d = pSrc). admit.
         subst. auto. 
       apply (H3 c d H_new) in H2. auto.
-      apply cinc in Heqb. subst. apply (H3) in H_new ; auto.
-      intros. rewrite Heql0 in H2. simpl in H2. destruct H2 ; intuition. subst.
+      apply cinc in Heqb. subst. 
+Admitted.
 
+Lemma NoDup_packets : forall x',
+  net_reachable x' ->
+  NoDup (nwPackets x').
+Proof.
+  unfold net_reachable.
+  intros net H. destruct H.
+  remember step_async_init as y in *.
+  induction H using refl_trans_1n_trace_n1_ind ; simpl in *.
+  + subst.
+    simpl in *.
+    intuition.
+  + subst. simpl in *.
+    intuition.
+    invc H0 ; simpl in * ; intuition.
+    - destruct p. simpl in *.
+      assert (net_reachable x') as H'. unfold net_reachable. exists tr1. auto.
+      assert (c_finished x' pSrc).
+      
+      apply (packet_source_terminated' x' H' pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
+      assert (pDst = parent pSrc).
+      apply (packets_dst_eq_src x' H' pSrc pDst pBody) ; auto.
+      rewrite H3. apply in_or_app. simpl. auto.
 
-      apply eqb_prop in Heqb ; auto.
-      apply eqb_prop in Heqb ; auto.
-      apply (H3 (pDst p) (pDst p) ) ; auto.
-      apply (H3 c (pDst p)) ; auto.
-      assert (terminated (nwState x' (pSrc p)) = true).
-      destruct p. simpl in *.
-        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
-        rewrite H4. apply in_or_app. simpl. auto. 
-        destruct p. simpl in *. subst. apply eqb_false_iff in Heqb. intuition.
-      apply (H3 (pDst p) (pDst p) ) ; auto.
-      apply (H3 c (pDst p)) ; auto.
-      apply (H3 (pDst p) d) ; auto.
-      apply (H3 c d) ; auto.
-      apply (H3 (pDst p) d) ; auto.
-      apply (H3 c d) ; auto.
-      destruct p. simpl in *. rewrite <- H0 in *.
-        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
-        rewrite H4. apply in_or_app. simpl. auto.
-      apply (H3 (pDst p) d) ; auto.
-      apply (H3 c d ) ; auto.
-      destruct p. simpl in *. rewrite <- H0 in *.
-        apply (packet_source_terminated' x' tr1 H pSrc pDst pBody) ; auto.
-        rewrite H4. apply in_or_app. simpl. auto.
-      apply (H3 (pDst p) d) ; auto.
-      apply (H3 c d ) ; auto.
-    - specialize (H3 c d).
-      unfold InputHandler in H4.
-      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H4 ; subst ; simpl in * ; intuition.
+      subst.
+      unfold c_finished in H0.
+      unfold NetHandler in H4.
+      repeat (break_match ; simpl in * ; subst ; simpl in * ; intuition) ; inversion H4 ; subst ; simpl in * ; intuition ; rewrite H3 in * ; clear H4.
+      apply NoDup_remove_1 in H2 ; auto.
+      rewrite Heql0 in H0.
+      apply NoDup_remove_1 in H2 ; auto.
+      apply NoDup_remove in H2. destruct H2.
+      apply NoDup_cons ; auto. intuition.
+      assert ((nwState x' (parent pSrc)).(terminated) = true).
+      apply (packet_source_terminated' x' tr1 H (parent pSrc) (parent (parent pSrc)) (ass_list (nwState x' (parent pSrc)) ++ pBody)) ; auto.
+      rewrite H3. apply in_or_app. simpl. apply in_app_or in H6. destruct H6 ; auto.
+      apply eqb_false_iff in Heqb. intuition.
+      apply NoDup_remove_1 in H2 ; auto.
+    - unfold InputHandler in H3.
+      repeat break_match ; simpl in * ; subst ; simpl in * ; intuition ; inversion H3 ; subst ; simpl in * ; intuition.
+      apply NoDup_cons ; auto.
+      intuition.
+      assert ((nwState x' h).(terminated) = true).
+      apply (packet_source_terminated' x' tr1 H h (parent h) (ass_list (nwState x' h))) ; auto.
+      apply eqb_false_iff in Heqb. intuition.
 Qed.
 
 
