@@ -219,8 +219,6 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
-
-
 Axiom neighbors_leader_distance_correct0' : forall (x y z : Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x) ->
     is_in_once y (neighbors_leader_distance x).
@@ -253,7 +251,7 @@ Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
-  intros.
+  intros. (*induction (construct_local_input x1).*)
   apply (neighbors_leader_distance_correct2' x1 x2) ; auto.
 Qed.
 
@@ -269,10 +267,21 @@ Proof.
   apply (neighbors_leader_distance_correct5' x1 x2) ; auto.
 Qed.
 
-Axiom neighbors_leader_distance_correct4' : forall (x y : Component),
+Lemma neighbors_leader_distance_correct4' : forall (x y : Component),
   is_in_once y (neighbors_leader_distance x) ->
   (exists (z : Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x)).
+Proof.
+  intros x y H.
+  induction (neighbors_leader_distance x) ; simpl in *.
+  inversion H.
+  destruct a0. destruct p. destruct (V_eq_dec y c0).
+  subst.
+  exists c1. exists n. left. auto.
+  apply IHl in H.
+  destruct H. destruct H. exists x0. exists x1.
+  right. auto.
+Qed.
 
 Lemma neighbors_leader_distance_correct4 : forall (x y : Component),
   is_in_once y (construct_checker_input x).(neighbor_leader_distance) ->
@@ -281,18 +290,6 @@ Lemma neighbors_leader_distance_correct4 : forall (x y : Component),
 Proof.
   intros.
   apply (neighbors_leader_distance_correct4' x y) ; auto.
-Qed.
-
-Axiom neighbors_leader_distance_correct3' : forall (x y z: Component) (n : nat),
-  In (y,z,n) (neighbors_leader_distance x) -> 
-    (construct_checker_input y).(distance_i) = n.
-
-Lemma neighbors_leader_distance_correct3 : forall (x y z: Component) (n : nat),
-  In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) -> 
-    (construct_checker_input y).(distance_i) = n.
-Proof.
-  intros.
-  apply (neighbors_leader_distance_correct3' x y z n) ; auto.
 Qed.
 
 Fixpoint leader_same (x : Component) (l : list (Component * Component * nat)) : bool :=
