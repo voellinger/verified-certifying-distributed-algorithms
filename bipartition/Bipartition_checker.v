@@ -54,10 +54,10 @@ Definition construct_local_input (x: Component) : local_input :=
     x 
     (neighbors x).
 
-Fixpoint construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
+Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
   match l with
   | nil => nil
-  | hd :: tl => (hd, leader hd, distance hd) :: (construct_checker_input_neighbor_list tl)
+  | hd :: tl => (hd, leader hd, distance hd) :: (manual_construct_checker_input_neighbor_list tl)
   end.
 
 Definition construct_checker_input (x : Component) : checker_input :=
@@ -212,12 +212,19 @@ Proof.
 Qed.
 
 Lemma is_not_in_correct' : forall l x,
-(~ In x l) ->  is_not_in x (construct_checker_input_neighbor_list l).
+(~ In x l) ->  is_not_in x (manual_construct_checker_input_neighbor_list l).
 Proof.
   intros.
   induction l ; simpl in * ; intuition.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
+
+
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
 
 Axiom neighbors_leader_distance_correct0' : forall (x y z : Component) (n : nat),
   In (y,z,n) (neighbors_leader_distance x) ->
@@ -252,20 +259,6 @@ Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
   intros.
-  apply neighbors_leader_distance_correct1 in H.
-  apply is_in_once_correct in H.
-  destruct H. destruct H.
-  unfold construct_checker_input in * ; simpl in *.
-  destruct (neighbor_leader_distance (construct_checker_input x1)).
-  inversion H.
-  inversion H. subst. simpl. destruct (V_eq_dec x2 x2) ; intuition.
-  
-  destruct (construct_checker_input x1). destruct (construct_checker_input x2).
-  simpl in *.
-  unfold get_distance_in_list.
-  destruct neighbor_leader_distance0.
-  
-  
   apply (neighbors_leader_distance_correct2' x1 x2) ; auto.
 Qed.
 
