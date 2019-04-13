@@ -251,7 +251,21 @@ Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
-  intros. (*induction (construct_local_input x1).*)
+  intros.
+  apply neighbors_leader_distance_correct1 in H.
+  apply is_in_once_correct in H.
+  destruct H. destruct H.
+  unfold construct_checker_input in * ; simpl in *.
+  destruct (neighbor_leader_distance (construct_checker_input x1)).
+  inversion H.
+  inversion H. subst. simpl. destruct (V_eq_dec x2 x2) ; intuition.
+  
+  destruct (construct_checker_input x1). destruct (construct_checker_input x2).
+  simpl in *.
+  unfold get_distance_in_list.
+  destruct neighbor_leader_distance0.
+  
+  
   apply (neighbors_leader_distance_correct2' x1 x2) ; auto.
 Qed.
 
