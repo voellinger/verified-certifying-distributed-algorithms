@@ -219,37 +219,6 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
-
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-
-Axiom neighbors_leader_distance_correct0' : forall (x y z : Component) (n : nat),
-  In (y,z,n) (neighbors_leader_distance x) ->
-    is_in_once y (neighbors_leader_distance x).
-
-Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
-  In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
-    is_in_once y (construct_checker_input x).(neighbor_leader_distance).
-Proof.
-  simpl in * ; intros.
-  apply (neighbors_leader_distance_correct0' x y z n) ; auto.
-Qed.
-
-Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
-    is_in_once x2 (neighbors_leader_distance x1).
-
-Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
-    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
-Proof.
-  intros.
-  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
-Qed.
-
 Axiom neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i).
@@ -367,13 +336,125 @@ Definition get_parent (x : Component) : Component :=
 Definition get_leader (x : Component) : Component :=
   (construct_checker_input x).(leader_i).
 
+Fixpoint is_not_in_b (x : Component) (l : list (Component * Component * nat)) : bool :=
+  match l with
+  | nil => true
+  | (y,z,n) :: tl => if V_eq_dec x y then false else is_not_in_b x tl
+  end.
+
+Fixpoint is_in_once_b (x : Component) (l : list (Component * Component * nat)) : bool :=
+  match l with
+  | nil => false
+  | (y,z,n) :: tl => if V_eq_dec x y then is_not_in_b x tl else is_in_once_b x tl
+  end.
+
+Fixpoint NoDup_b (l: list (Component * Component * nat)) : bool :=
+  match l with
+  | nil => true
+  | (a, b, c) :: tl => is_in_once_b a l && NoDup_b tl
+  end.
+
+Definition checker_local_output_consistent (x : Component) : bool :=
+  NoDup_b (neighbors_leader_distance x).
+ (* &&
+  each_neighbor_is_in_nld &&
+  each_nld_is_in_neighbor. *)
+
+Lemma NoDup_b_1: forall (y z : Component) (n : nat) (l : list (Component * Component * nat)),
+  NoDup_b ((y, z, n) :: l) = true ->
+    is_in_once y ((y, z, n) :: l).
+Proof.
+  intros.
+  simpl in *.
+  destruct (V_eq_dec y y) ; intuition.
+  apply andb_true_iff in H.
+  destruct H.
+  unfold is_not_in.
+  induction l ; auto.
+  destruct a0. destruct p. simpl in *.
+  destruct (V_eq_dec c0 c0) ; intuition.
+  destruct (V_eq_dec y c0) ; intuition.
+  simpl in *.
+  apply andb_true_iff in H4.
+  destruct H4.
+  intuition.
+Qed.
+
+Lemma NoDup_b_2 : forall a0 l,
+  NoDup_b (a0 :: l) = true
+    -> NoDup_b l = true.
+Proof.
+  intros.
+  unfold NoDup_b in *. destruct a0. destruct p. simpl in *.
+  destruct (V_eq_dec c0 c0) ; intuition.
+  apply andb_true_iff in H.
+  destruct H.
+  intuition.
+Qed.
+
+Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
+  checker_local_output_consistent x = true ->
+  In (y,z,n) (neighbors_leader_distance x) ->  
+    is_in_once y (construct_checker_input x).(neighbor_leader_distance).
+Proof.
+  simpl in * ; intros.
+  unfold checker_local_output_consistent in H.
+  induction (neighbors_leader_distance x). auto.
+
+  assert (NoDup_b l = true).
+  apply NoDup_b_2 in H. auto.
+  inversion H0. subst.
+  apply NoDup_b_1 in H. auto.
+  apply IHl in H1 ; auto.
+  clear H0 IHl.
+  destruct a0. destruct p.
+  assert (c0 <> y).
+  intuition. subst. 
+  induction l. inversion H2. inversion H2. subst. unfold NoDup_b in H.
+  simpl in H. destruct (V_eq_dec y y) ; intuition.
+  destruct a0. destruct p. simpl in *. destruct (V_eq_dec y y) ; destruct (V_eq_dec c0 c0) ; destruct (V_eq_dec y c0) ; intuition.
+  assert (is_not_in_b y l && NoDup_b l = true).
+  apply andb_true_iff in H. destruct H.
+  apply andb_true_iff in H2. destruct H2.
+  apply andb_true_iff. auto. auto.
+  assert (is_not_in_b y l && NoDup_b l = true).
+  apply andb_true_iff in H. destruct H.
+  apply andb_true_iff in H2. destruct H2.
+  apply andb_true_iff. auto. auto.
+  unfold is_in_once.
+  destruct (V_eq_dec y c0) ; intuition.
+  symmetry in e. intuition.
+Qed.
+
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+
+Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) <-> 
+    is_in_once x2 (neighbors_leader_distance x1).
+
+Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) <-> 
+    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
+Proof.
+  intros.
+  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
+Qed.
+
+
+
+
 Lemma checker_bipartite_correct : forall x : Component,
   v x ->
   checker_local_bipartition x = true ->
+  checker_local_output_consistent x = true ->
   gamma_1 v a c x get_color.
 Proof.
   unfold gamma_1.
-  intros.
+  intros x H H0 Hnew. intros.
   destruct H1.
   unfold get_color.
   assert (a (A_ends v2 x)).
@@ -413,6 +494,7 @@ Proof.
   rewrite H4 in *.
   destruct (Nat.odd n) ; intuition.
   destruct (eqb (Nat.odd (distance x)) (Nat.odd n)) ; subst ; intuition.
+  auto.
 Qed.
 
 Lemma neighborhood_correct : forall (v : V_set) a c x y,
@@ -540,19 +622,28 @@ Qed.
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->
-  (checker_local_bipartition x) = true) -> bipartite a) /\
+  checker_local_bipartition x = true /\ checker_local_output_consistent x = true) -> bipartite a) /\
 
 (((forall (x : Component), v x -> 
-  (checker_tree x) = true) /\
+  (checker_tree x = true /\ checker_local_output_consistent x = true)) /\
   (exists (x : Component), v x /\
-  (checker_local_bipartition x) = false)) -> ~ bipartite a).
+  checker_local_bipartition x = false)) -> ~ bipartite a).
 Proof.
   split ; intros.
   - apply (Gamma_1_Psi1 (get_root v a c) get_parent get_distance v a c get_color).
     unfold Gamma_1.
     intros.
     apply checker_bipartite_correct ; intros ; auto.
-  - assert (exists v_random, v v_random) as v_r.
+    apply (H v1) ; auto. apply (H v1) ; auto.
+  - assert ((forall x : Component,
+     v x -> checker_tree x = true) /\
+    (exists x : Component, v x /\ checker_local_bipartition x = false)).
+    destruct H ; split ; intros ; auto. apply (H x) ; auto.
+    assert (forall x : Component, v x -> checker_local_output_consistent x = true).
+    intros. destruct H. apply (H x) ; auto.
+    clear H. rename H0 into H. rename H1 into Hneu.
+
+    assert (exists v_random, v v_random) as v_r.
     apply (v_not_empty v a c).
     destruct v_r as [v_random v_r].
     assert (forall (x : Component), v x -> (construct_checker_input x).(leader_i) = (construct_checker_input v_random).(leader_i)).
@@ -581,21 +672,23 @@ Proof.
     exists x.
     unfold checker_local_bipartition in H0.
     assert (forall (x y z : Component) (n : nat),
+      v x ->
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       a (A_ends x y)).
     intros.
     apply local_input_correct.
-    apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H1 ; auto.
+    apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H2 ; auto.
     specialize (H1 x).
 
 
 
 
     assert (forall (x y z : Component) (n : nat),
+      v x ->
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
-    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H2. auto.
+    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H3 ; auto.
     specialize (H2 x).
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
@@ -605,7 +698,10 @@ Proof.
     assert (forall (y z : Component) (n : nat),
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
-    apply neighbors_leader_distance_correct0.
+    intros.
+    specialize (Hneu x). apply Hneu in H.
+    apply (neighbors_leader_distance_correct0 x y z n) in H.
+    auto. simpl in H3. auto.
     clear H1.
     remember leader as ll. remember parent as pp. remember neighbors_leader_distance as rr.
     induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
@@ -633,12 +729,13 @@ Proof.
     apply IHl ; auto.
     destruct (Nat.odd (distance x)) ; destruct (Nat.odd (distance c0)) ; intuition.
 
+    
 
 
     intros. specialize (H2' y z n0). specialize (new y z n0).
     destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp.
     remember neighbors_leader_distance as rr. intuition.
-    apply (is_not_in_correct l c0 z n0) in H4. intuition.
+    apply (is_not_in_correct l c0 z n0) in H6. intuition.
     intuition.
     clear IHl H2' H0.
     intros.
@@ -659,6 +756,7 @@ Proof.
     apply (Connected_Isa_Graph v a c).
     apply (G_ina_inv2 v a H5 _ _ H3).
     intuition.
+    auto.
 Qed.
 
 End Checker.
