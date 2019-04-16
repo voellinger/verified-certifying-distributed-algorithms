@@ -354,12 +354,6 @@ Fixpoint NoDup_b (l: list (Component * Component * nat)) : bool :=
   | (a, b, c) :: tl => is_in_once_b a l && NoDup_b tl
   end.
 
-Definition checker_local_output_consistent (x : Component) : bool :=
-  NoDup_b (neighbors_leader_distance x).
- (* &&
-  each_neighbor_is_in_nld &&
-  each_nld_is_in_neighbor. *)
-
 Lemma NoDup_b_1: forall (y z : Component) (n : nat) (l : list (Component * Component * nat)),
   NoDup_b ((y, z, n) :: l) = true ->
     is_in_once y ((y, z, n) :: l).
@@ -392,6 +386,65 @@ Proof.
   intuition.
 Qed.
 
+
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
+
+Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
+  is_in_once x2 (neighbors_leader_distance x1) ->
+  In x2 (construct_local_input x1).(neighbours).
+
+(* Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
+  In x2 (construct_local_input x1).(neighbours) <-> 
+    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
+Proof.
+  intros.
+  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
+Qed. *)
+
+Fixpoint each_neighbor_is_in_nld (x : Component) (l : list Component) : bool :=
+  match l with
+  | nil => true
+  | a :: tl => is_in_once_b a (construct_checker_input x).(neighbor_leader_distance) && each_neighbor_is_in_nld x tl
+  end.
+
+Definition checker_local_output_consistent (x : Component) : bool :=
+  NoDup_b (neighbors_leader_distance x) &&
+  each_neighbor_is_in_nld x (construct_local_input x).(neighbours). (* &&
+  each_nld_is_in_neighbor. *)
+
+Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
+  checker_local_output_consistent x1 = true ->
+  In x2 (construct_local_input x1).(neighbours) -> 
+    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
+Proof.
+  intros x1 x2 H H1.
+  unfold checker_local_output_consistent in H.
+  apply andb_true_iff in H.
+  destruct H.
+  clear H.
+  simpl in *.
+  induction (neighbors x1).
+  inversion H1.
+  simpl in *.
+  destruct H1 ; subst.
+  apply andb_true_iff in H0.
+  destruct H0.
+  clear H0 IHl.
+  induction (neighbors_leader_distance x1).
+  simpl in *. inversion H.
+  simpl in *.
+  destruct a0. destruct p. destruct (V_eq_dec x2 c0) ; subst ; intuition.
+  clear IHl0.
+  induction l0. simpl. auto.
+  simpl in *. destruct a0. destruct p. destruct (V_eq_dec c0 c2) ; subst ; intuition.
+  apply andb_true_iff in H0. destruct H0.
+  auto.
+Qed.
+
 Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
   checker_local_output_consistent x = true ->
   In (y,z,n) (neighbors_leader_distance x) ->  
@@ -399,6 +452,7 @@ Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
 Proof.
   simpl in * ; intros.
   unfold checker_local_output_consistent in H.
+  apply andb_true_iff in H. destruct H. clear H1.
   induction (neighbors_leader_distance x). auto.
 
   assert (NoDup_b l = true).
@@ -426,23 +480,7 @@ Proof.
   symmetry in e. intuition.
 Qed.
 
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
 
-Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
-    is_in_once x2 (neighbors_leader_distance x1).
-
-Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
-    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
-Proof.
-  intros.
-  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
-Qed.
 
 
 
