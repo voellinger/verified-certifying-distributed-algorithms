@@ -485,13 +485,45 @@ Qed.
 
 
 
-Lemma checker_bipartite_correct : forall x : Component,
+Lemma checker_bipartite_correct : (forall x : Component,
   v x ->
-  checker_local_bipartition x = true ->
-  checker_local_output_consistent x = true ->
-  gamma_1 v a c x get_color.
+  (checker_local_bipartition x = true /\
+  checker_local_output_consistent x = true)) ->
+  forall y : Component, gamma_1 v a c y get_color.
 Proof.
   unfold gamma_1.
+  intros H. intros. destruct H0.
+  assert (v y) as vy.
+  assert (Connected v a).
+  apply c.
+  apply Connected_Isa_Graph in H2.
+  apply (G_ina_inv1 v a H2) in H1 ; auto.
+  assert (H' := H).
+  specialize (H y). specialize (H' v2).
+  intuition. clear H H6. unfold checker_local_bipartition in H4.
+  simpl in *. apply (neighbors_leader_distance_correct1 v2 y) in H5.
+  simpl in *.
+  assert (H5' := H5).
+  
+
+
+  apply is_in_once_correct in H5.
+    apply neighbors_leader_distance_correct4' in H5'.
+  assert (get_color y <> get_color v2).
+  destruct H5. destruct H.
+  induction (neighbors_leader_distance v2).
+  inversion H.
+  simpl in *. destruct a0. destruct p.
+  destruct (eqb (Nat.odd (distance v2)) (Nat.odd n)) ; intuition.
+  inversion H5.
+  subst.
+  
+  admit.
+  intuition.
+  simpl in *. clear H2 H4 H5.
+  
+  
+
   intros x H H0 Hnew. intros.
   destruct H1.
   unfold get_color.
@@ -512,7 +544,7 @@ Proof.
   apply neighbors_leader_distance_correct2 in H2.
   intuition.
   rewrite <- H2 in *.
-  apply neighbors_leader_distance_correct1 in H3.
+  apply neighbors_leader_distance_correct1' in H3.
   rewrite neighbors_leader_distance_correct2 in * ; auto.
   subst.
   clear H1 H2.
@@ -523,7 +555,7 @@ Proof.
   apply neighbors_leader_distance_correct4 in H2'.
   destruct H2'. destruct H1.
   apply neighbors_leader_distance_correct0 in H1.
-  apply neighbors_leader_distance_correct1 in H1.
+  apply neighbors_leader_distance_correct1' in H1.
   apply neighbors_leader_distance_correct2 in H1.
   rewrite <- H1 in *. clear H1.
   induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
@@ -532,6 +564,8 @@ Proof.
   rewrite H4 in *.
   destruct (Nat.odd n) ; intuition.
   destruct (eqb (Nat.odd (distance x)) (Nat.odd n)) ; subst ; intuition.
+  auto.
+  auto.
   auto.
 Qed.
 
