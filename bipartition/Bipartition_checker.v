@@ -501,11 +501,46 @@ Proof.
   assert (H' := H).
   specialize (H y). specialize (H' v2).
   intuition. clear H H6. unfold checker_local_bipartition in H4.
-  simpl in *. apply (neighbors_leader_distance_correct1 v2 y) in H5.
   simpl in *.
-  assert (H5' := H5).
+
+  assert (In y (neighbors v2)).
+  admit.
+  assert (H' := H).
+  apply neighbors_leader_distance_correct2' in H'.
+
+  apply neighbors_leader_distance_correct1 in H ; auto.
+  assert (H'' := H).
+
+  apply neighbors_leader_distance_correct4' in H.
+  destruct H. destruct H.
+  unfold get_color in H2. simpl in *. clear H0 H1 vy H5.
+  induction (neighbors_leader_distance v2).
+  inversion H.
+
   
 
+  simpl in *.
+  destruct a0. destruct p.
+  destruct H ; auto. inversion H. subst.
+  destruct (eqb (Nat.odd (distance v2)) (Nat.odd x0)).
+  inversion H4. destruct (V_eq_dec y y) ; intuition.
+  subst.
+  
+
+  unfold checker_local_output_consistent in H5.
+  apply andb_true_iff in H5. destruct H5.
+  simpl in H3. clear H.
+  
+  assert (In y (neighbors v2)).
+  admit.
+  apply neighbors_leader_distance_correct2' in H.
+  unfold get_color in H2. simpl in *.
+  assert (exists n : nat, n = distance y).
+  exists (distance y). auto. destruct H5. rewrite <- H5 in *.
+  assert (exists n : nat, n = distance v2).
+  exists (distance v2). auto. destruct H6. rewrite <- H6 in *.
+  
+    
 
   apply is_in_once_correct in H5.
     apply neighbors_leader_distance_correct4' in H5'.
