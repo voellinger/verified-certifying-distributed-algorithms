@@ -387,15 +387,7 @@ Proof.
 Qed.
 
 
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* Theoretisch koennte der Checker auch A0' und A1' selbst pruefen!? *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
-(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)(* *)
 
-Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
-  is_in_once x2 (neighbors_leader_distance x1) ->
-  In x2 (construct_local_input x1).(neighbours).
 
 Fixpoint each_neighbor_is_in_nld (x : Component) (l : list Component) : bool :=
   match l with
@@ -403,10 +395,27 @@ Fixpoint each_neighbor_is_in_nld (x : Component) (l : list Component) : bool :=
   | a :: tl => is_in_once_b a (construct_checker_input x).(neighbor_leader_distance) && each_neighbor_is_in_nld x tl
   end.
 
+Fixpoint each_nld_is_in_neighbor (x : Component) (l : list (Component * Component * nat)) : bool :=
+  match l with
+  | nil => true
+  | (a,b,c) :: tl => is_in a (construct_local_input x).(neighbours) && each_nld_is_in_neighbor x tl
+  end.
+
 Definition checker_local_output_consistent (x : Component) : bool :=
   NoDup_b (neighbors_leader_distance x) &&
-  each_neighbor_is_in_nld x (construct_local_input x).(neighbours). (* &&
-  each_nld_is_in_neighbor. *)
+  each_neighbor_is_in_nld x (construct_local_input x).(neighbours) &&
+  each_nld_is_in_neighbor x (construct_checker_input x).(neighbor_leader_distance).
+
+Lemma neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
+  checker_local_output_consistent x1 = true ->
+  is_in_once x2 (neighbors_leader_distance x1) ->
+  In x2 (construct_local_input x1).(neighbours).
+Proof.
+  intros.
+  simpl.
+  unfold checker_local_output_consistent in H.
+  repeat (apply andb_true_iff in H).
+Admitted.
 
 Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
   checker_local_output_consistent x1 = true ->
@@ -415,6 +424,8 @@ Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
 Proof.
   intros x1 x2 H H1.
   unfold checker_local_output_consistent in H.
+  apply andb_true_iff in H.
+  destruct H. clear H0.
   apply andb_true_iff in H.
   destruct H.
   clear H.
@@ -444,7 +455,7 @@ Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
 Proof.
   simpl in * ; intros.
   unfold checker_local_output_consistent in H.
-  apply andb_true_iff in H. destruct H. clear H1.
+  apply andb_true_iff in H. destruct H. clear H1. apply andb_true_iff in H. destruct H. clear H1.
   induction (neighbors_leader_distance x). auto.
 
   assert (NoDup_b l = true).
@@ -756,6 +767,9 @@ Proof.
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
     apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1'. apply neighbors_leader_distance_correct0 in H3 ; auto.
+    specialize (Hneu x0).
+    intuition.
+    apply (neighbors_leader_distance_correct0 x0 y z n) ; auto.
     specialize (H2 x).
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
