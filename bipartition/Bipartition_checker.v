@@ -858,4 +858,5 @@ End Checker.
 
 
 Recursive Extraction checker_local_bipartition.
+Recursive Extraction checker_local_output_consistent.
 Recursive Extraction checker_tree.
