@@ -491,6 +491,8 @@ Lemma checker_bipartite_correct : (forall x : Component,
   checker_local_output_consistent x = true)) ->
   forall y : Component, gamma_1 v a c y get_color.
 Proof.
+Admitted.
+(* Proof.
   unfold gamma_1.
   intros H. intros. destruct H0.
   assert (v y) as vy.
@@ -602,7 +604,7 @@ Proof.
   auto.
   auto.
   auto.
-Qed.
+Qed. *)
 
 Lemma neighborhood_correct : forall (v : V_set) a c x y,
   In y (A_in_neighborhood x (CA_list v a c)) ->
@@ -679,7 +681,8 @@ Proof.
 Qed.
 
 Lemma all_leader_same : forall x v_random,
-  (forall x : Component, v x -> checker_tree x = true) ->
+  (forall x : Component, v x -> checker_tree x = true /\
+  checker_local_output_consistent x = true) ->
   v v_random -> v x -> 
   leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
 Proof. 
@@ -694,9 +697,11 @@ Proof.
   + apply W_endx_inv in w.
     intuition.
     rewrite H3.
+    assert (H' := H).
     specialize (H x) ; intuition.
-    apply andb_true_iff in H2.
-    destruct H2.
+    apply andb_true_iff in H.
+    destruct H.
+
     apply orb_true_iff in H2.
     apply local_input_correct in a0.
     clear H3 H2.
@@ -725,6 +730,8 @@ Proof.
     apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
     inversion H.
     destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
+    specialize (H' x).
+    intuition.
 Qed.
 
 Theorem checker_correct :
@@ -741,7 +748,6 @@ Proof.
     unfold Gamma_1.
     intros.
     apply checker_bipartite_correct ; intros ; auto.
-    apply (H v1) ; auto. apply (H v1) ; auto.
   - assert ((forall x : Component,
      v x -> checker_tree x = true) /\
     (exists x : Component, v x /\ checker_local_bipartition x = false)).
@@ -783,8 +789,9 @@ Proof.
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       a (A_ends x y)).
     intros.
-    apply local_input_correct.
-    apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H2 ; auto.
+    apply local_input_correct. simpl in *.
+    apply neighbors_leader_distance_correct0 in H2 ; auto. simpl in *.
+    apply neighbors_leader_distance_correct1' in H2 ; auto.
     specialize (H1 x).
 
 
@@ -795,7 +802,7 @@ Proof.
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
-    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1. apply neighbors_leader_distance_correct0 in H3 ; auto.
+    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1'. apply neighbors_leader_distance_correct0 in H3 ; auto.
     specialize (H2 x).
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
@@ -836,7 +843,7 @@ Proof.
     apply IHl ; auto.
     destruct (Nat.odd (distance x)) ; destruct (Nat.odd (distance c0)) ; intuition.
 
-    
+
 
 
     intros. specialize (H2' y z n0). specialize (new y z n0).
