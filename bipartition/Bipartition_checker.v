@@ -397,14 +397,6 @@ Axiom neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
   is_in_once x2 (neighbors_leader_distance x1) ->
   In x2 (construct_local_input x1).(neighbours).
 
-(* Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
-  In x2 (construct_local_input x1).(neighbours) <-> 
-    is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
-Proof.
-  intros.
-  apply (neighbors_leader_distance_correct1' x1 x2) ; auto.
-Qed. *)
-
 Fixpoint each_neighbor_is_in_nld (x : Component) (l : list Component) : bool :=
   match l with
   | nil => true
@@ -481,131 +473,6 @@ Proof.
 Qed.
 
 
-
-
-
-
-Lemma checker_bipartite_correct : (forall x : Component,
-  v x ->
-  (checker_local_bipartition x = true /\
-  checker_local_output_consistent x = true)) ->
-  forall y : Component, gamma_1 v a c y get_color.
-Proof.
-Admitted.
-(* Proof.
-  unfold gamma_1.
-  intros H. intros. destruct H0.
-  assert (v y) as vy.
-  assert (Connected v a).
-  apply c.
-  apply Connected_Isa_Graph in H2.
-  apply (G_ina_inv1 v a H2) in H1 ; auto.
-  assert (H' := H).
-  specialize (H y). specialize (H' v2).
-  intuition. clear H H6. unfold checker_local_bipartition in H4.
-  simpl in *.
-
-  assert (In y (neighbors v2)).
-  admit.
-  assert (H' := H).
-  apply neighbors_leader_distance_correct2' in H'.
-
-  apply neighbors_leader_distance_correct1 in H ; auto.
-  assert (H'' := H).
-
-  apply neighbors_leader_distance_correct4' in H.
-  destruct H. destruct H.
-  unfold get_color in H2. simpl in *. clear H0 H1 vy H5.
-  induction (neighbors_leader_distance v2).
-  inversion H.
-
-  
-
-  simpl in *.
-  destruct a0. destruct p.
-  destruct H ; auto. inversion H. subst.
-  destruct (eqb (Nat.odd (distance v2)) (Nat.odd x0)).
-  inversion H4. destruct (V_eq_dec y y) ; intuition.
-  subst.
-  
-
-  unfold checker_local_output_consistent in H5.
-  apply andb_true_iff in H5. destruct H5.
-  simpl in H3. clear H.
-  
-  assert (In y (neighbors v2)).
-  admit.
-  apply neighbors_leader_distance_correct2' in H.
-  unfold get_color in H2. simpl in *.
-  assert (exists n : nat, n = distance y).
-  exists (distance y). auto. destruct H5. rewrite <- H5 in *.
-  assert (exists n : nat, n = distance v2).
-  exists (distance v2). auto. destruct H6. rewrite <- H6 in *.
-  
-    
-
-  apply is_in_once_correct in H5.
-    apply neighbors_leader_distance_correct4' in H5'.
-  assert (get_color y <> get_color v2).
-  destruct H5. destruct H.
-  induction (neighbors_leader_distance v2).
-  inversion H.
-  simpl in *. destruct a0. destruct p.
-  destruct (eqb (Nat.odd (distance v2)) (Nat.odd n)) ; intuition.
-  inversion H5.
-  subst.
-  
-  admit.
-  intuition.
-  simpl in *. clear H2 H4 H5.
-  
-  
-
-  intros x H H0 Hnew. intros.
-  destruct H1.
-  unfold get_color.
-  assert (a (A_ends v2 x)).
-  assert (Connected v a).
-  apply c.
-  apply Connected_Isa_Graph in H3.
-  apply (G_non_directed v a H3) in H2 ; auto.
-  rename H2 into H2'.
-  assert (v x) as vx.
-  assert (Connected v a).
-  apply c.
-  apply Connected_Isa_Graph in H2.
-  apply (G_ina_inv2 v a H2) in H3 ; auto.
-  apply local_input_correct in H3.
-  assert (H2 := H3).
-  apply neighbors_leader_distance_correct1 in H3.
-  apply neighbors_leader_distance_correct2 in H2.
-  intuition.
-  rewrite <- H2 in *.
-  apply neighbors_leader_distance_correct1' in H3.
-  rewrite neighbors_leader_distance_correct2 in * ; auto.
-  subst.
-  clear H1 H2.
-  apply local_input_correct in H2'.
-  apply neighbors_leader_distance_correct1 in H2'.
-  unfold checker_local_bipartition in H0.
-  assert (H2'' := H2').
-  apply neighbors_leader_distance_correct4 in H2'.
-  destruct H2'. destruct H1.
-  apply neighbors_leader_distance_correct0 in H1.
-  apply neighbors_leader_distance_correct1' in H1.
-  apply neighbors_leader_distance_correct2 in H1.
-  rewrite <- H1 in *. clear H1.
-  induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
-  destruct a0. destruct p.
-  destruct (V_eq_dec v2 c0) ; subst ; intuition.
-  rewrite H4 in *.
-  destruct (Nat.odd n) ; intuition.
-  destruct (eqb (Nat.odd (distance x)) (Nat.odd n)) ; subst ; intuition.
-  auto.
-  auto.
-  auto.
-Qed. *)
-
 Lemma neighborhood_correct : forall (v : V_set) a c x y,
   In y (A_in_neighborhood x (CA_list v a c)) ->
   a (A_ends x y).
@@ -639,6 +506,92 @@ Proof.
       apply In_right. apply (H3 x0 y0) ; auto.
   + subst. intuition.
 Qed.
+
+Lemma neighborhood_correct1 : forall (v : V_set) (a : A_set) c x y,
+  a (A_ends x y) ->
+  In y (A_in_neighborhood x (CA_list v a c)).
+Proof.
+  clear v a c.
+  intros.
+  induction c ; simpl in * ; intuition.
+  inversion H.
+  destruct (V_eq_dec x y0) ; subst ; intuition.
+  destruct (V_eq_dec y0 x0) ; subst ; intuition.
+  inversion H.
+  subst. inversion H5. subst. simpl. left. auto.
+  subst. simpl. auto.
+  subst. simpl. right. auto.
+  destruct (V_eq_dec x x0) ; subst ; intuition.
+  inversion H. inversion H5 ; subst ; simpl.
+  auto. auto. subst. simpl. auto.
+  inversion H ; subst. inversion H5 ; subst ; simpl.
+  intuition. intuition.
+  auto.
+  destruct (V_eq_dec x y0) ; subst ; intuition.
+  destruct (V_eq_dec y0 x0) ; subst ; intuition.
+  inversion H.
+  subst. inversion H5. subst. simpl. left. auto.
+  subst. simpl. auto.
+  subst. simpl. right. auto.
+  destruct (V_eq_dec x x0) ; subst ; intuition.
+  inversion H. inversion H5 ; subst ; simpl.
+  auto. auto. subst. simpl. auto.
+  inversion H ; subst. inversion H5 ; subst ; simpl.
+  intuition. intuition.
+  auto.
+  subst. auto.
+Qed.
+
+Lemma checker_bipartite_correct : (forall x : Component,
+  v x ->
+  (checker_local_bipartition x = true /\
+  checker_local_output_consistent x = true)) ->
+  forall y : Component, gamma_1 v a c y get_color.
+Proof.
+  unfold gamma_1.
+  intros H. intros. destruct H0.
+  assert (v y) as vy.
+  assert (Connected v a).
+  apply c.
+  apply Connected_Isa_Graph in H2.
+  apply (G_ina_inv1 v a H2) in H1 ; auto.
+  assert (H' := H).
+  specialize (H y). specialize (H' v2).
+  intuition.
+  unfold checker_local_bipartition in *.
+  unfold get_color in H2. simpl in *.
+  clear H H6.
+  assert (In y (neighbors v2)).
+  unfold neighbors.
+  apply neighborhood_correct1.
+  apply (G_non_directed v a) ; auto.
+  apply (Connected_Isa_Graph v a) ; auto.
+  assert (H6 := H5).
+  unfold checker_local_output_consistent in H5.
+  apply andb_true_iff in H5. destruct H5.
+  simpl in *.
+  clear H3.
+  apply (neighbors_leader_distance_correct1 v2 y) in H6 ; simpl in * ; auto.
+  apply neighbors_leader_distance_correct2' in H.
+  simpl in *. (* rewrite <- H in *. *)
+  clear H5 H0 H1 vy.
+  
+  
+  induction (neighbors_leader_distance v2).
+
+  inversion H6.
+  simpl in *. destruct a0. destruct p.
+  destruct (V_eq_dec y c0) ; subst ; intuition.
+  rewrite H2 in *.
+  assert (eqb (Nat.odd (distance v2)) (Nat.odd (distance v2)) = true).
+  destruct (Nat.odd (distance v2)). auto. auto.
+  rewrite H3 in H4. inversion H4.
+
+  destruct (eqb (Nat.odd (distance v2)) (Nat.odd n)). inversion H4.
+  auto.
+Qed.
+
+
 
 Lemma checker_tree_correct : forall (x : Component),
   v x -> (checker_tree x) = true -> gamma_2 get_parent get_distance v a (construct_checker_input x).(leader_i) x.
