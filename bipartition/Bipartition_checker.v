@@ -414,8 +414,21 @@ Proof.
   intros.
   simpl.
   unfold checker_local_output_consistent in H.
-  repeat (apply andb_true_iff in H).
-Admitted.
+  apply andb_true_iff in H. destruct H.
+  apply andb_true_iff in H. destruct H.
+  clear H2.
+  simpl in *.
+  induction (neighbors_leader_distance x1).
+  inversion H0.
+  simpl in *.
+  destruct a0. destruct p.
+  apply andb_true_iff in H1. destruct H1.
+  apply andb_true_iff in H. destruct H.
+  destruct (V_eq_dec c0 c0).
+  destruct (V_eq_dec x2 c0) ; subst.
+  apply is_in_correct in H1 ; auto.
+  intuition. intuition.
+Qed.
 
 Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
   checker_local_output_consistent x1 = true ->
