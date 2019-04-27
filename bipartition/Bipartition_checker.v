@@ -735,50 +735,18 @@ Proof.
     inversion H.
     specialize (H' x). intuition.
 Qed.
-    
-    
-
-
-(*     remember leader as ll. remember parent as pp. remember distance as dd. remember neighbors_leader_distance as rr.
-    assert (H'' := H'). specialize (H'' x). simpl in *.
-    assert (v x) as H''' ; auto. apply (H'') in H'''. clear H''.
-    
-    induction (neighbors_leader_distance x) ; simpl in * ; intuition.
-
-    destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst.
-    inversion H3 ; subst. reflexivity.
-    inversion H3. subst. intuition.
-    destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst.
-    destruct (V_eq_dec (leader x) c1) ; subst.
-    apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
-    inversion H.
-    destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
-    destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst.
-    destruct (V_eq_dec (leader x) c1) ; subst.
-    inversion H3. auto. inversion H.
-    inversion H3.
-    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
-    inversion H.
-    destruct a0. destruct p.
-    destruct (V_eq_dec y c0) ; subst.
-    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
-    specialize (H' x).
-    intuition. admit.
-    inversion H.
-    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
-    inversion H.
-    specialize (H' x). intuition.
-Qed. *)
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->
-  checker_local_bipartition x = true /\ checker_local_output_consistent x = true) -> bipartite a) /\
+  checker_local_bipartition x = true /\ checker_local_output_consistent x = true /\
+  checker_global_output_consistent x = true) -> 
+    bipartite a) 
+
+  /\
 
 (((forall (x : Component), v x -> 
-  (checker_tree x = true /\ checker_local_output_consistent x = true)) /\
+  (checker_tree x = true /\ checker_local_output_consistent x = true /\
+  checker_global_output_consistent x = true)) /\
   (exists (x : Component), v x /\
   checker_local_bipartition x = false)) -> ~ bipartite a).
 Proof.
