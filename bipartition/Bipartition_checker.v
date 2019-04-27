@@ -227,23 +227,19 @@ Fixpoint checker_global_output_consistent (x : Component) :=
 
 Axiom checker_global_output_consistent_nld_correct1 : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true ->
-    In x2 (construct_local_input x1).(neighbours) ->
     get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i) /\
     get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
 
 Lemma neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
-  checker_global_output_consistent x1 = true ->
-  In x2 (construct_local_input x1).(neighbours) -> 
+  checker_global_output_consistent x1 = true -> 
      get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i).
 Proof.
   intros.
-  apply checker_global_output_consistent_nld_correct1 in H0 ; auto.
-  destruct H0 ; auto.
+  apply checker_global_output_consistent_nld_correct1 ; auto.
 Qed.
 
 Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true ->
-  In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
   intros.
@@ -252,17 +248,14 @@ Qed.
 
 Lemma neighbors_leader_distance_correct5' : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true ->
-  In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
 Proof.
   intros.
-  apply checker_global_output_consistent_nld_correct1 in H0 ; auto.
-  destruct H0 ; auto.
+  apply checker_global_output_consistent_nld_correct1 ; auto.
 Qed.
 
 Lemma neighbors_leader_distance_correct5 : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true ->
-  In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 Proof.
   intros.
@@ -611,20 +604,21 @@ Proof.
   intuition.
   unfold checker_local_bipartition in *.
   unfold get_color in H2. simpl in *.
-  clear H H6.
+  clear H H5 H8.
   assert (In y (neighbors v2)).
   unfold neighbors.
   apply neighborhood_correct1.
   apply (G_non_directed v a) ; auto.
   apply (Connected_Isa_Graph v a) ; auto.
+  rename H3 into H5. rename H6 into Hglobal.
   assert (H6 := H5).
   unfold checker_local_output_consistent in H5.
   apply andb_true_iff in H5. destruct H5.
   simpl in *.
   clear H3.
   apply (neighbors_leader_distance_correct1 v2 y) in H6 ; simpl in * ; auto.
-  apply neighbors_leader_distance_correct2' in H.
-  simpl in *. (* rewrite <- H in *. *)
+  apply (neighbors_leader_distance_correct2' v2 y) in Hglobal.
+  simpl in *.
   clear H5 H0 H1 vy.
   
   
@@ -636,7 +630,7 @@ Proof.
   rewrite H2 in *.
   assert (eqb (Nat.odd (distance v2)) (Nat.odd (distance v2)) = true).
   destruct (Nat.odd (distance v2)). auto. auto.
-  rewrite H3 in H4. inversion H4.
+  rewrite H5 in H4. inversion H4.
 
   destruct (eqb (Nat.odd (distance v2)) (Nat.odd n)). inversion H4.
   auto.
