@@ -680,7 +680,8 @@ Qed.
 
 Lemma all_leader_same : forall x v_random,
   (forall x : Component, v x -> checker_tree x = true /\
-  checker_local_output_consistent x = true) ->
+  checker_local_output_consistent x = true /\
+  checker_global_output_consistent x = true) ->
   v v_random -> v x -> 
   leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
 Proof. 
@@ -700,37 +701,77 @@ Proof.
     apply andb_true_iff in H.
     destruct H.
 
-    apply orb_true_iff in H2.
+    apply orb_true_iff in H4.
     apply local_input_correct in a0.
+    rename H5 into Hglobal.
     clear H3 H2.
     assert (a1 := a0).
     apply neighbors_leader_distance_correct1 in a0.
     apply neighbors_leader_distance_correct4 in a0.
     destruct a0. destruct H2.
-    apply neighbors_leader_distance_correct5 in a1.
-    rewrite <- a1. clear a1.
+    apply (neighbors_leader_distance_correct5 x y) in Hglobal ; auto.
+    rewrite <- Hglobal. clear Hglobal.
     assert (a0 := H2).
     apply (leader_same_correct (leader_i (construct_checker_input x))) in H2 ; auto.
-    rewrite <- H2. clear H2 v0.
+    rewrite <- H2. clear H2 v0. rename a0 into aneu.
 
-    unfold neighbors in *.
+    unfold neighbors in *. 
 
-    remember leader as ll. remember parent as pp. remember distance as dd. remember neighbors_leader_distance as rr.
-    induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
 
-    destruct a1. destruct p.
+
+    simpl in *.
+    specialize (H' x). clear H4. intuition.
+    clear a1 H3 H2 H5.
+    induction (neighbors_leader_distance x).
+    inversion aneu.
+    simpl in *. destruct a0. destruct p.
+    destruct (V_eq_dec y c0) ; destruct (V_eq_dec (leader x) c1) ; subst.
+    destruct aneu.
+    inversion H2. auto. symmetry.
+    apply (leader_same_correct (leader x) c0 x0 l x1) ; auto.
+    inversion H. destruct aneu. inversion H2.
+    subst. intuition.
+    auto.
+    inversion H.
+    specialize (H' x). intuition.
+Qed.
+    
+    
+
+
+(*     remember leader as ll. remember parent as pp. remember distance as dd. remember neighbors_leader_distance as rr.
+    assert (H'' := H'). specialize (H'' x). simpl in *.
+    assert (v x) as H''' ; auto. apply (H'') in H'''. clear H''.
+    
+    induction (neighbors_leader_distance x) ; simpl in * ; intuition.
+
+    destruct a0. destruct p.
     destruct (V_eq_dec y c0) ; subst.
-    inversion H2 ; subst. reflexivity.
-    inversion H2. subst. intuition.
-    destruct a1. destruct p.
+    inversion H3 ; subst. reflexivity.
+    inversion H3. subst. intuition.
+    destruct a0. destruct p.
     destruct (V_eq_dec y c0) ; subst.
     destruct (V_eq_dec (leader x) c1) ; subst.
     apply (leader_same_correct _ c0 x0 l x1) in H ; auto.
     inversion H.
     destruct (V_eq_dec (leader x) c1) ; subst ; intuition.
+    destruct a0. destruct p.
+    destruct (V_eq_dec y c0) ; subst.
+    destruct (V_eq_dec (leader x) c1) ; subst.
+    inversion H3. auto. inversion H.
+    inversion H3.
+    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
+    inversion H.
+    destruct a0. destruct p.
+    destruct (V_eq_dec y c0) ; subst.
+    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
     specialize (H' x).
-    intuition.
-Qed.
+    intuition. admit.
+    inversion H.
+    destruct (V_eq_dec (leader x) c1) ; subst. intuition.
+    inversion H.
+    specialize (H' x). intuition.
+Qed. *)
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->
