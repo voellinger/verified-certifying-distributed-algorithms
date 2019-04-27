@@ -2,9 +2,9 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Trees.
 Require Import Coq.Logic.Classical_Pred_Type.
 
-Load "Tree_related".
+(* Load "Tree_related". *)
 Load "Spanning_Tree_related".
-
+Load "Help_Lemmata".
 
 
 

@@ -7,29 +7,6 @@ Require FunInd.
 
 Section Help.
 
-
-Function get_end_vertex (a : Arc) (b : bool) : Vertex :=
-  match a with
-  | A_ends x y => match b with
-	      | true => x
-	      | false => y
-        end
-  end.
-
-Lemma get_end_vertex_correct : forall (a : Arc) (b : bool) (x y : Vertex),
-  a = A_ends x y ->
-  get_end_vertex a b = x \/ get_end_vertex a b = y.
-Proof.
-  intros.
-  rewrite H.
-  simpl.
-  destruct b.
-  + left.
-    reflexivity.
-  + right.
-    reflexivity.
-Qed.
-
 (* Our terminology for members of a network (graph). *)
 Definition Component := Vertex.
 
@@ -139,6 +116,59 @@ Proof.
   apply vx.
   rewrite <- e in vy.
   apply vy.
+Qed.
+
+(* the starting vertex of a walk is in the graph itself *)
+Lemma W_endx_inv :
+ forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list), Walk v a x y vl el -> v x.
+Proof.
+        intros. inversion H. apply H0. apply H1.
+Qed.
+
+(* the ending vertex of a walk is in the graph itself *)
+Lemma W_endy_inv :
+ forall (v: V_set) (a: A_set) (x y : Component) (vl : V_list) (el : E_list), Walk v a x y vl el -> v y.
+Proof.
+        intros. elim H. intros. apply v0. intros. apply H0.
+Qed.
+
+(* Lenghts of lists don't change by reversing. *)
+Lemma E_rev_len: forall(el:E_list),
+  length (E_reverse el) = length el.
+Proof.
+  intros el.
+  induction el.
+  reflexivity.
+  destruct a.
+  simpl.
+  rewrite app_length.
+  simpl.
+  rewrite IHel.
+  apply plus_comm.
+Qed.
+
+(* All Connected have at least one component (therefore root exists). *)
+Lemma v_not_empty : forall (v:V_set) (a:A_set) (c:Connected v a),
+  exists (x:Component), v x.
+Proof.
+  intros v a c.
+  assert (c':=c).
+  induction c.
+  exists x.
+  unfold V_single.
+  intuition.
+
+  exists x.
+  apply V_in_right.
+  apply v0.
+  
+
+  exists x.
+  apply v0.
+  
+  rewrite <- e.
+  apply IHc.
+  apply c.
 Qed.
 
 End Help.
