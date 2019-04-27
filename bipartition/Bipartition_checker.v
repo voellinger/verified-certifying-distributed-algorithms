@@ -17,6 +17,7 @@ Variable c : Connected v a.
 
 (******** Interface of checker *********)
 Variable bipartite_answer : bool.
+Variable global_output_consistent : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
@@ -31,6 +32,7 @@ Record local_input: Set := mk_local_input {
 
 Record checker_input : Set := mk_checker_input {
   algo_answer : bool;
+  global_consistent : bool;
   leader_i : Component;
   distance_i : nat;
   parent_i : Component;
@@ -62,7 +64,8 @@ Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : lis
 
 Definition construct_checker_input (x : Component) : checker_input :=
   mk_checker_input 
-    bipartite_answer 
+    bipartite_answer
+    global_output_consistent
     (leader x) 
     (distance x) 
     (parent x)
@@ -219,11 +222,27 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
-Axiom neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
+Fixpoint checker_global_output_consistent (x : Component) :=
+  (construct_checker_input x).(global_consistent).
+
+Axiom checker_global_output_consistent_nld_correct1 : forall (x1 x2 : Component),
+  checker_global_output_consistent x1 = true ->
+    In x2 (construct_local_input x1).(neighbours) ->
+    get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i) /\
+    get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
+
+Lemma neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
+  checker_global_output_consistent x1 = true ->
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i).
+Proof.
+  intros.
+  apply checker_global_output_consistent_nld_correct1 in H0 ; auto.
+  destruct H0 ; auto.
+Qed.
 
 Lemma neighbors_leader_distance_correct2 : forall (x1 x2 : Component),
+  checker_global_output_consistent x1 = true ->
   In x2 (construct_local_input x1).(neighbours) -> 
      get_distance_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(distance_i).
 Proof.
@@ -231,11 +250,18 @@ Proof.
   apply (neighbors_leader_distance_correct2' x1 x2) ; auto.
 Qed.
 
-Axiom neighbors_leader_distance_correct5' : forall (x1 x2 : Component),
+Lemma neighbors_leader_distance_correct5' : forall (x1 x2 : Component),
+  checker_global_output_consistent x1 = true ->
   In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
+Proof.
+  intros.
+  apply checker_global_output_consistent_nld_correct1 in H0 ; auto.
+  destruct H0 ; auto.
+Qed.
 
 Lemma neighbors_leader_distance_correct5 : forall (x1 x2 : Component),
+  checker_global_output_consistent x1 = true ->
   In x2 (construct_local_input x1).(neighbours) -> 
      get_leader_in_list x2 (construct_checker_input x1).(neighbor_leader_distance) = (construct_checker_input x2).(leader_i).
 Proof.
@@ -569,7 +595,8 @@ Qed.
 Lemma checker_bipartite_correct : (forall x : Component,
   v x ->
   (checker_local_bipartition x = true /\
-  checker_local_output_consistent x = true)) ->
+  checker_local_output_consistent x = true /\
+  checker_global_output_consistent x = true)) ->
   forall y : Component, gamma_1 v a c y get_color.
 Proof.
   unfold gamma_1.
