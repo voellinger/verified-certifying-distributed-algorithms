@@ -782,7 +782,7 @@ Proof.
     apply checker_tree_correct ; auto.
     simpl in *.
 
-
+    destruct H2. destruct H2.
 
 
 
@@ -802,7 +802,8 @@ Proof.
     apply local_input_correct. simpl in *.
     apply neighbors_leader_distance_correct0 in H2 ; auto. simpl in *.
     apply neighbors_leader_distance_correct1' in H2 ; auto.
-    (* specialize (H1 x). *)
+    exists x.
+    specialize (H x).
 
 
 
@@ -813,10 +814,10 @@ Proof.
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
     apply neighbors_leader_distance_correct2. apply (H3 x0) ; auto.
-    specialize (Hneu x0).
-    intuition.
-    apply (neighbors_leader_distance_correct0 x0 y z n) ; auto.
     specialize (H2 x).
+    (* intuition.
+    apply (neighbors_leader_distance_correct0 x0 y z n) ; auto.
+    specialize (H2 x). *)
     unfold get_distance in *.
     assert ({y : Component & {z : Component & In (y, z, distance_i (construct_checker_input y)) (neighbor_leader_distance (construct_checker_input x)) /\
       Nat.odd (distance_i (construct_checker_input x)) = Nat.odd (distance_i (construct_checker_input y))}}).
@@ -826,24 +827,27 @@ Proof.
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       is_in_once y (construct_checker_input x).(neighbor_leader_distance)) as new.
     intros.
-    specialize (Hneu x). apply Hneu in H.
-    apply (neighbors_leader_distance_correct0 x y z n) in H.
+    (* specialize (Hneu x). apply Hneu in H. *)
+    apply (neighbors_leader_distance_correct0 x y z n) in H5.
     auto. simpl in H3. auto.
-    clear H1.
+    clear H.
     remember leader as ll. remember parent as pp. remember neighbors_leader_distance as rr.
-    induction (neighbor_leader_distance (construct_checker_input x)) ; simpl in * ; intuition.
-    inversion H0.
+    unfold checker_local_bipartition in H4.
+    simpl in *.
+    induction (neighbors_leader_distance x) ; simpl in * ; intuition.
+    
+    inversion H4.
     destruct a0. destruct p.
     assert (H2' := H2).
-    specialize (H2 c0 c1 n). intuition. clear H3.
+    specialize (H2 c0 c1 n). intuition. clear H5.
     destruct ((V_eq_dec c0 c0)) ; subst.
     assert ({Nat.odd (distance x) = Nat.odd (distance c0)} + 
             {Nat.odd (distance x) <> Nat.odd (distance c0)}).
     apply bool_dec.
-    destruct H1.
+    destruct H.
     exists c0. exists c1.
     rewrite e0 in *. intuition.
-    unfold eqb in H0.
+    unfold eqb in H4.
     assert ({y : Component & {z : Component &
       In (y, z, distance y) l /\
       Nat.odd (distance x) = Nat.odd (distance y)}} -> 
@@ -851,8 +855,8 @@ Proof.
       ((c0, c1, distance c0) = (y, z, distance y) \/
       In (y, z, distance y) l) /\
       Nat.odd (distance x) = Nat.odd (distance y)}}).
-    intros. destruct H1. destruct s. exists x0. exists x1. intuition.
-    apply H1. clear H1.
+    intros. destruct H. destruct s. exists x0. exists x1. intuition.
+    apply H. clear H.
     apply IHl ; auto.
     destruct (Nat.odd (distance x)) ; destruct (Nat.odd (distance c0)) ; intuition.
 
@@ -862,28 +866,27 @@ Proof.
     intros. specialize (H2' y z n0). specialize (new y z n0).
     destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp.
     remember neighbors_leader_distance as rr. intuition.
-    apply (is_not_in_correct l c0 z n0) in H6. intuition.
+    apply (is_not_in_correct l c0 z n0) in H8. intuition.
     intuition.
-    clear IHl H2' H0.
+    clear IHl H2' H4.
     intros.
     specialize (new y z n0).
     destruct (V_eq_dec y c0) ; subst.
     assert (is_not_in c0 l). apply new. auto.
-    apply (is_not_in_correct l c0 z n0) in H1. intuition.
+    apply (is_not_in_correct l c0 z n0) in H2. intuition.
     intuition.
 
 
     intuition.
-    destruct H3. repeat destruct s.
+    destruct H5. repeat destruct s.
     destruct a0.
     exists x0.
-    apply H1 in H3.
+    apply H in H5 ; auto.
     assert (v x0).
     assert (Graph v a).
     apply (Connected_Isa_Graph v a c).
-    apply (G_ina_inv2 v a H5 _ _ H3).
+    apply (G_ina_inv2 v a H7 _ _ H5).
     intuition.
-    auto.
 Qed.
 
 End Checker.
