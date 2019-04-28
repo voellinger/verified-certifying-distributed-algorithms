@@ -761,26 +761,29 @@ Proof.
     destruct H ; split ; intros ; auto. apply (H x) ; auto.
     assert (forall x : Component, v x -> checker_local_output_consistent x = true).
     intros. destruct H. apply (H x) ; auto.
-    clear H. rename H0 into H. rename H1 into Hneu.
 
+
+
+    destruct H0.
+    assert (forall x : Component, v x -> checker_global_output_consistent x = true).
+    destruct H. clear H3.
+    intros. specialize (H x). intuition. clear H.
     assert (exists v_random, v v_random) as v_r.
     apply (v_not_empty v a c).
     destruct v_r as [v_random v_r].
     assert (forall (x : Component), v x -> (construct_checker_input x).(leader_i) = (construct_checker_input v_random).(leader_i)).
-    destruct H. clear H0.
     intros.
     apply all_leader_same ; auto.
     assert (spanning_tree v a (leader_i (construct_checker_input v_random)) get_parent get_distance c) as G1.
     apply G2'G2. unfold Gamma_2'.
     exists (leader_i (construct_checker_input v_random)). unfold root_prop''.
     split ; intuition.
-    specialize (H1 x).
-    apply checker_tree_correct in H1 ; auto.
-    specialize (H0 x) ; intuition. rewrite <- H3. auto.
+    specialize (H x). intuition. simpl in *. rewrite <- H5.
+    apply checker_tree_correct ; auto.
+    simpl in *.
 
 
-    destruct H. clear H H0.
-    destruct H1. destruct H.
+
 
 
     apply (Gamma_implies_Psi (leader_i (construct_checker_input v_random)) get_parent get_distance v a c) ; auto.
@@ -788,8 +791,8 @@ Proof.
     unfold Gamma_3.
     unfold gamma_3.
     unfold neighbors_with_same_color.
-    clear G1 v_random v_r.
-    exists x.
+    clear H G1 v_r v_random.
+    rename H0 into H0'. rename H2 into H0.
     unfold checker_local_bipartition in H0.
     assert (forall (x y z : Component) (n : nat),
       v x ->
@@ -799,7 +802,7 @@ Proof.
     apply local_input_correct. simpl in *.
     apply neighbors_leader_distance_correct0 in H2 ; auto. simpl in *.
     apply neighbors_leader_distance_correct1' in H2 ; auto.
-    specialize (H1 x).
+    (* specialize (H1 x). *)
 
 
 
@@ -809,7 +812,7 @@ Proof.
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
       get_distance_in_list y (construct_checker_input x).(neighbor_leader_distance) = (construct_checker_input y).(distance_i)).
     intros.
-    apply neighbors_leader_distance_correct2. apply neighbors_leader_distance_correct1'. apply neighbors_leader_distance_correct0 in H3 ; auto.
+    apply neighbors_leader_distance_correct2. apply (H3 x0) ; auto.
     specialize (Hneu x0).
     intuition.
     apply (neighbors_leader_distance_correct0 x0 y z n) ; auto.
