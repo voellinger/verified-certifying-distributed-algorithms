@@ -17,12 +17,15 @@ Variable c : Connected v a.
 
 (******** Interface of checker *********)
 Variable bipartite_answer : bool.
-Variable global_output_consistent : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
 Variable neighbors_leader_distance : Component -> list (Component * Component * nat).
 (********/Interface of checker *********)
+
+(******** Seperate function to implement in the framework *********)
+Variable global_output_consistent : bool.
+(********/Seperate function to implement in the framework *********)
 
 
 Record local_input: Set := mk_local_input {
@@ -62,10 +65,17 @@ Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : lis
   | hd :: tl => (hd, leader hd, distance hd) :: (manual_construct_checker_input_neighbor_list tl)
   end.
 
+
+Fixpoint checker_bipartite_answer (x : Component) :=
+  bipartite_answer.
+
+Fixpoint checker_global_output_consistent (x : Component) :=
+  global_output_consistent.
+
 Definition construct_checker_input (x : Component) : checker_input :=
   mk_checker_input 
-    bipartite_answer
-    global_output_consistent
+    (checker_bipartite_answer x)
+    (checker_global_output_consistent x)
     (leader x) 
     (distance x) 
     (parent x)
@@ -222,13 +232,11 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
-Fixpoint checker_global_output_consistent (x : Component) :=
-  (construct_checker_input x).(global_consistent).
-
 Axiom checker_global_output_consistent_nld_correct1 : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true ->
     get_distance_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(distance_i) /\
     get_leader_in_list x2 (neighbors_leader_distance x1) = (construct_checker_input x2).(leader_i).
+
 
 Lemma neighbors_leader_distance_correct2' : forall (x1 x2 : Component),
   checker_global_output_consistent x1 = true -> 
