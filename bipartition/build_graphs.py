@@ -10,11 +10,16 @@ class Graph:
         self.components = []
         self.dot = None
 
-    def build_spanning_tree(self):
+    def check_bipartition(self):
         for c in self.components:
             c.st_thread.start()
         for c in self.components:
             c.st_thread.join(1)
+        for c in self.components:
+            if c.no_bi_edge:
+                print("Graph NOT bipartite")
+                return
+        print("Graph is bipartite")
 
     def build_random_connected_graph(self) -> None:
         """Builds a connected graph with self.node_count many nodes. The sparsity describes inversely how many nodes will be
@@ -35,9 +40,9 @@ class Graph:
         """Render the graph."""
         self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
-            if c.root:
+            if c.leader.id == c.id:
                 c.color = "red"
-            if c.distance % 2 == 0:
+            if not c.certificate or c.certificate.distance % 2 == 0:
                 c.fill_color = "white"
             else:
                 c.fill_color = "gray"
@@ -73,42 +78,27 @@ class Graph:
             if not r in [c.id for c in self.components]:
                 return r
 
-    def check_bipartition(self):
-        for c in self.components:
-            c.check_local_bipartition()
-        for c in self.components:
-            if c.no_bi_edge:
-                print("Graph NOT bipartite")
-                return
-        print("Graph is bipartite")
 
 class Component:
     def __init__(self, given_id, neighbours=[]) -> None:
         self.id = given_id
         self.neighbours = neighbours
-        self.distance = -1
         self.color = "black"
         self.st_thread = None
         self.leader = None
         self.parent = None
         self.children = []
-        self.root = False
         self.q = Queue(maxsize=0)
-        self.no_bi_edge = False
+        self.certificate = None
+        self.no_bi_edge = None
 
     def __str__(self) -> str:
-        return str(self.id) + " " + str([n.id for n in self.neighbours])
+        return str(self.id)# + " " + str([n.id for n in self.neighbours])
 
     def is_in_neighbours(self, c) -> bool:
         if type(c) == int:
             return c in self.neighbour_ids
         return c in self.neighbours
-
-    def check_local_bipartition(self):
-        for n in self.neighbours:
-            if n.distance % 2 == self.distance % 2:
-                self.no_bi_edge = True
-                break
 
 
 
@@ -118,20 +108,24 @@ class ST_thread(threading.Thread):
         super(ST_thread,self).__init__()
         self.name = name
         self.component = component
-        self.root = False
         self.leader = self.component
         self.parent = self.component
+        self.distance = -1
         self.children = []
         self.unexplored = self.component.neighbours[:]
         self.stop_request = threading.Event()
+        self.n_distances = []
+        self.n_leaders = []
         self.switcher = {
             "leader":self.leader_f,
             "already":self.already_f,
             "parent":self.parent_f,
-            "stop":self.stop
+            "stop":self.stop,
+            "certadd":self.certadd
         }
 
     def run(self):
+        print(str(self.component.id) + " starting ...")
         self.explore()
 
         while not self.stop_request.isSet():
@@ -142,6 +136,23 @@ class ST_thread(threading.Thread):
             else:
                 self.component.q.task_done()
                 self.switcher.get(message.m_type)(message.value, message.from_id)
+        while len(self.component.neighbours) > len(self.n_distances):
+            try:
+                message = self.component.q.get(True)
+            except Queue.Empty:
+                pass
+            else:
+                self.component.q.task_done()
+                self.switcher.get(message.m_type)(message.value, message.from_id)
+        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.n_distances, self.n_leaders)
+        self.component.no_bi_edge = self.check_local_bipartition(self.component.certificate)
+        print(str(self.component.id) + " shutting down ...")
+
+    def check_local_bipartition(self, cert):
+        for n in cert.n_distances:
+            if cert.distance % 2 == n % 2:
+                return True
+        return False
 
     def leader_f(self, new_leader, from_):
         if self.leader.id < new_leader.id:
@@ -171,18 +182,23 @@ class ST_thread(threading.Thread):
             if self.parent.id != self.component.id:
                 self.parent.q.put(Message(self.component, "parent", self.leader))
             else:
-                self.root = True
                 self.stop(0, None)
 
     def stop(self, val, from_):
-        self.component.distance = val
+        self.distance = val
         for c in self.children:
-            c.q.put(Message(self.component, "stop", val + 1))
+            c.q.put(Message(self.component, "stop", val+1))
+        for c in self.component.neighbours:
+            c.q.put(Message(self.component, "certadd", (self.leader, self.distance)))
         self.stop_request.set()
         self.component.parent = self.parent
         self.component.leader = self.leader
         self.component.children = self.children
-        self.component.root = self.root
+
+    def certadd(self, val, from_) -> None:
+        (l, d) = val
+        self.n_leaders.append(l)
+        self.n_distances.append(d)
 
 
 class Message:
@@ -195,7 +211,12 @@ class Message:
         return str(self.from_id) + " " + self.m_type + " " + str(self.value)
 
 class Certificate:
-    def __init__(self, root, leader, distance):
-        self.root = root
+    def __init__(self, leader, distance, parent, distances, leaders):
         self.leader = leader
         self.distance = distance
+        self.parent = parent
+        self.n_distances = distances
+        self.n_leaders = leaders
+
+    def __str__(self):
+        return "Cert(" + str(self.leader) + " " + str(self.distance) + " " + str(self.parent) + " " + str([n.id for n in self.n_leaders]) + " " + str(self.n_distances) + ")"
