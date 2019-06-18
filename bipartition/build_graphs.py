@@ -41,22 +41,22 @@ class Graph:
         self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
             penwidth = "1"
+            color = "black"
             if c.leader.id == c.id:
-                c.color = "red"
-                penwidth = "3"
+                color = "#CC4444"
+                penwidth = "4"
             if not c.certificate or c.certificate.distance % 2 == 0:
-                c.fill_color = "white"
+                fill_color = "white"
             else:
-                c.fill_color = "gray"
+                fill_color = "gray"
             if c.no_bi_edge:
-                c.fill_color = "blue"
-            self.dot.node("C"+str(c.id), str(c.id), color=c.color, fillcolor=c.fill_color, style="filled", penwidth=penwidth)
+                fill_color = "#8888CC"
+            self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, style="filled", penwidth=penwidth)
             for n in c.neighbours:
-                if (n.parent and c.parent) and (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
-                    self.dot.edge("C" + str(c.id), "C" + str(n.id), color="red", penwidth="3", constraint="false")
-                else:
-                    if n.id > c.id:
-                        self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
+                if (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
+                    self.dot.edge("C" + str(c.id), "C" + str(n.id), color="#CC4444", penwidth="2", constraint="false")
+                elif n.id > c.id:
+                    self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
         self.dot.render(title, view=True)
 
     def __str__(self) -> str:
@@ -85,10 +85,9 @@ class Component:
     def __init__(self, given_id, neighbours=[]) -> None:
         self.id = given_id
         self.neighbours = neighbours
-        self.color = "black"
         self.st_thread = None
         self.leader = None
-        self.parent = None
+        self.parent = self
         self.children = []
         self.q = Queue(maxsize=0)
         self.certificate = None
