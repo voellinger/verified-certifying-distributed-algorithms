@@ -40,18 +40,20 @@ class Graph:
         """Render the graph."""
         self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
+            penwidth = "1"
             if c.leader.id == c.id:
                 c.color = "red"
+                penwidth = "3"
             if not c.certificate or c.certificate.distance % 2 == 0:
                 c.fill_color = "white"
             else:
                 c.fill_color = "gray"
             if c.no_bi_edge:
                 c.fill_color = "blue"
-            self.dot.node("C"+str(c.id), str(c.id), color=c.color, fillcolor=c.fill_color, style="filled")
+            self.dot.node("C"+str(c.id), str(c.id), color=c.color, fillcolor=c.fill_color, style="filled", penwidth=penwidth)
             for n in c.neighbours:
                 if (n.parent and c.parent) and (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
-                    self.dot.edge("C" + str(c.id), "C" + str(n.id), color="red", constraint="false")
+                    self.dot.edge("C" + str(c.id), "C" + str(n.id), color="red", penwidth="3", constraint="false")
                 else:
                     if n.id > c.id:
                         self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
