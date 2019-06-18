@@ -4,7 +4,7 @@ Require Import Coq.Logic.Classical_Prop.
 
 Load Bipartition_related.
 Require Export Coq.Bool.BoolEq.
-Require Extraction.
+(* Require Extraction. *)
 Extraction Language Haskell.
 
 Section Checker.
@@ -901,6 +901,13 @@ End Checker.
 
 
 
+Extraction "checker_local_bipartition" checker_local_bipartition.
+Extraction "checker_local_output_consistent" checker_local_output_consistent.
+Extraction "checker_tree" checker_tree.
+
+
+(*
 Recursive Extraction checker_local_bipartition.
 Recursive Extraction checker_local_output_consistent.
 Recursive Extraction checker_tree.
+*)

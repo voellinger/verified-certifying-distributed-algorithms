@@ -2,7 +2,7 @@ Require Import GraphBasics.Graphs.
 Require Import GraphBasics.Connected.
 Require Import Coq.Logic.Classical_Prop.
 
-Require FunInd.
+(* Require FunInd. *)
 
 
 Section Help.
