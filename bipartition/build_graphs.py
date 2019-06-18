@@ -3,9 +3,6 @@ import graphviz
 import threading, logging
 from queue import Queue
 
-q = Queue(maxsize=0)
-
-
 class Graph:
     def __init__(self, min_size : int, max_size : int, sparsity : int) -> None:
         self.node_count = random.randint(min_size, max_size)
@@ -50,9 +47,8 @@ class Graph:
                     if n > c.id:
                         self.dot.edge("C"+str(c.id), "C"+str(n), constraint="false")
                 else:
-                    if n == c.parent:
+                    if n == c.parent.id:
                         self.dot.edge("C" + str(c.id), "C" + str(n), color="red", constraint="false")
-        #print(self.dot.source)
         self.dot.render(title, view=True)
 
     def __str__(self) -> str:
@@ -87,6 +83,7 @@ class Component():
         self.parent = None
         self.children = []
         self.root = False
+        self.q = Queue(maxsize=0)
 
     def __str__(self) -> str:
         return str(self.id) + " " + str([n.id for n in self.neighbours])
@@ -105,14 +102,12 @@ class ST_thread(threading.Thread):
         super(ST_thread,self).__init__()
         self.name = name
         self.component = component
-        self.id = self.component.id
-        self.leader = -1
-        self.parent = None
-        self.children = []
         self.root = False
-        self.unexplored = [n.id for n in self.component.neighbours]
+        self.leader = self.component
+        self.parent = self.component
+        self.children = []
+        self.unexplored = self.component.neighbours[:]
         self.stop_request = threading.Event()
-        self.stop_request.clear()
         self.switcher = {
             "leader":self.leader_f,
             "already":self.already_f,
@@ -121,54 +116,51 @@ class ST_thread(threading.Thread):
         }
 
     def run(self):
-        self.leader = self.id
-        self.parent = self.id
         self.explore()
 
         while not self.stop_request.isSet():
-            message = q.get(True)
-            if message.to_id != self.id:
-                q.task_done()
-                q.put(message)
+            try:
+                message = self.component.q.get(True)
+            except Queue.Empty:
+                pass
             else:
+                self.component.q.task_done()
                 self.switcher.get(message.m_type)(message.value, message.from_id)
-                q.task_done()
 
-    def leader_f(self, new_id, from_id):
-        if self.leader < new_id:
-            self.leader = new_id
-            self.parent = from_id
+    def leader_f(self, new_leader, from_):
+        if self.leader.id < new_leader.id:
+            self.leader = new_leader
+            self.parent = from_
             self.children = []
-            self.unexplored = [n.id for n in self.component.neighbours if n.id != from_id]
+            self.unexplored = [n for n in self.component.neighbours if n.id != from_.id]
             self.explore()
         else:
-            if self.leader == new_id:
-                q.put(Message(self.id, from_id, "already", self.leader))
+            if self.leader.id == new_leader.id:
+                from_.q.put(Message(self.component, "already", self.leader))
 
-    def already_f(self, new_id, from_id):
-        if new_id == self.leader:
+    def already_f(self, new_leader, from_):
+        if new_leader.id == self.leader.id:
             self.explore()
 
-    def parent_f(self, new_id, from_id):
-        if new_id == self.leader:
-            self.children.append(from_id)
+    def parent_f(self, new_leader, from_):
+        if new_leader.id == self.leader.id:
+            self.children.append(from_)
             self.explore()
 
     def explore(self):
         if self.unexplored:
             p_k = self.unexplored.pop()
-            q.put(Message(self.id, p_k, "leader", self.leader))
+            p_k.q.put(Message(self.component, "leader", self.leader))
         else:
-            if self.parent != self.id:
-                q.put(Message(self.id, self.parent, "parent", self.leader))
+            if self.parent.id != self.component.id:
+                self.parent.q.put(Message(self.component, "parent", self.leader))
             else:
                 self.root = True
-                self.component.fill_color = 1
-                self.stop(self.component.fill_color, 0)
+                self.stop(1, 0)
 
-    def stop(self, val, from_id):
+    def stop(self, val, from_):
         for c in self.children:
-            q.put(Message(self.id, c, "stop", 1-val))
+            c.q.put(Message(self.component, "stop", 1-val))
         self.stop_request.set()
         self.component.fill_color = 1 - val
         self.component.parent = self.parent
@@ -178,11 +170,10 @@ class ST_thread(threading.Thread):
 
 
 class Message:
-    def __init__(self, from_id, to_id, m_type, value):
+    def __init__(self, from_id, m_type, value):
         self.from_id = from_id
-        self.to_id = to_id
         self.m_type = m_type
         self.value = value
 
     def __str__(self):
-        return str(self.from_id) + " " + str(self.to_id) + " " + self.m_type + " " + str(self.value)
+        return str(self.from_id) + " " + self.m_type + " " + str(self.value)
