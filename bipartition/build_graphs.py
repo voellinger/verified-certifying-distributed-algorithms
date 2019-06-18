@@ -8,7 +8,7 @@ class Graph:
         self.node_count = random.randint(min_size, max_size)
         self.sparsity = sparsity
         self.components = []
-        self.dot = graphviz.Graph(name="", engine="neato")
+        self.dot = None
 
     def build_spanning_tree(self):
         for c in self.components:
@@ -33,22 +33,23 @@ class Graph:
 
     def dottify(self, title="", whole_graph=True) -> None:
         """Render the graph."""
-        self.dot.name = title
+        self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
             if c.root:
                 c.color = "red"
-            if c.fill_color == 0:
-                c.fill_color = "gray"
-            else:
+            if c.distance % 2 == 0:
                 c.fill_color = "white"
+            else:
+                c.fill_color = "gray"
+            if c.no_bi_edge:
+                c.fill_color = "blue"
             self.dot.node("C"+str(c.id), str(c.id), color=c.color, fillcolor=c.fill_color, style="filled")
-            for n in [n.id for n in c.neighbours]:
-                if whole_graph:
-                    if n > c.id:
-                        self.dot.edge("C"+str(c.id), "C"+str(n), constraint="false")
+            for n in c.neighbours:
+                if (n.parent and c.parent) and (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
+                    self.dot.edge("C" + str(c.id), "C" + str(n.id), color="red", constraint="false")
                 else:
-                    if n == c.parent.id:
-                        self.dot.edge("C" + str(c.id), "C" + str(n), color="red", constraint="false")
+                    if n.id > c.id:
+                        self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
         self.dot.render(title, view=True)
 
     def __str__(self) -> str:
@@ -72,11 +73,20 @@ class Graph:
             if not r in [c.id for c in self.components]:
                 return r
 
-class Component():
+    def check_bipartition(self):
+        for c in self.components:
+            c.check_local_bipartition()
+        for c in self.components:
+            if c.no_bi_edge:
+                print("Graph NOT bipartite")
+                return
+        print("Graph is bipartite")
+
+class Component:
     def __init__(self, given_id, neighbours=[]) -> None:
         self.id = given_id
         self.neighbours = neighbours
-        self.fill_color = "white"
+        self.distance = -1
         self.color = "black"
         self.st_thread = None
         self.leader = None
@@ -84,6 +94,7 @@ class Component():
         self.children = []
         self.root = False
         self.q = Queue(maxsize=0)
+        self.no_bi_edge = False
 
     def __str__(self) -> str:
         return str(self.id) + " " + str([n.id for n in self.neighbours])
@@ -93,6 +104,11 @@ class Component():
             return c in self.neighbour_ids
         return c in self.neighbours
 
+    def check_local_bipartition(self):
+        for n in self.neighbours:
+            if n.distance % 2 == self.distance % 2:
+                self.no_bi_edge = True
+                break
 
 
 
@@ -156,13 +172,13 @@ class ST_thread(threading.Thread):
                 self.parent.q.put(Message(self.component, "parent", self.leader))
             else:
                 self.root = True
-                self.stop(1, 0)
+                self.stop(0, None)
 
     def stop(self, val, from_):
+        self.component.distance = val
         for c in self.children:
-            c.q.put(Message(self.component, "stop", 1-val))
+            c.q.put(Message(self.component, "stop", val + 1))
         self.stop_request.set()
-        self.component.fill_color = 1 - val
         self.component.parent = self.parent
         self.component.leader = self.leader
         self.component.children = self.children
@@ -177,3 +193,9 @@ class Message:
 
     def __str__(self):
         return str(self.from_id) + " " + self.m_type + " " + str(self.value)
+
+class Certificate:
+    def __init__(self, root, leader, distance):
+        self.root = root
+        self.leader = leader
+        self.distance = distance
