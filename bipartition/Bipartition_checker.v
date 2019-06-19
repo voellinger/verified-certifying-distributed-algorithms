@@ -20,6 +20,7 @@ Variable bipartite_answer : bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
+Variable neighbours_input : Component -> list Component.
 Variable neighbors_leader_distance : Component -> list (Component * Component * nat).
 (********/Interface of checker *********)
 
@@ -49,20 +50,10 @@ Fixpoint CA_list (v : V_set) (a : A_set) (c : Connected v a) {struct c} : A_list
   | C_eq v' _ a' _ _ _ c' => CA_list v' a' c'
   end.
 
-Definition neighbors (x: Component) : list Component :=
-  (A_in_neighborhood x (CA_list v a c)).
-
 Definition construct_local_input (x: Component) : local_input :=
   mk_local_input
     x
-    (neighbors x).
-
-Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
-  match l with
-  | nil => nil
-  | hd :: tl => (hd, leader hd, distance hd) :: (manual_construct_checker_input_neighbor_list tl)
-  end.
-
+    (neighbours_input x).
 
 Fixpoint checker_bipartite_answer (x : Component) :=
   bipartite_answer.
@@ -76,6 +67,8 @@ Definition construct_checker_input (x : Component) : checker_input :=
     (distance x) 
     (parent x)
     (neighbors_leader_distance x).
+
+
 
 
 
@@ -123,49 +116,6 @@ Proof. clear v a c.
       apply (IHc0 ) ; auto.
 Qed.
 
-Lemma local_input_correct: forall (x1 x2: Component),
-  In x2 (construct_local_input x1).(neighbours) <-> a (A_ends x1 x2).
-Proof.
-  intros.
-  unfold construct_local_input.
-  unfold neighbours.
-  unfold neighbors.
-  induction c ; split ; intros ; simpl in * ; subst ; intuition.
-  - inversion H.
-  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
-    inversion H ; subst ; auto.
-    apply In_left. apply E_left.
-    intuition. apply In_right. auto.
-    inversion H ; subst ; auto.
-    apply In_left. apply E_right.
-    intuition. apply In_right. auto.
-    apply In_right. auto.
-  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
-    inversion H ; subst.
-    inversion H4 ; subst ; intuition.
-    intuition. inversion H ; subst.
-    inversion H4 ; subst ; intuition. intuition.
-    inversion H ; subst.
-    inversion H4 ; subst ; intuition.
-    intuition.
-  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
-    inversion H ; subst ; auto.
-    apply In_left. apply E_left.
-    intuition. apply In_right. auto.
-    inversion H ; subst ; auto.
-    apply In_left. apply E_right.
-    intuition. apply In_right. auto.
-    apply In_right. auto.
-  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
-    inversion H ; subst.
-    inversion H4 ; subst ; intuition.
-    intuition. inversion H ; subst.
-    inversion H4 ; subst ; intuition. intuition.
-    inversion H ; subst.
-    inversion H4 ; subst ; intuition.
-    intuition.
-Qed.
-
 Fixpoint is_not_in (x : Component) (l : list (Component * Component * nat)) : Prop :=
   match l with
   | nil => True
@@ -201,7 +151,7 @@ Fixpoint get_leader_in_list (x : Component) (l : list (Component * Component * n
 Lemma is_in_once_correct : forall x l,
   is_in_once x l -> exists y n, In (x,y,n) l.
 Proof.
-  intros.
+  intros. clear neighbours_input.
   induction l.
   inversion H.
   simpl in *. destruct a0. destruct p.
@@ -213,12 +163,18 @@ Qed.
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
 Proof.
-  intro l.
+  intro l. clear neighbours_input.
   induction l ; simpl in * ; intuition.
   inversion H5. subst. destruct (V_eq_dec a1 a1) ; intuition.
   destruct (V_eq_dec a1 a0) ; intuition.
   specialize (IHl a1 b1 c0) ; intuition.
 Qed.
+
+Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
+  match l with
+  | nil => nil
+  | hd :: tl => (hd, leader hd, distance hd) :: (manual_construct_checker_input_neighbor_list tl)
+  end.
 
 Lemma is_not_in_correct' : forall l x,
 (~ In x l) ->  is_not_in x (manual_construct_checker_input_neighbor_list l).
@@ -226,6 +182,57 @@ Proof.
   intros.
   induction l ; simpl in * ; intuition.
   destruct (V_eq_dec x a0) ; subst ; intuition.
+Qed.
+
+
+Definition neighbors (x: Component) : list Component :=
+  (A_in_neighborhood x (CA_list v a c)).
+
+Axiom neighbor_input_is_correct : forall v,
+  neighbours_input v = neighbors v.
+
+Lemma local_input_correct: forall (x1 x2: Component),
+  In x2 (construct_local_input x1).(neighbours) <-> a (A_ends x1 x2).
+Proof.
+  intros.
+  unfold construct_local_input.
+  unfold neighbours.
+  rewrite neighbor_input_is_correct. clear neighbours_input.
+  unfold neighbors.
+  induction c ; split ; intros ; simpl in * ; subst ; intuition.
+  - inversion H.
+  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
+    inversion H ; subst ; auto.
+    apply In_left. apply E_left.
+    intuition. apply In_right. auto.
+    inversion H ; subst ; auto.
+    apply In_left. apply E_right.
+    intuition. apply In_right. auto.
+    apply In_right. auto.
+  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
+    inversion H ; subst.
+    inversion H4 ; subst ; intuition.
+    intuition. inversion H ; subst.
+    inversion H4 ; subst ; intuition. intuition.
+    inversion H ; subst.
+    inversion H4 ; subst ; intuition.
+    intuition.
+  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
+    inversion H ; subst ; auto.
+    apply In_left. apply E_left.
+    intuition. apply In_right. auto.
+    inversion H ; subst ; auto.
+    apply In_left. apply E_right.
+    intuition. apply In_right. auto.
+    apply In_right. auto.
+  - destruct (V_eq_dec x1 y) ; destruct (V_eq_dec x1 x) ; subst ; intuition.
+    inversion H ; subst.
+    inversion H4 ; subst ; intuition.
+    intuition. inversion H ; subst.
+    inversion H4 ; subst ; intuition. intuition.
+    inversion H ; subst.
+    inversion H4 ; subst ; intuition.
+    intuition.
 Qed.
 
 Axiom checker_global_output_consistent_nld_correct1 : forall (x1 x2 : Component),
@@ -381,7 +388,7 @@ Lemma NoDup_b_1: forall (y z : Component) (n : nat) (l : list (Component * Compo
   NoDup_b ((y, z, n) :: l) = true ->
     is_in_once y ((y, z, n) :: l).
 Proof.
-  intros.
+  intros. clear neighbours_input.
   simpl in *.
   destruct (V_eq_dec y y) ; intuition.
   apply andb_true_iff in H.
@@ -465,7 +472,7 @@ Proof.
   apply andb_true_iff in H.
   destruct H.
   clear H.
-  simpl in *.
+  simpl in *. rewrite neighbor_input_is_correct in *. clear neighbours_input.
   induction (neighbors x1).
   inversion H1.
   simpl in *.
@@ -525,7 +532,7 @@ Lemma neighborhood_correct : forall (v : V_set) a c x y,
   a (A_ends x y).
 Proof.
   clear v a c.
-  intros v a c.
+  intros v a c. clear neighbours_input.
   induction c ; simpl in * ; intuition.
   + destruct (V_eq_dec x0 y) ; subst ; intuition.
     - destruct (V_eq_dec y x) ; subst ; intuition.
@@ -559,7 +566,7 @@ Lemma neighborhood_correct1 : forall (v : V_set) (a : A_set) c x y,
   In y (A_in_neighborhood x (CA_list v a c)).
 Proof.
   clear v a c.
-  intros.
+  intros. clear neighbours_input.
   induction c ; simpl in * ; intuition.
   inversion H.
   destruct (V_eq_dec x y0) ; subst ; intuition.
@@ -618,12 +625,12 @@ Proof.
   assert (H6 := H5).
   unfold checker_local_output_consistent in H5.
   apply andb_true_iff in H5. destruct H5.
-  simpl in *.
+  simpl in *. rewrite neighbor_input_is_correct in *.
   clear H3.
   apply (neighbors_leader_distance_correct1 v2 y) in H6 ; simpl in * ; auto.
   apply (neighbors_leader_distance_correct2' v2 y) in Hglobal.
   simpl in *.
-  clear H5 H0 H1 vy.
+  clear H5 H0 H1 vy. clear neighbours_input.
   
   
   induction (neighbors_leader_distance v2).
@@ -638,6 +645,7 @@ Proof.
 
   destruct (eqb (Nat.odd (distance v2)) (Nat.odd n)). inversion H4.
   auto.
+  rewrite neighbor_input_is_correct. auto.
 Qed.
 
 
@@ -671,6 +679,10 @@ Proof.
   unfold neighbors in H1.
   apply is_in_correct in H1.
   apply (neighborhood_correct v a c) ; auto.
+  assert (Graph v a).
+  apply (Connected_Isa_Graph v a c).
+  rewrite neighbor_input_is_correct in *. clear neighbours_input. intuition.
+  simpl in *. 
   assert (Graph v a).
   apply (Connected_Isa_Graph v a c).
   intuition.
