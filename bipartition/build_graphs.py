@@ -50,7 +50,10 @@ class Graph:
             else:
                 fill_color = "gray"
             if c.no_bi_edge:
-                fill_color = "#8888CC"
+                if fill_color != "white":
+                    fill_color = "#9999DD"
+                else:
+                    fill_color = "#BFBFFF"
             self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, style="filled", penwidth=penwidth)
             for n in c.neighbours:
                 if (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
