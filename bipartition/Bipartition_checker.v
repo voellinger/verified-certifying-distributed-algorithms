@@ -4,8 +4,7 @@ Require Import Coq.Logic.Classical_Prop.
 
 Load Bipartition_related.
 Require Export Coq.Bool.BoolEq.
-(* Require Extraction. *)
-Extraction Language Haskell.
+
 
 Section Checker.
 
@@ -338,7 +337,7 @@ Proof.
   destruct (V_eq_dec x a0) ; subst ; intuition.
 Qed.
 
-Definition checker_tree (x : Component) : bool :=
+Definition Checker_tree (x : Component) : bool :=
   leader_same (construct_checker_input x).(leader_i) (construct_checker_input x).(neighbor_leader_distance) &&
   ((is_leader x && is_parent x && ((construct_checker_input x).(distance_i) =? 0)) ||
   (negb (is_leader x) && (is_in (construct_checker_input x).(parent_i) (construct_local_input x).(neighbours)) &&
@@ -351,7 +350,7 @@ Fixpoint locally_bipartite (d : nat) (neighbor_l : list (Component * Component *
   | (c1, c2, n) :: tl => if (eqb (Nat.odd d) (Nat.odd n)) then false else locally_bipartite d tl
   end.
 
-Definition checker_local_bipartition (x : Component) : bool :=
+Definition Checker_local_bipartition (x : Component) : bool :=
   locally_bipartite (construct_checker_input x).(distance_i) (construct_checker_input x).(neighbor_leader_distance).
 
 Definition get_color (x : Component) : bool :=
@@ -431,19 +430,19 @@ Fixpoint each_nld_is_in_neighbor (x : Component) (l : list (Component * Componen
   | (a,b,c) :: tl => is_in a (construct_local_input x).(neighbours) && each_nld_is_in_neighbor x tl
   end.
 
-Definition checker_local_output_consistent (x : Component) : bool :=
+Definition Checker_local_output_consistent (x : Component) : bool :=
   NoDup_b (neighbors_leader_distance x) &&
   each_neighbor_is_in_nld x (construct_local_input x).(neighbours) &&
   each_nld_is_in_neighbor x (construct_checker_input x).(neighbor_leader_distance).
 
 Lemma neighbors_leader_distance_correct1' : forall (x1 x2 : Component),
-  checker_local_output_consistent x1 = true ->
+  Checker_local_output_consistent x1 = true ->
   is_in_once x2 (neighbors_leader_distance x1) ->
   In x2 (construct_local_input x1).(neighbours).
 Proof.
   intros.
   simpl.
-  unfold checker_local_output_consistent in H.
+  unfold Checker_local_output_consistent in H.
   apply andb_true_iff in H. destruct H.
   apply andb_true_iff in H. destruct H.
   clear H2.
@@ -461,12 +460,12 @@ Proof.
 Qed.
 
 Lemma neighbors_leader_distance_correct1 : forall (x1 x2 : Component),
-  checker_local_output_consistent x1 = true ->
+  Checker_local_output_consistent x1 = true ->
   In x2 (construct_local_input x1).(neighbours) -> 
     is_in_once x2 (construct_checker_input x1).(neighbor_leader_distance).
 Proof.
   intros x1 x2 H H1.
-  unfold checker_local_output_consistent in H.
+  unfold Checker_local_output_consistent in H.
   apply andb_true_iff in H.
   destruct H. clear H0.
   apply andb_true_iff in H.
@@ -492,12 +491,12 @@ Proof.
 Qed.
 
 Lemma neighbors_leader_distance_correct0 : forall (x y z : Component) (n : nat),
-  checker_local_output_consistent x = true ->
+  Checker_local_output_consistent x = true ->
   In (y,z,n) (neighbors_leader_distance x) ->  
     is_in_once y (construct_checker_input x).(neighbor_leader_distance).
 Proof.
   simpl in * ; intros.
-  unfold checker_local_output_consistent in H.
+  unfold Checker_local_output_consistent in H.
   apply andb_true_iff in H. destruct H. clear H1. apply andb_true_iff in H. destruct H. clear H1.
   induction (neighbors_leader_distance x). auto.
 
@@ -598,8 +597,8 @@ Qed.
 
 Lemma checker_bipartite_correct : (forall x : Component,
   v x ->
-  (checker_local_bipartition x = true /\
-  checker_local_output_consistent x = true /\
+  (Checker_local_bipartition x = true /\
+  Checker_local_output_consistent x = true /\
   checker_global_output_consistent x = true)) ->
   forall y : Component, gamma_1 v a c y get_color.
 Proof.
@@ -613,7 +612,7 @@ Proof.
   assert (H' := H).
   specialize (H y). specialize (H' v2).
   intuition.
-  unfold checker_local_bipartition in *.
+  unfold Checker_local_bipartition in *.
   unfold get_color in H2. simpl in *.
   clear H H5 H8.
   assert (In y (neighbors v2)).
@@ -623,7 +622,7 @@ Proof.
   apply (Connected_Isa_Graph v a) ; auto.
   rename H3 into H5. rename H6 into Hglobal.
   assert (H6 := H5).
-  unfold checker_local_output_consistent in H5.
+  unfold Checker_local_output_consistent in H5.
   apply andb_true_iff in H5. destruct H5.
   simpl in *. rewrite neighbor_input_is_correct in *.
   clear H3.
@@ -650,11 +649,11 @@ Qed.
 
 
 
-Lemma checker_tree_correct : forall (x : Component),
-  v x -> (checker_tree x) = true -> gamma_2 get_parent get_distance v a (construct_checker_input x).(leader_i) x.
+Lemma Checker_tree_correct : forall (x : Component),
+  v x -> (Checker_tree x) = true -> gamma_2 get_parent get_distance v a (construct_checker_input x).(leader_i) x.
 Proof.
   intros.
-  unfold checker_tree in H0.
+  unfold Checker_tree in H0.
   unfold gamma_2.
   unfold parent_prop.
   unfold distance_prop.
@@ -695,13 +694,13 @@ Proof.
 Qed.
 
 Lemma all_leader_same : forall x v_random,
-  (forall x : Component, v x -> checker_tree x = true /\
-  checker_local_output_consistent x = true /\
+  (forall x : Component, v x -> Checker_tree x = true /\
+  Checker_local_output_consistent x = true /\
   checker_global_output_consistent x = true) ->
   v v_random -> v x -> 
   leader_i (construct_checker_input x) = leader_i (construct_checker_input v_random).
 Proof. 
-  unfold checker_tree.
+  unfold Checker_tree.
   unfold neighbours.
   intros.
   assert ({vl : V_list & {el : E_list & Walk v a v_random x vl el}}).
@@ -754,17 +753,17 @@ Qed.
 
 Theorem checker_correct :
  ((forall (x : Component), v x ->
-  checker_local_bipartition x = true /\ checker_local_output_consistent x = true /\
+  Checker_local_bipartition x = true /\ Checker_local_output_consistent x = true /\
   checker_global_output_consistent x = true) -> 
     bipartite a) 
 
   /\
 
 (((forall (x : Component), v x -> 
-  (checker_tree x = true /\ checker_local_output_consistent x = true /\
+  (Checker_tree x = true /\ Checker_local_output_consistent x = true /\
   checker_global_output_consistent x = true)) /\
   (exists (x : Component), v x /\
-  checker_local_bipartition x = false)) -> ~ bipartite a).
+  Checker_local_bipartition x = false)) -> ~ bipartite a).
 Proof.
   split ; intros.
   - apply (Gamma_1_Psi1 (get_root v a c) get_parent get_distance v a c get_color).
@@ -772,10 +771,10 @@ Proof.
     intros.
     apply checker_bipartite_correct ; intros ; auto.
   - assert ((forall x : Component,
-     v x -> checker_tree x = true) /\
-    (exists x : Component, v x /\ checker_local_bipartition x = false)).
+     v x -> Checker_tree x = true) /\
+    (exists x : Component, v x /\ Checker_local_bipartition x = false)).
     destruct H ; split ; intros ; auto. apply (H x) ; auto.
-    assert (forall x : Component, v x -> checker_local_output_consistent x = true).
+    assert (forall x : Component, v x -> Checker_local_output_consistent x = true).
     intros. destruct H. apply (H x) ; auto.
 
 
@@ -795,7 +794,7 @@ Proof.
     exists (leader_i (construct_checker_input v_random)). unfold root_prop''.
     split ; intuition.
     specialize (H x). intuition. simpl in *. rewrite <- H5.
-    apply checker_tree_correct ; auto.
+    apply Checker_tree_correct ; auto.
     simpl in *.
 
     destruct H2. destruct H2.
@@ -809,7 +808,7 @@ Proof.
     unfold neighbors_with_same_color.
     clear H G1 v_r v_random.
     rename H0 into H0'. rename H2 into H0.
-    unfold checker_local_bipartition in H0.
+    unfold Checker_local_bipartition in H0.
     assert (forall (x y z : Component) (n : nat),
       v x ->
       In (y,z,n) (construct_checker_input x).(neighbor_leader_distance) ->
@@ -848,7 +847,7 @@ Proof.
     auto. simpl in H3. auto.
     clear H.
     remember leader as ll. remember parent as pp. remember neighbors_leader_distance as rr.
-    unfold checker_local_bipartition in H4.
+    unfold Checker_local_bipartition in H4.
     simpl in *.
     induction (neighbors_leader_distance x) ; simpl in * ; intuition.
     
@@ -909,13 +908,13 @@ End Checker.
 
 
 
-Extraction "checker_local_bipartition" checker_local_bipartition.
-Extraction "checker_local_output_consistent" checker_local_output_consistent.
-Extraction "checker_tree" checker_tree.
-
-
+(* Require Extraction. *)
+Extraction Language Haskell.
+Extraction "Checker_local_bipartition" Checker_local_bipartition.
+Extraction "Checker_local_output_consistent" Checker_local_output_consistent.
+Extraction "Checker_tree" Checker_tree.
 (*
-Recursive Extraction checker_local_bipartition.
-Recursive Extraction checker_local_output_consistent.
-Recursive Extraction checker_tree.
+Recursive Extraction Checker_local_bipartition.
+Recursive Extraction Checker_local_output_consistent.
+Recursive Extraction Checker_tree.
 *)

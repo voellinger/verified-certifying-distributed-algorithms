@@ -68,6 +68,12 @@ class Graph:
             ret += c.__str__() + "\n"
         return ret
 
+# leader (Component -> Component)
+# distance (Component -> Nat)
+# parent (Component -> Component)
+# neighbours_input (Component -> List Component)
+# neighbors_leader_distance (Component -> List (Prod (Prod Component Component) Nat))
+
     def random_rename(self) -> None:
         """The components rename themselves randomly for a true random graph.
         Temporary negative ids are given to each component, afterwards the names are flipped again."""
