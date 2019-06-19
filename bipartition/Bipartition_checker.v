@@ -34,8 +34,6 @@ Record local_input: Set := mk_local_input {
 }.
 
 Record checker_input : Set := mk_checker_input {
-  algo_answer : bool;
-  global_consistent : bool;
   leader_i : Component;
   distance_i : nat;
   parent_i : Component;
@@ -74,8 +72,6 @@ Fixpoint checker_global_output_consistent (x : Component) :=
 
 Definition construct_checker_input (x : Component) : checker_input :=
   mk_checker_input 
-    (checker_bipartite_answer x)
-    (checker_global_output_consistent x)
     (leader x) 
     (distance x) 
     (parent x)
