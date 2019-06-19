@@ -53,8 +53,8 @@ Definition neighbors (x: Component) : list Component :=
   (A_in_neighborhood x (CA_list v a c)).
 
 Definition construct_local_input (x: Component) : local_input :=
-  mk_local_input 
-    x 
+  mk_local_input
+    x
     (neighbors x).
 
 Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) : list (Component * Component * nat) :=
