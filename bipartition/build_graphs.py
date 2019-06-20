@@ -3,9 +3,25 @@ import graphviz
 import threading, logging
 from queue import Queue
 
+
+def int_to_nat(n) -> str:
+    ret = "O"
+    for k in range(n):
+        ret = "S (" + ret + ")"
+    return ret
+
+def list_to_List(ls) -> str:
+    ret = "Nil"
+    for l in ls:
+        ret = "Cons (" + l + ") (" + ret + ")"
+    return ret
+
+def pair_to_prod(p1, p2) -> str:
+    return "Pair (" + p1 + ") (" + p2 + ")"
+
 class Graph:
-    def __init__(self, min_size : int, max_size : int, sparsity : int) -> None:
-        self.node_count = random.randint(min_size, max_size)
+    def __init__(self, node_count : int, sparsity : int) -> None:
+        self.node_count = node_count
         self.sparsity = sparsity
         self.components = []
         self.dot = None
@@ -36,7 +52,7 @@ class Graph:
         for c in self.components:
             c.st_thread = ST_thread("Thread " + str(c.id), c)
 
-    def dottify(self, title="", whole_graph=True) -> None:
+    def dottify(self, title="") -> None:
         """Render the graph."""
         self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
@@ -51,10 +67,10 @@ class Graph:
                 fill_color = "gray"
             if c.no_bi_edge:
                 if fill_color != "white":
-                    fill_color = "#9999DD"
+                    fill_color = "#AAAACC"
                 else:
-                    fill_color = "#BFBFFF"
-            self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, style="filled", penwidth=penwidth)
+                    fill_color = "#DDDDFF"
+            self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, shape="circle", style="filled", penwidth=penwidth)
             for n in c.neighbours:
                 if (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
                     self.dot.edge("C" + str(c.id), "C" + str(n.id), color="#CC4444", penwidth="2", constraint="false")
@@ -68,11 +84,46 @@ class Graph:
             ret += c.__str__() + "\n"
         return ret
 
-# leader (Component -> Component)
-# distance (Component -> Nat)
-# parent (Component -> Component)
-# neighbours_input (Component -> List Component)
-# neighbors_leader_distance (Component -> List (Prod (Prod Component Component) Nat))
+    def build_haskell_code(self) -> str:
+        ret  = "module Global_checker where\n\n"
+        ret += "import Checker_local_bipartition\n\n"
+        ret += self.str_leader()
+        ret += self.str_distance()
+        ret += self.str_parent()
+        ret += self.str_neighbours()
+        ret += self.str_nld()
+        return ret
+
+    def str_leader(self) -> str:
+        ret = "leader :: (Component -> Component)\n"
+        for c in self.components:
+            ret += "leader (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.leader.id) + "\n"
+        return ret + "\n\n"
+
+    def str_distance(self) -> str:
+        ret = "distance :: (Component -> Nat)\n"
+        for c in self.components:
+            ret += "distance (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.distance) + "\n"
+        return ret + "\n\n"
+
+    def str_parent(self) -> str:
+        ret = "parent :: (Component -> Component)\n"
+        for c in self.components:
+            ret += "parent (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.parent.id) + "\n"
+        return ret + "\n\n"
+
+    def str_neighbours(self) -> str:
+        ret = "neighbours_input :: (Component -> List Component)\n"
+        for c in self.components:
+            ret += "neighbours_input (" + int_to_nat(c.id) + ") = " + list_to_List([int_to_nat(n.id) for n in c.neighbours]) + "\n"
+        return ret + "\n\n"
+
+    def str_nld(self) -> str:
+        ret = "neighbors_leader_distance :: (Component -> List (Prod (Prod Component Component) Nat))\n"
+        for c in self.components:
+            ret += "neighbors_leader_distance (" + int_to_nat(c.id) + ") = "
+            ret += list_to_List([pair_to_prod("("+pair_to_prod(int_to_nat(nld[0].id), int_to_nat(nld[1].id))+")", int_to_nat(nld[2])) for nld in c.certificate.nld]) + "\n"
+        return ret + "\n\n"
 
     def random_rename(self) -> None:
         """The components rename themselves randomly for a true random graph.
@@ -89,17 +140,13 @@ class Graph:
             if not r in [c.id for c in self.components]:
                 return r
 
-
 class Component:
     def __init__(self, given_id, neighbours=[]) -> None:
         self.id = given_id
         self.neighbours = neighbours
-        self.st_thread = None
-        self.leader = None
-        self.parent = self
-        self.children = []
-        self.q = Queue(maxsize=0)
         self.certificate = None
+        self.st_thread = None
+        self.q = Queue(maxsize=0)
         self.no_bi_edge = None
 
     def __str__(self) -> str:
@@ -124,8 +171,7 @@ class ST_thread(threading.Thread):
         self.children = []
         self.unexplored = self.component.neighbours[:]
         self.stop_request = threading.Event()
-        self.n_distances = []
-        self.n_leaders = []
+        self.nld = []
         self.switcher = {
             "leader":self.leader_f,
             "already":self.already_f,
@@ -146,7 +192,7 @@ class ST_thread(threading.Thread):
             else:
                 self.component.q.task_done()
                 self.switcher.get(message.m_type)(message.value, message.from_id)
-        while len(self.component.neighbours) > len(self.n_distances):
+        while len(self.component.neighbours) > len(self.nld):
             try:
                 message = self.component.q.get(True)
             except Queue.Empty:
@@ -154,13 +200,13 @@ class ST_thread(threading.Thread):
             else:
                 self.component.q.task_done()
                 self.switcher.get(message.m_type)(message.value, message.from_id)
-        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.n_distances, self.n_leaders)
+        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.nld)
         self.component.no_bi_edge = self.check_local_bipartition(self.component.certificate)
         print(str(self.component.id) + " shutting down ...")
 
     def check_local_bipartition(self, cert):
-        for n in cert.n_distances:
-            if cert.distance % 2 == n % 2:
+        for n in cert.nld:
+            if cert.distance % 2 == n[2] % 2:
                 return True
         return False
 
@@ -204,11 +250,10 @@ class ST_thread(threading.Thread):
         self.component.parent = self.parent
         self.component.leader = self.leader
         self.component.children = self.children
+        self.component.distance = self.distance
 
     def certadd(self, val, from_) -> None:
-        (l, d) = val
-        self.n_leaders.append(l)
-        self.n_distances.append(d)
+        self.nld.append((from_, val[0], val[1]))
 
 
 class Message:
@@ -221,12 +266,11 @@ class Message:
         return str(self.from_id) + " " + self.m_type + " " + str(self.value)
 
 class Certificate:
-    def __init__(self, leader, distance, parent, distances, leaders):
+    def __init__(self, leader, distance, parent, nld):
         self.leader = leader
         self.distance = distance
         self.parent = parent
-        self.n_distances = distances
-        self.n_leaders = leaders
+        self.nld = nld
 
     def __str__(self):
         return "Cert(" + str(self.leader) + " " + str(self.distance) + " " + str(self.parent) + " " + str([n.id for n in self.n_leaders]) + " " + str(self.n_distances) + ")"

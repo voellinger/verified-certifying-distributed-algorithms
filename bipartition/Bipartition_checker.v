@@ -910,6 +910,8 @@ End Checker.
 
 (* Require Extraction. *)
 Extraction Language Haskell.
+(*Extraction Language Scheme.*)
+(*Extraction Language Ocaml.*)
 Extraction "Checker_local_bipartition" Checker_local_bipartition.
 Extraction "Checker_local_output_consistent" Checker_local_output_consistent.
 Extraction "Checker_tree" Checker_tree.
