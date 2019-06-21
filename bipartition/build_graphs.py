@@ -33,9 +33,8 @@ class Graph:
         for c in self.components:
             c.st_thread.join(1)
         for c in self.components:
-            if c.no_bi_edge:
-                return False
-        return True
+            if c.is_leader():
+                return c.global_bipartite
 
     def build_random_connected_graph(self) -> None:
         """Builds a connected graph with self.node_count many nodes. The sparsity describes inversely how many nodes will be
@@ -49,8 +48,6 @@ class Graph:
                         new_vertex.neighbours.append(self.components[n])
                         self.components[n].neighbours.append(new_vertex)
         self.random_rename()
-        for c in self.components:
-            c.st_thread = ST_thread("Thread " + str(c.id), c)
 
     def dottify(self, title="") -> None:
         """Render the graph."""
@@ -65,7 +62,7 @@ class Graph:
                 fill_color = "white"
             else:
                 fill_color = "gray"
-            if c.no_bi_edge:
+            if not c.local_bipartite:
                 if fill_color != "white":
                     fill_color = "#AAAACC"
                 else:
@@ -78,7 +75,7 @@ class Graph:
                     self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
         self.dot.render(title+".gv", view=True)
 
-    def build_haskell_code(self) -> None:
+    def run_checks(self) -> None:
         start_string = "--This file was created automatically\nmodule Main where\n\n"
         end_string = open("temp.tmp", "r").read()
         self.run_check(start_string, "Checker_local_bipartition", end_string)
@@ -147,6 +144,7 @@ class Graph:
             c.id = self.generate_new_neg_id()
         for c in self.components:
             c.id = -c.id
+            c.init_thread()
 
     def generate_new_neg_id(self) -> int:
         """A temporary new random negative id is found."""
@@ -162,12 +160,13 @@ class Component:
         self.certificate = None
         self.st_thread = None
         self.q = Queue(maxsize=0)
-        self.no_bi_edge = None
+        self.global_bipartite = None
 
-    def is_in_neighbours(self, c) -> bool:
-        if type(c) == int:
-            return c in self.neighbour_ids
-        return c in self.neighbours
+    def is_leader(self) -> bool:
+        return self.certificate.leader.id == self.id
+
+    def init_thread(self):
+        self.st_thread = ST_thread("Thread " + str(self.id), self)
 
 
 
@@ -184,43 +183,73 @@ class ST_thread(threading.Thread):
         self.unexplored = self.component.neighbours[:]
         self.stop_request = threading.Event()
         self.nld = []
+        self.local_bipartite = None
+        self.converge_messages = 0
         self.switcher = {
             "leader":self.leader_f,
             "already":self.already_f,
             "parent":self.parent_f,
             "stop":self.stop,
-            "certadd":self.certadd
+            "certadd":self.certadd,
+            "aggregate":self.aggregate
         }
 
     def run(self):
         #print(str(self.component.id) + " starting ...")
-        self.explore()
-
-        while not self.stop_request.isSet():
-            try:
-                message = self.component.q.get(True)
-            except Queue.Empty:
-                pass
-            else:
-                self.component.q.task_done()
-                self.switcher.get(message.m_type)(message.value, message.from_id)
-        while len(self.component.neighbours) > len(self.nld):
-            try:
-                message = self.component.q.get(True)
-            except Queue.Empty:
-                pass
-            else:
-                self.component.q.task_done()
-                self.switcher.get(message.m_type)(message.value, message.from_id)
-        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.nld)
-        self.component.no_bi_edge = self.check_local_bipartition(self.component.certificate)
+        self.phase1()
+        self.phase2()
+        self.phase3()
         #print(str(self.component.id) + " shutting down ...")
 
-    def check_local_bipartition(self, cert):
-        for n in cert.nld:
-            if cert.distance % 2 == n[2] % 2:
-                return True
-        return False
+    def phase1(self):
+        """A spanning tree is built. The node with the highest id becomes root.
+           Afterwards all certificates get filled with information of neighboring nodes.
+           Each node can now compute its local bipartiteness."""
+        self.explore()
+        while not self.stop_request.isSet() or not self.nld_is_full():
+            self.get_message_execute_message()
+        self.local_bipartite = self.component.local_bipartite = self.check_local_bipartition(self.nld)
+        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.nld, self.local_bipartite)
+
+    def map_and(self, ll):
+        for l in ll:
+            if not l:
+                return False
+        return True
+
+    def phase2(self):
+        """A convergecast, starting from leafs going to the root. The attribute local_bipartite is sent to root."""
+        while self.converge_messages < len(self.children):
+            self.get_message_execute_message()
+        if self.parent.id != self.component.id:
+            self.parent.q.put(Message(self.component, "aggregate", self.local_bipartite))
+        else:
+            self.component.global_bipartite = self.local_bipartite
+
+    def aggregate(self, local_bipartite, from_):
+        self.local_bipartite = self.local_bipartite and local_bipartite
+        self.converge_messages += 1
+
+    def phase3(self):
+        """A broadcast starting from root. Maybe this phase is not necessary?!"""
+
+    def get_message_execute_message(self):
+        try:
+            message = self.component.q.get(True)
+        except Queue.Empty:
+            pass
+        else:
+            self.component.q.task_done()
+            self.switcher.get(message.m_type)(message.value, message.from_id)
+
+    def nld_is_full(self):
+        return len(self.component.neighbours) <= len(self.nld)
+
+    def check_local_bipartition(self, nld):
+        for n in nld:
+            if self.distance % 2 == n[2] % 2:
+                return False
+        return True
 
     def leader_f(self, new_leader, from_):
         if self.leader.id < new_leader.id:
@@ -259,10 +288,13 @@ class ST_thread(threading.Thread):
         for c in self.component.neighbours:
             c.q.put(Message(self.component, "certadd", (self.leader, self.distance)))
         self.stop_request.set()
+
+        #  Output for GraphViz
         self.component.parent = self.parent
         self.component.leader = self.leader
         self.component.children = self.children
         self.component.distance = self.distance
+        # /Output for Graphviz
 
     def certadd(self, val, from_) -> None:
         self.nld.append((from_, val[0], val[1]))
@@ -274,15 +306,10 @@ class Message:
         self.m_type = m_type
         self.value = value
 
-    def __str__(self):
-        return str(self.from_id) + " " + self.m_type + " " + str(self.value)
-
 class Certificate:
-    def __init__(self, leader, distance, parent, nld):
+    def __init__(self, leader, distance, parent, nld, local_bipartite):
         self.leader = leader
         self.distance = distance
         self.parent = parent
         self.nld = nld
-
-    def __str__(self):
-        return "Cert(" + str(self.leader) + " " + str(self.distance) + " " + str(self.parent) + " " + str([n.id for n in self.n_leaders]) + " " + str(self.n_distances) + ")"
+        self.local_bipartite = local_bipartite
