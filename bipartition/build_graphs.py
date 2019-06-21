@@ -78,9 +78,17 @@ class Graph:
     def run_checks(self) -> None:
         start_string = "--This file was created automatically\nmodule Main where\n\n"
         end_string = open("temp.tmp", "r").read()
-        self.run_check(start_string, "Checker_local_bipartition", end_string)
-        self.run_check(start_string, "Checker_local_output_consistent", end_string)
-        self.run_check(start_string, "Checker_tree", end_string)
+        bips = self.run_check(start_string, "Checker_local_bipartition", end_string)
+        print("Local bipartite?\n" + str(bips))
+
+        #self.components[0].certificate.nld.append(self.components[0].certificate.nld[0])
+        #self.components[0].certificate.parent = self.components[0]
+        #self.components[0].certificate.nld[0] = (self.components[0], self.components[0], 0)
+        print(self.components[0].id)
+        locs = self.run_check(start_string, "Checker_local_output_consistent", end_string)
+        print("Local output consistent?\n" + str(locs))
+        tree = self.run_check(start_string, "Checker_tree", end_string)
+        print("Local tree correct?\n" + str(tree))
 
     def run_check(self, start_string, file_name, end_string) -> list:
         end_string = end_string.replace("##", file_name)
@@ -103,8 +111,7 @@ class Graph:
         text_file.write(ret + end_string)
         text_file.close()
         subprocess.run(["ghc", file_name_complete], stdout=PIPE, stderr=PIPE)
-        print([b==b'true' for b in subprocess.run(["./" + file_name_var], stdout=PIPE, stderr=PIPE).__dict__["stdout"].split()])
-        return
+        return [b==b'true' for b in subprocess.run(["./" + file_name_var], stdout=PIPE, stderr=PIPE).__dict__["stdout"].split()]
 
     def str_leader(self) -> str:
         ret = "leader :: (Component -> Component)\n"
