@@ -204,7 +204,6 @@ class ST_thread(threading.Thread):
         #print(str(self.component.id) + " starting ...")
         self.phase1()
         self.phase2()
-        self.phase3()
         #print(str(self.component.id) + " shutting down ...")
 
     def phase1(self):
@@ -215,7 +214,7 @@ class ST_thread(threading.Thread):
         while not self.stop_request.isSet() or not self.nld_is_full():
             self.get_message_execute_message()
         self.local_bipartite = self.component.local_bipartite = self.check_local_bipartition(self.nld)
-        self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.nld, self.local_bipartite)
+        self.component.certificate = Certificate(self.component.id, self.component.neighbours, self.leader, self.distance, self.parent, self.nld, self.local_bipartite)
 
     def map_and(self, ll):
         for l in ll:
@@ -235,9 +234,6 @@ class ST_thread(threading.Thread):
     def aggregate(self, local_bipartite, from_):
         self.local_bipartite = self.local_bipartite and local_bipartite
         self.converge_messages += 1
-
-    def phase3(self):
-        """A broadcast starting from root. Maybe this phase is not necessary?!"""
 
     def get_message_execute_message(self):
         try:
@@ -313,9 +309,12 @@ class Message:
         self.value = value
 
 class Certificate:
-    def __init__(self, leader, distance, parent, nld, local_bipartite):
+    def __init__(self, id, neighbors, leader, distance, parent, nld, local_bipartite):
+        self.id = id
+        self.neighbors = neighbors
         self.leader = leader
         self.distance = distance
         self.parent = parent
         self.nld = nld
         self.local_bipartite = local_bipartite
+        self.global_output_consistent = True ### Simulation of a successful consistency check, which is not yet verified in COQ.
