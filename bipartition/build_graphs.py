@@ -1,6 +1,7 @@
 import random
 import graphviz
-import threading, logging
+import threading, logging, subprocess
+from subprocess import PIPE
 from queue import Queue
 
 
@@ -26,16 +27,15 @@ class Graph:
         self.components = []
         self.dot = None
 
-    def check_bipartition(self):
+    def is_bipartite(self) -> bool:
         for c in self.components:
             c.st_thread.start()
         for c in self.components:
             c.st_thread.join(1)
         for c in self.components:
             if c.no_bi_edge:
-                print("Graph NOT bipartite")
-                return
-        print("Graph is bipartite")
+                return False
+        return True
 
     def build_random_connected_graph(self) -> None:
         """Builds a connected graph with self.node_count many nodes. The sparsity describes inversely how many nodes will be
@@ -76,23 +76,38 @@ class Graph:
                     self.dot.edge("C" + str(c.id), "C" + str(n.id), color="#CC4444", penwidth="2", constraint="false")
                 elif n.id > c.id:
                     self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
-        self.dot.render(title, view=True)
+        self.dot.render(title+".gv", view=True)
 
-    def __str__(self) -> str:
-        ret = ""
-        for c in self.components:
-            ret += c.__str__() + "\n"
-        return ret
+    def build_haskell_code(self) -> None:
+        start_string = "--This file was created automatically\nmodule Main where\n\n"
+        end_string = open("temp.tmp", "r").read()
+        self.run_check(start_string, "Checker_local_bipartition", end_string)
+        self.run_check(start_string, "Checker_local_output_consistent", end_string)
+        self.run_check(start_string, "Checker_tree", end_string)
 
-    def build_haskell_code(self) -> str:
-        ret  = "module Global_checker where\n\n"
-        ret += "import Checker_local_bipartition\n\n"
+    def run_check(self, start_string, file_name, end_string) -> list:
+        end_string = end_string.replace("##", file_name)
+        end_string = end_string.replace("**", file_name.lower())
+        end_string = end_string.replace("@@", "("+int_to_nat(self.node_count)+")")
+        if file_name != "Checker_local_bipartition":
+            end_string = end_string.replace(" nnnn_iiii", " neighbours_input")
+        else:
+            end_string = end_string.replace(" nnnn_iiii", "")
+        ret = start_string
+        ret += "import " + file_name + "\n\n"
         ret += self.str_leader()
         ret += self.str_distance()
         ret += self.str_parent()
         ret += self.str_neighbours()
         ret += self.str_nld()
-        return ret
+        file_name_var = file_name + "_vars"
+        file_name_complete = file_name_var + ".hs"
+        text_file = open(file_name_complete, "w")
+        text_file.write(ret + end_string)
+        text_file.close()
+        subprocess.run(["ghc", file_name_complete], stdout=PIPE, stderr=PIPE)
+        print([b==b'true' for b in subprocess.run(["./" + file_name_var], stdout=PIPE, stderr=PIPE).__dict__["stdout"].split()])
+        return
 
     def str_leader(self) -> str:
         ret = "leader :: (Component -> Component)\n"
@@ -149,9 +164,6 @@ class Component:
         self.q = Queue(maxsize=0)
         self.no_bi_edge = None
 
-    def __str__(self) -> str:
-        return str(self.id)# + " " + str([n.id for n in self.neighbours])
-
     def is_in_neighbours(self, c) -> bool:
         if type(c) == int:
             return c in self.neighbour_ids
@@ -181,7 +193,7 @@ class ST_thread(threading.Thread):
         }
 
     def run(self):
-        print(str(self.component.id) + " starting ...")
+        #print(str(self.component.id) + " starting ...")
         self.explore()
 
         while not self.stop_request.isSet():
@@ -202,7 +214,7 @@ class ST_thread(threading.Thread):
                 self.switcher.get(message.m_type)(message.value, message.from_id)
         self.component.certificate = Certificate(self.leader, self.distance, self.parent, self.nld)
         self.component.no_bi_edge = self.check_local_bipartition(self.component.certificate)
-        print(str(self.component.id) + " shutting down ...")
+        #print(str(self.component.id) + " shutting down ...")
 
     def check_local_bipartition(self, cert):
         for n in cert.nld:

@@ -1,15 +1,18 @@
 import build_graphs
 import random
 
-min_count = 1
-max_count = 4 * min_count
-node_count = random.randint(min_count, max_count)
-sparsity = random.randint(3*min_count, 3*max_count)
-g = build_graphs.Graph(node_count, sparsity)
-g.build_random_connected_graph()
-#g.dottify("The original graph")
-g.check_bipartition()
-#print(g)
-g.dottify("The graph and its spanning tree")
-print()
-print(g.build_haskell_code())
+k = 1
+while k:
+    k -= 1
+    min_count = 3
+    max_count = 3
+    sparsity = 0
+    #min_count = 10
+    #max_count = 20
+    #sparsity = random.randint(min_count, 2 * max_count)
+    node_count = random.randint(min_count, max_count)
+    g = build_graphs.Graph(node_count, sparsity)
+    g.build_random_connected_graph()
+    g.is_bipartite()
+    g.dottify("The graph and its spanning tree")
+    g.build_haskell_code()

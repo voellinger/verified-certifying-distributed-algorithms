@@ -2,3 +2,8 @@
 \#*
 *.hs
 __py*
+*.hi
+*.o
+*.gv
+*.pdf
+*_vars
