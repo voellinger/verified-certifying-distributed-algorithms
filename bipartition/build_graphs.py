@@ -80,11 +80,10 @@ class Graph:
         end_string = open("temp.tmp", "r").read()
         bips = self.run_check(start_string, "Checker_local_bipartition", end_string)
         print("Local bipartite?\n" + str(bips))
-
         #self.components[0].certificate.nld.append(self.components[0].certificate.nld[0])
         #self.components[0].certificate.parent = self.components[0]
         #self.components[0].certificate.nld[0] = (self.components[0], self.components[0], 0)
-        print(self.components[0].id)
+        #print(self.components[0].id)
         locs = self.run_check(start_string, "Checker_local_output_consistent", end_string)
         print("Local output consistent?\n" + str(locs))
         tree = self.run_check(start_string, "Checker_tree", end_string)
