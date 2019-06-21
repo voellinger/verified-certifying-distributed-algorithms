@@ -100,9 +100,6 @@ Fixpoint each_nld_is_in_neighbor (neigh_list : list Component) (nld : nldlist) :
   | (a,b,c) :: tl => is_in a neigh_list && each_nld_is_in_neighbor neigh_list tl
   end.
 
-Definition get_color (distance : nat) : bool :=
-Nat.odd distance.
-
 Definition Checker_local_output_consistent (neigh_list : list Component) (nld : nldlist) : bool :=
   NoDup_b nld &&
   each_neighbor_is_in_nld neigh_list nld &&

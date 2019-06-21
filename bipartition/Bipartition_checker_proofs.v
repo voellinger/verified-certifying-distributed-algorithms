@@ -428,6 +428,9 @@ Proof.
   subst. auto.
 Qed.
 
+Definition get_color (x : Component) : bool :=
+  Nat.odd (distance x).
+
 Lemma checker_bipartite_correct : (forall x : Component,
   v x ->
   (Checker_local_bipartition (distance x) (nld x) = true /\
