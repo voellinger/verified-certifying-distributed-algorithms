@@ -15,7 +15,8 @@ Variable c : Connected v a.
 (********/Network of the algorithm *********)
 
 (******** Interface of checker *********)
-Variable bipartite_answer : bool.
+Variable global_bipartite_answer : bool.
+Variable local_bipartite_answer : Component -> bool.
 Variable leader : Component -> Component.
 Variable distance : Component -> nat.
 Variable parent : Component -> Component.
@@ -90,7 +91,7 @@ Qed.
 Lemma is_in_once_correct : forall x l,
   is_in_once x l -> exists y n, In (x,y,n) l.
 Proof.
-  intros. clear neighbors_input.
+  intros x l H. clear neighbors_input local_bipartite_answer.
   induction l.
   inversion H.
   simpl in *. destruct a0. destruct p.
@@ -102,7 +103,7 @@ Qed.
 Lemma is_not_in_correct : forall l a b c,
   is_not_in a l -> ~ In (a,b,c) l.
 Proof.
-  intro l. clear neighbors_input.
+  intro l. clear neighbors_input. clear local_bipartite_answer.
   induction l ; simpl in * ; intuition.
   inversion H5. subst. destruct (V_eq_dec a1 a1) ; intuition.
   destruct (V_eq_dec a1 a0) ; intuition.
@@ -121,7 +122,7 @@ Lemma local_input_correct: forall (x1 x2: Component),
   In x2 (neighbors_input x1) <-> a (A_ends x1 x2).
 Proof.
   intros.
-  rewrite neighbor_input_is_correct. clear neighbors_input.
+  rewrite neighbor_input_is_correct. clear neighbors_input local_bipartite_answer.
   unfold neighbors.
   induction c ; split ; intros ; simpl in * ; subst ; intuition.
   - inversion H.
@@ -242,7 +243,7 @@ Lemma NoDup_b_1: forall (y z : Component) (n : nat) (l : nldlist),
   NoDup_b ((y, z, n) :: l) = true ->
     is_in_once y ((y, z, n) :: l).
 Proof.
-  intros. clear neighbors_input.
+  intros. clear neighbors_input local_bipartite_answer.
   simpl in *.
   destruct (V_eq_dec y y) ; intuition.
   apply andb_true_iff in H.
@@ -364,7 +365,7 @@ Lemma neighborhood_correct : forall (v : V_set) a c x y,
   a (A_ends x y).
 Proof.
   clear v a c.
-  intros v a c. clear neighbors_input.
+  intros v a c. clear neighbors_input local_bipartite_answer.
   induction c ; simpl in * ; intuition.
   + destruct (V_eq_dec x0 y) ; subst ; intuition.
     - destruct (V_eq_dec y x) ; subst ; intuition.
@@ -398,7 +399,7 @@ Lemma neighborhood_correct1 : forall (v : V_set) (a : A_set) c x y,
   In y (A_in_neighborhood x (CA_list v a c)).
 Proof.
   clear v a c.
-  intros. clear neighbors_input.
+  intros. clear neighbors_input local_bipartite_answer.
   induction c ; simpl in * ; intuition.
   inversion H.
   destruct (V_eq_dec x y0) ; subst ; intuition.
@@ -495,8 +496,8 @@ Proof.
   destruct (V_eq_dec x (parent x)) ; subst ; intuition.
   right. intuition. apply beq_nat_true in H2. auto.
   inversion H1.
-  inversion H1. simpl in *.
-  intuition.
+  inversion H1. simpl in *. split.
+  
   left.
   assert (a (A_ends x (parent x))).
   apply andb_prop in H1.
@@ -515,7 +516,7 @@ Proof.
   apply (G_non_directed _ _ H3 _ _ H2).
   left. intuition.
   apply andb_prop in H1. destruct H1.
-  apply beq_nat_true in H2.
+  apply beq_nat_true in H3.
   auto.
 Qed.
 
@@ -533,7 +534,7 @@ Proof.
   destruct H2. destruct s.
   induction w.
   + reflexivity.
-  + apply W_endx_inv in w.
+  + apply W_endx_inv in w. remember local_bipartite_answer as lba.
     intuition.
     rewrite H3.
     assert (H' := H).
@@ -626,12 +627,13 @@ Proof.
     assert (spanning_tree v a (leader v_random) parent distance c) as G1.
     apply G2'G2. unfold Gamma_2'.
     exists (leader v_random). unfold root_prop''.
-    split ; intuition.
-    specialize (H x). intuition. simpl in *. rewrite <- H5.
-    apply Checker_tree_correct ; auto. apply (H3 x) ; auto.
-    simpl in *.
+    split ; auto. intros x vx.
+    specialize (H x). assert (vxx := vx). apply H in vx. rewrite <- vx.
 
-    destruct H2. destruct H2.
+
+    apply Checker_tree_correct ; auto. apply (H3 x) ; auto.
+
+    destruct H2 as [x H2]. destruct H2 as [H2 H4].
 
 
 
@@ -684,12 +686,12 @@ Proof.
     inversion H4.
     destruct a0. destruct p.
     assert (H2' := H2).
-    specialize (H2 c0 c1 n0). intuition. clear H5.
+    specialize (H2 c0 c1 n0). intuition. clear H6.
     destruct ((V_eq_dec c0 c0)) ; subst.
     assert ({Nat.odd (distance x) = Nat.odd (distance c0)} + 
             {Nat.odd (distance x) <> Nat.odd (distance c0)}).
     apply bool_dec.
-    destruct H.
+    destruct H2.
     exists c0. exists c1.
     rewrite e0 in *. intuition.
     unfold eqb in H4.
@@ -700,8 +702,8 @@ Proof.
       ((c0, c1, distance c0) = (y, z, distance y) \/
       In (y, z, distance y) n) /\
       Nat.odd (distance x) = Nat.odd (distance y)}}).
-    intros. destruct H. destruct s. exists x0. exists x1. intuition.
-    apply H. clear H.
+    intros. destruct H2. destruct s. exists x0. exists x1. intuition.
+    apply H2. clear H2.
     apply IHn ; auto.
     destruct (Nat.odd (distance x)) ; destruct (Nat.odd (distance c0)) ; intuition.
 
@@ -711,7 +713,7 @@ Proof.
     intros. specialize (H2' y z n1). specialize (new y z n1).
     destruct (V_eq_dec y c0) ; subst. remember leader as lll. remember parent as ppp.
     remember nld as rr. intuition.
-    apply (is_not_in_correct n c0 z n1) in H8. intuition.
+    apply (is_not_in_correct n c0 z n1) in H9. intuition.
     intuition.
     clear IHn H2' H4.
     intros.
@@ -722,7 +724,7 @@ Proof.
     intuition.
 
 
-    intuition.
+    intuition. intuition.
     destruct H5. repeat destruct s.
     destruct a0.
     exists x0.
@@ -732,6 +734,57 @@ Proof.
     apply (Connected_Isa_Graph v a c).
     apply (G_ina_inv2 v a H7 _ _ H5).
     intuition.
+Qed.
+
+Theorem checker_correct2: (forall x, v x -> Local_checker x (neighbors_input x) (leader x) (parent x) (distance x) (nld x) (local_bipartite_answer x) global_output_consistent = true) ->
+  ((forall x: Component, v x -> local_bipartite_answer x = true) <-> bipartite a).
+Proof.
+  intros H. split ; intros H0.
+  - apply checker_correct. intros x vx.
+    unfold Local_checker in H. specialize (H x).
+    apply andb_true_iff in H. destruct H as [H H'].
+    apply andb_true_iff in H. destruct H as [H H''].
+    apply andb_true_iff in H. destruct H as [H H'''].
+    apply eqb_prop in H. specialize (H0 x). rewrite H0 in H.
+    intuition. auto. auto.
+  - intros x vx.
+    unfold Local_checker in H. assert (Hcopy := H). specialize (H x).
+    apply andb_true_iff in H ; auto. destruct H as [H H'].
+    apply andb_true_iff in H. destruct H as [H H''].
+    apply andb_true_iff in H. destruct H as [H H'''].
+    apply eqb_prop in H. rewrite <- H.
+    assert (~ (exists (x : Component), v x /\ Checker_local_bipartition (distance x) (nld x) = false)) as H1.
+    unfold not. intros.
+    assert (((forall (x : Component), v x -> 
+        (Checker_tree x (neighbors_input x) (leader x) (parent x) (distance x) (nld x) = true /\ Checker_local_output_consistent (neighbors_input x) (nld x) = true /\
+        global_output_consistent = true)) /\
+        (exists (x : Component), v x /\
+        Checker_local_bipartition (distance x) (nld x) = false))) as H2.
+    split ; intros. specialize (Hcopy x0).
+    apply andb_true_iff in Hcopy. destruct Hcopy as [Hcopy Hcopy'].
+    apply andb_true_iff in Hcopy. destruct Hcopy as [Hcopy Hcopy''].
+    apply andb_true_iff in Hcopy. destruct Hcopy as [Hcopy Hcopy'''].
+    intuition. auto.
+    destruct H1 as [proof H1]. exists proof ; auto.
+    apply checker_correct in H2. intuition.
+    clear - H1 vx.
+
+    assert (~(exists x : Component, v x /\ ~Checker_local_bipartition (distance x) (nld x) = true)).
+    intuition. apply H1.
+    destruct H as [proof H]. exists proof. intuition.
+    destruct (Checker_local_bipartition (distance proof) (nld proof)) ; simpl in * ; auto.
+    intuition.
+    clear H1.
+    unfold not at 1 in H.
+    clear - H vx.
+    assert (~~ Checker_local_bipartition (distance x) (nld x) = true -> Checker_local_bipartition (distance x) (nld x) = true).
+    tauto.
+    assert ((Checker_local_bipartition (distance x) (nld x) <> true -> False) -> Checker_local_bipartition (distance x) (nld x) = true).
+    destruct (Checker_local_bipartition (distance x) (nld x)) ; simpl in * ; auto.
+    apply H1.
+    intros.
+    apply H.
+    exists x. auto.
 Qed.
 
 End Checker_proofs.
