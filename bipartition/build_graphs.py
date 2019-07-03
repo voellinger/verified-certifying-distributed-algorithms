@@ -1,24 +1,10 @@
 import random
 import graphviz
-import threading, logging, subprocess
+import threading
+import subprocess
 from subprocess import PIPE
 from queue import Queue
 
-
-def int_to_nat(n) -> str:
-    ret = "O"
-    for k in range(n):
-        ret = "S (" + ret + ")"
-    return ret
-
-def list_to_List(ls) -> str:
-    ret = "Nil"
-    for l in ls:
-        ret = "Cons (" + l + ") (" + ret + ")"
-    return ret
-
-def pair_to_prod(p1, p2) -> str:
-    return "Pair (" + p1 + ") (" + p2 + ")"
 
 class Graph:
     def __init__(self, node_count : int, sparsity : int) -> None:
@@ -53,11 +39,11 @@ class Graph:
         """Render the graph."""
         self.dot = graphviz.Graph(name=title, engine="neato")
         for c in self.components:
-            penwidth = "1"
+            pen_width = "1"
             color = "black"
-            if c.leader.id == c.id:
+            if c.is_leader():
                 color = "#CC4444"
-                penwidth = "4"
+                pen_width = "4"
             if not c.certificate or c.certificate.distance % 2 == 0:
                 fill_color = "white"
             else:
@@ -67,81 +53,13 @@ class Graph:
                     fill_color = "#AAAACC"
                 else:
                     fill_color = "#DDDDFF"
-            self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, shape="circle", style="filled", penwidth=penwidth)
+            self.dot.node("C"+str(c.id), str(c.id), color=color, fillcolor=fill_color, shape="circle", style="filled", penwidth=pen_width)
             for n in c.neighbours:
                 if (n.parent.id == c.id or c.parent.id == n.id) and n.id > c.id:
                     self.dot.edge("C" + str(c.id), "C" + str(n.id), color="#CC4444", penwidth="2", constraint="false")
                 elif n.id > c.id:
                     self.dot.edge("C"+str(c.id), "C"+str(n.id), constraint="false")
         self.dot.render(title+".gv", view=True)
-
-    def run_checks(self) -> None:
-        start_string = "--This file was created automatically\nmodule Main where\n\n"
-        end_string = open("temp.tmp", "r").read()
-        bips = self.run_check(start_string, "Checker_local_bipartition", end_string)
-        print("Local bipartite?\n" + str(bips))
-        #self.components[0].certificate.nld.append(self.components[0].certificate.nld[0])
-        #self.components[0].certificate.parent = self.components[0]
-        #self.components[0].certificate.nld[0] = (self.components[0], self.components[0], 0)
-        #print(self.components[0].id)
-        locs = self.run_check(start_string, "Checker_local_output_consistent", end_string)
-        print("Local output consistent?\n" + str(locs))
-        tree = self.run_check(start_string, "Checker_tree", end_string)
-        print("Local tree correct?\n" + str(tree))
-
-    def run_check(self, start_string, file_name, end_string) -> list:
-        end_string = end_string.replace("##", file_name)
-        end_string = end_string.replace("**", file_name.lower())
-        end_string = end_string.replace("@@", "("+int_to_nat(self.node_count)+")")
-        if file_name != "Checker_local_bipartition":
-            end_string = end_string.replace(" nnnn_iiii", " neighbours_input")
-        else:
-            end_string = end_string.replace(" nnnn_iiii", "")
-        ret = start_string
-        ret += "import " + file_name + "\n\n"
-        ret += self.str_leader()
-        ret += self.str_distance()
-        ret += self.str_parent()
-        ret += self.str_neighbours()
-        ret += self.str_nld()
-        file_name_var = file_name + "_vars"
-        file_name_complete = file_name_var + ".hs"
-        text_file = open(file_name_complete, "w")
-        text_file.write(ret + end_string)
-        text_file.close()
-        subprocess.run(["ghc", file_name_complete], stdout=PIPE, stderr=PIPE)
-        return [b==b'true' for b in subprocess.run(["./" + file_name_var], stdout=PIPE, stderr=PIPE).__dict__["stdout"].split()]
-
-    def str_leader(self) -> str:
-        ret = "leader :: (Component -> Component)\n"
-        for c in self.components:
-            ret += "leader (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.leader.id) + "\n"
-        return ret + "\n\n"
-
-    def str_distance(self) -> str:
-        ret = "distance :: (Component -> Nat)\n"
-        for c in self.components:
-            ret += "distance (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.distance) + "\n"
-        return ret + "\n\n"
-
-    def str_parent(self) -> str:
-        ret = "parent :: (Component -> Component)\n"
-        for c in self.components:
-            ret += "parent (" + int_to_nat(c.id) + ") = " + int_to_nat(c.certificate.parent.id) + "\n"
-        return ret + "\n\n"
-
-    def str_neighbours(self) -> str:
-        ret = "neighbours_input :: (Component -> List Component)\n"
-        for c in self.components:
-            ret += "neighbours_input (" + int_to_nat(c.id) + ") = " + list_to_List([int_to_nat(n.id) for n in c.neighbours]) + "\n"
-        return ret + "\n\n"
-
-    def str_nld(self) -> str:
-        ret = "neighbors_leader_distance :: (Component -> List (Prod (Prod Component Component) Nat))\n"
-        for c in self.components:
-            ret += "neighbors_leader_distance (" + int_to_nat(c.id) + ") = "
-            ret += list_to_List([pair_to_prod("("+pair_to_prod(int_to_nat(nld[0].id), int_to_nat(nld[1].id))+")", int_to_nat(nld[2])) for nld in c.certificate.nld]) + "\n"
-        return ret + "\n\n"
 
     def random_rename(self) -> None:
         """The components rename themselves randomly for a true random graph.
@@ -159,8 +77,9 @@ class Graph:
             if not r in [c.id for c in self.components]:
                 return r
 
+
 class Component:
-    def __init__(self, given_id, neighbours=[]) -> None:
+    def __init__(self, given_id, neighbours=[]):
         self.id = given_id
         self.neighbours = neighbours
         self.certificate = None
@@ -175,11 +94,9 @@ class Component:
         self.st_thread = ST_thread("Thread " + str(self.id), self)
 
 
-
-
 class ST_thread(threading.Thread):
-    def __init__(self, name = None, component = None):
-        super(ST_thread,self).__init__()
+    def __init__(self, name=None, component=None):
+        super(ST_thread, self).__init__()
         self.name = name
         self.component = component
         self.leader = self.component
@@ -192,19 +109,20 @@ class ST_thread(threading.Thread):
         self.local_bipartite = None
         self.converge_messages = 0
         self.switcher = {
-            "leader":self.leader_f,
-            "already":self.already_f,
-            "parent":self.parent_f,
-            "stop":self.stop,
-            "certadd":self.certadd,
-            "aggregate":self.aggregate
+            "leader": self.leader_f,
+            "already": self.already_f,
+            "parent": self.parent_f,
+            "stop": self.stop,
+            "certadd": self.certadd,
+            "aggregate": self.aggregate
         }
 
     def run(self):
-        #print(str(self.component.id) + " starting ...")
+        # print(str(self.component.id) + " starting ...")
         self.phase1()
         self.phase2()
-        #print(str(self.component.id) + " shutting down ...")
+        self.run_checks()
+        # print(str(self.component.id) + " shutting down ...")
 
     def phase1(self):
         """A spanning tree is built. The node with the highest id becomes root.
@@ -301,12 +219,26 @@ class ST_thread(threading.Thread):
     def certadd(self, val, from_) -> None:
         self.nld.append((from_, val[0], val[1]))
 
+    def run_checks(self) -> None:
+        # (id:ni:l:p:d:nld:lb:goc)
+        id = str(self.component.certificate.id)
+        ni = str([n.id for n in self.component.certificate.neighbors])
+        l = str(self.component.certificate.leader.id)
+        p = str(self.component.certificate.parent.id)
+        d = str(self.component.certificate.distance)
+        nld = str([(n[0].id, n[1].id, n[2]) for n in self.component.certificate.nld])
+        lb = str(self.component.certificate.local_bipartite).capitalize()
+        goc = str(self.component.certificate.global_output_consistent).capitalize()
+        cert_correct = b'true' == subprocess.run(["./Local_checker_io", id, ni, l, p, d, nld, lb, goc], stdout=PIPE, stderr=PIPE).__dict__["stdout"]
+        print("Certificate of node " + str(self.component.certificate.id) + " correct? " + str(cert_correct))
+
 
 class Message:
     def __init__(self, from_id, m_type, value):
         self.from_id = from_id
         self.m_type = m_type
         self.value = value
+
 
 class Certificate:
     def __init__(self, id, neighbors, leader, distance, parent, nld, local_bipartite):
@@ -317,4 +249,6 @@ class Certificate:
         self.parent = parent
         self.nld = nld
         self.local_bipartite = local_bipartite
-        self.global_output_consistent = True ### Simulation of a successful consistency check, which is not yet verified in COQ.
+
+        self.global_output_consistent = True
+        # Simulation of a successful consistency check, which is not yet verified in COQ.

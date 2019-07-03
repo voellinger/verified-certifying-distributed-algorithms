@@ -7,8 +7,8 @@ while k:
     #min_count = 3
     #max_count = 3
     #sparsity = 0
-    min_count = 10
-    max_count = 20
+    min_count = 1000
+    max_count = 2000
     sparsity = random.randint(min_count, 2 * max_count)
     node_count = random.randint(min_count, max_count)
     g = build_graphs.Graph(node_count, sparsity)
@@ -18,4 +18,3 @@ while k:
     else:
         print("Graph is NOT bipartite.")
     g.dottify("The graph and its spanning tree")
-    g.run_checks()
