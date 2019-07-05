@@ -128,6 +128,9 @@ class Component:
     def g_id(self) -> int:
         return self.__id
 
+    def s_global_bipartite(self, g_bipartite) -> None:
+        self.__global_bipartite = g_bipartite
+
     def is_global_bipartite(self) -> bool:
         return self.__global_bipartite
 
@@ -191,6 +194,7 @@ class StThread(threading.Thread):
         self.stop_request = threading.Event()
         self.nld = []
         self.local_bipartite = None
+        self.global_bipartite = True
         self.converge_messages = 0
         self.switcher = {
             "leader": self.leader_f,
@@ -223,12 +227,12 @@ class StThread(threading.Thread):
         while self.converge_messages < len(self.children):
             self.get_message_execute_message()
         if self.parent.g_id() != self.id:
-            self.parent.q_put(Message(self.component, "aggregate", self.local_bipartite))
+            self.parent.q_put(Message(self.component, "aggregate", self.global_bipartite and self.local_bipartite))
         else:
-            self.component.global_bipartite = self.local_bipartite
+            self.component.s_global_bipartite(self.global_bipartite)
 
-    def aggregate(self, local_bipartite, from_):
-        self.local_bipartite = self.local_bipartite and local_bipartite
+    def aggregate(self, tree_bipartite, *_):
+        self.global_bipartite = self.global_bipartite and tree_bipartite
         self.converge_messages += 1
 
     def get_message_execute_message(self):
@@ -260,7 +264,7 @@ class StThread(threading.Thread):
             if self.leader.g_id() == new_leader.g_id():
                 from_.q_put(Message(self.component, "already", self.leader))
 
-    def already_f(self, new_leader, from_):
+    def already_f(self, new_leader, *_):
         if new_leader.g_id() == self.leader.g_id():
             self.explore()
 
@@ -279,7 +283,7 @@ class StThread(threading.Thread):
             else:
                 self.stop(0, None)
 
-    def stop(self, val, from_):
+    def stop(self, val, *_):
         self.distance = val
         for c in self.children:
             c.q_put(Message(self.component, "stop", val+1))
