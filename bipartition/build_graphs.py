@@ -113,6 +113,9 @@ class Component:
     def q_task_done(self) -> None:
         self.__q.task_done()
 
+    def q_is_empty(self) -> bool:
+        return self.__q.empty()
+
     def s_certificate(self, certificate) -> None:
         self.__certificate = certificate
 
@@ -231,7 +234,7 @@ class StThread(threading.Thread):
     def get_message_execute_message(self):
         try:
             message = self.component.q_get(True)
-        except Queue.empty():
+        except self.component.queue_is_empty():
             pass
         else:
             self.component.q_task_done()
@@ -289,15 +292,15 @@ class StThread(threading.Thread):
 
     def run_checks(self) -> None:
         # (__id:ni:l:p:d:nld:lb:goc)
-        id = str(self.component.g_certificate().g_id())
+        n_id = str(self.component.g_certificate().g_id())
         ni = str([n.g_id() for n in self.component.g_certificate().g_neighbors()])
-        l = str(self.component.g_certificate().g_leader().g_id())
+        le = str(self.component.g_certificate().g_leader().g_id())
         p = str(self.component.g_certificate().g_parent().g_id())
         d = str(self.component.g_certificate().g_distance())
         nld = str([(n[0].g_id(), n[1].g_id(), n[2]) for n in self.component.g_certificate().g_nld()])
         lb = str(self.component.g_certificate().g_local_bipartite()).capitalize()
         goc = str(self.component.g_certificate().g_global_output_consistent()).capitalize()
-        cert_correct = b'true' == subprocess.run(["./Local_checker_io", id, ni, l, p, d, nld, lb, goc], stdout=PIPE, stderr=PIPE).__dict__["stdout"]
+        cert_correct = b'true' == subprocess.run(["./Local_checker_io", n_id, ni, le, p, d, nld, lb, goc], stdout=PIPE, stderr=PIPE).__dict__["stdout"]
         print("Certificate of node " + str(self.component.g_certificate().g_id()) + " correct? " + str(cert_correct))
 
 
@@ -309,8 +312,8 @@ class Message:
 
 
 class Certificate:
-    def __init__(self, id, neighbors, leader, distance, parent, nld, local_bipartite):
-        self.__id = id
+    def __init__(self, node_id, neighbors, leader, distance, parent, nld, local_bipartite):
+        self.__id = node_id
         self.__neighbors = neighbors
         self.__leader = leader
         self.__distance = distance
