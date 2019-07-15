@@ -722,4 +722,71 @@ Proof.
   reflexivity.
 Qed.
 
+
+
+
+Inductive parent_path:  Vertex -> Vertex -> A_list -> Prop :=
+  | null_step : forall x:Vertex,  v x -> parent_path x x A_nil
+  | parent_step : forall (x y z : Vertex)(al : A_list),
+           parent_path y z al -> parent x = y 
+          -> a (A_ends x (parent x))  -> a (A_ends (parent x) x)
+          -> parent_path x z ((A_ends (parent x) x ) :: al).
+
+Definition parent_path_prop (x : Vertex) :=
+  exists al, parent_path x root al.
+ (* {al: A_list & parent_path x root al}. *)
+
+Definition spanning_tree_2 (c: Connected v a) :=
+(forall x, v x -> parent_path_prop x) /\
+(forall x, v x -> parent_prop x).
+
+
+Lemma conn_pp : forall x al d,
+  Connection x root al d -> parent_path x root al.
+Proof.
+  intros x al d H.
+  clear -H.
+  induction H.
+  apply null_step ; auto.
+  subst.
+  apply (parent_step x (parent x)) ; auto.
+Qed.
+
+Lemma sp_eq: forall c, spanning_tree c <-> spanning_tree_2 c.
+Proof.
+  intros c.
+  unfold spanning_tree. unfold spanning_tree_2.
+  unfold parent_path_prop. unfold distance_prop.
+  split ; intros H.
+  + split ; intros x ; intros vx.
+    specialize (H x). assert (vx' := vx).
+    assert (forall (x:Vertex) (prop1 : v x),
+      {al : A_list & Connection x root al (distance x)}).
+    apply path_to_root2.
+    specialize (H0 x).
+    apply H0 in vx'.
+    destruct vx' as [al Conn].
+    exists al.
+    apply (conn_pp x al (distance x)) ; auto.
+    destruct (H x) ; auto.
+  + intros x vx.
+    destruct H as [H H0].
+    split.
+    assert ({x <> root} + {x = root}).
+    destruct x.
+    destruct root.
+    assert ({n = n0} + {n <> n0}) as H1.
+    apply Nat.eq_dec.
+    destruct H1.
+    right. subst. auto. left. intuition. inversion H1. intuition.
+    destruct H1.
+    left. split ; auto.
+    apply distance_prop2 ; auto.
+    subst.
+    right ; split ; auto.
+    apply distance_root.
+    specialize (H x) ; intuition.
+Qed.
+
+
 End Spanning_Tree.
