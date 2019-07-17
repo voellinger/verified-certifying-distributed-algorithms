@@ -18,7 +18,8 @@ class Graph:
         for c in self.__components:
             c.start_thread()
         for c in self.__components:
-            c.join_thread()
+            if c.is_thread_started():
+                c.join_thread()
         for c in self.__components:
             if c.is_leader():
                 return c.is_global_bipartite()
@@ -176,6 +177,10 @@ class Component:
 
     def start_thread(self) -> None:
         self.__st_thread.start()
+
+    def is_thread_started(self) -> bool:
+        return self.__st_thread.isAlive()
+
 
 
 class StThread(threading.Thread):
@@ -360,3 +365,10 @@ class Certificate:
 
     def is_even(self) -> bool:
         return self.__distance % 2 == 0
+
+
+
+
+#Phase 1: Baum bilden
+#Phase 2: von Blättern her Wurzel bescheid geben
+#Phase 3: Wurzel-Broadcast entlang der Parent-Relation
