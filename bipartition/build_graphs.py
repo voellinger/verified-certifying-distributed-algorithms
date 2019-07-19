@@ -94,9 +94,11 @@ class Component:
         else:
             self.__neighbours = neighbours
         self.__certificate = None
-        self.__st_thread = None
+        self.__bipartition_thread = None
         self.__q = Queue(maxsize=0)
         self.__global_bipartite = None
+
+
 
     def __str__(self) -> str:
         ret = str(self.__id) + " ["
@@ -106,6 +108,7 @@ class Component:
         return ret
 
     def q_put(self, message) -> None:
+        #print(message)
         self.__q.put(message)
 
     def q_get(self, b):
@@ -150,7 +153,8 @@ class Component:
         return self.__neighbours[:]
 
     def init_thread(self):
-        self.__st_thread = StThread("Thread " + str(self.__id), self)
+        self.__bipartition_thread = Bipartition_Thread("Bipartition Thread " + str(self.__id), self)
+        #self.__exp_bi_thread = Exp_Bipartition_Thread("Exp Bipartition Thread " + str(self.__id), self)
 
     def is_local_bipartite(self) -> bool:
         if self.__certificate is not None:
@@ -173,19 +177,25 @@ class Component:
         return False
 
     def join_thread(self) -> None:
-        self.__st_thread.join(1)
+        pass
+        self.__bipartition_thread.join(1)
+        #self.__exp_bi_thread.join(1)
 
     def start_thread(self) -> None:
-        self.__st_thread.start()
+        pass
+        self.__bipartition_thread.start()
+        #self.__exp_bi_thread.start()
 
     def is_thread_started(self) -> bool:
-        return self.__st_thread.isAlive()
+        pass
+        return self.__bipartition_thread.isAlive()
+        #return self.__exp_bi_thread.is_alive()
 
 
 
-class StThread(threading.Thread):
+class Bipartition_Thread(threading.Thread):
     def __init__(self, name=None, component=None):
-        super(StThread, self).__init__()
+        super(Bipartition_Thread, self).__init__()
         self.name = name
         self.component = component
         self.id = self.component.g_id()
@@ -212,12 +222,12 @@ class StThread(threading.Thread):
 
     def run(self):
         # print(str(self.id) + " starting ...")
-        self.phase1()
-        self.phase2()
+        self.build_spanning_tree_check_bipartition()
+        self.check_local_bipartitenesses()
         self.run_checks()
         # print(str(self.id) + " shutting down ...")
 
-    def phase1(self):
+    def build_spanning_tree_check_bipartition(self):
         """A spanning tree is built. The node with the highest __id becomes root.
            Afterwards all certificates get filled with information of neighboring nodes.
            Each node can now compute its local bipartiteness."""
@@ -227,7 +237,7 @@ class StThread(threading.Thread):
         self.local_bipartite = self.check_local_bipartition(self.nld)
         self.component.s_certificate(Certificate(self.id, self.neighbors, self.leader, self.distance, self.parent, self.nld, self.local_bipartite))
 
-    def phase2(self):
+    def check_local_bipartitenesses(self):
         """A converge-cast, starting from leafs going to the root. The attribute local_bipartite is sent to root."""
         while self.converge_messages < len(self.children):
             self.get_message_execute_message()
@@ -319,6 +329,9 @@ class Message:
         self.m_type = m_type
         self.value = value
 
+    def __str__(self) -> str:
+        return "from: " + str(self.from_id.g_id()) + " type: " + str(self.m_type) + ": " + str(self.value)
+
 
 class Certificate:
     def __init__(self, node_id, neighbors, leader, distance, parent, nld, local_bipartite):
@@ -364,11 +377,7 @@ class Certificate:
         return self.__local_bipartite
 
     def is_even(self) -> bool:
-        return self.__distance % 2 == 0
-
-
-
-
-#Phase 1: Baum bilden
-#Phase 2: von Blättern her Wurzel bescheid geben
-#Phase 3: Wurzel-Broadcast entlang der Parent-Relation
+        if self.__distance != None:
+            return self.__distance % 2 == 0
+        else:
+            return False
