@@ -49,7 +49,7 @@ Fixpoint leader_same (x : Component) (l : nldlist) : bool :=
   | (c1, c2, n) :: tl => if (V_eq_dec x c2) then leader_same x tl else false
   end.
 
-Function is_same (x : Component) (other : Component) : bool :=
+Definition is_same (x : Component) (other : Component) : bool :=
   if V_eq_dec x other then true else false.
 
 Fixpoint is_in (x : Component) (l : list Component) : bool :=
@@ -116,7 +116,7 @@ End Checker.
 
 
 
-(* Require Extraction. *)
+Require Extraction.
 Extraction Language Haskell.
 (*Extraction Language Scheme.*)
 (*Extraction Language Ocaml.*)

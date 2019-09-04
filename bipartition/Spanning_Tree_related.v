@@ -728,9 +728,9 @@ Qed.
 Inductive parent_path:  Vertex -> Vertex -> A_list -> Prop :=
   | null_step : forall x:Vertex,  v x -> parent_path x x A_nil
   | parent_step : forall (x y z : Vertex)(al : A_list),
-           parent_path y z al -> parent x = y 
-          -> a (A_ends x (parent x))  -> a (A_ends (parent x) x)
-          -> parent_path x z ((A_ends (parent x) x ) :: al).
+           parent_path y z al -> parent x = y
+          -> a (A_ends x (parent x)) -> a (A_ends (parent x) x)
+          -> parent_path x z ((A_ends (parent x) x) :: al).
 
 Definition parent_path_prop (x : Vertex) :=
   exists al, parent_path x root al.

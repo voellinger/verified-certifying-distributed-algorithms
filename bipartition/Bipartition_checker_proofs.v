@@ -489,6 +489,8 @@ Proof.
   destruct H0 as [H0 H1].
   rewrite nld_correct2 in * ; auto.
 
+
+
   destruct (V_eq_dec x (leader x)) ; subst.
   simpl in *. rewrite orb_false_r in H1.
   apply andb_prop in H1.
