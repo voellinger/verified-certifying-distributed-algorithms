@@ -38,11 +38,17 @@ Fixpoint manual_construct_checker_input_neighbor_list (l : list Component) (lead
   end.
 
 
+(* This axiom means, that distances and leaders are consistent: if a component knows about some  
+   other component's information, the values of that information must be the same. This shall be checked
+   by a consistency checker. This is work in progress, though.
+ *)
 Axiom checker_global_output_consistent_nld_correct1 : forall (x1 x2 : Component),
   global_output_consistent = true ->
     get_distance_in_list x2 (nld x1) = distance x2 /\
     get_leader_in_list x2 (nld x1) = leader x2.
 
+(* The next axiom means, that if the checker is given some neighbors, they are actually neighbors in the network.
+ *)
 Axiom neighbor_input_is_correct : forall v0,
   neighbors_input v0 = neighbors v0.
 

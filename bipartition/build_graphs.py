@@ -45,7 +45,7 @@ class Graph:
 
     def dottify(self, title="") -> None:
         """Render the graph."""
-        self.__dot = graphviz.Graph(name=title, engine="neato")
+        self.__dot = graphviz.Digraph(name=title, engine="neato")
         for c in self.__components:
             pen_width = "1"
             color = "black"
@@ -58,15 +58,15 @@ class Graph:
                 fill_color = "gray"
             if not c.is_local_bipartite():
                 if fill_color != "white":
-                    fill_color = "#AAAACC"
+                    fill_color = "#AFAFCC"
                 else:
-                    fill_color = "#DDDDFF"
+                    fill_color = "#DDDDF0"
             self.__dot.node("C" + str(c.g_id()), str(c.g_id()), color=color, fillcolor=fill_color, shape="circle", style="filled", penwidth=pen_width)
             for n in c.g_neighbors():
-                if (n.is_parent_or_child(c)) and n.g_id() > c.g_id():
-                    self.__dot.edge("C" + str(c.g_id()), "C" + str(n.g_id()), color="#CC4444", penwidth="2", constraint="false")
-                elif n.g_id() > c.g_id():
-                    self.__dot.edge("C" + str(c.g_id()), "C" + str(n.g_id()), constraint="false")
+                if n.is_parent(c):
+                    self.__dot.edge("C" + str(n.g_id()), "C" + str(c.g_id()), color="#CC4444", penwidth="1", constraint="false", arrowhead="normal")
+                elif ((not n.is_parent_or_child(c)) and n.g_id() > c.g_id()):
+                    self.__dot.edge("C" + str(c.g_id()), "C" + str(n.g_id()), color="#0000FF", constraint="false", arrowhead="none")
         self.__dot.render(title + ".gv", view=True)
 
     def random_rename(self) -> None:

@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="42164631-3884-4162-a3cd-2d7349bd089a" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/bipartition.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/bipartition.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Spanning_Tree_related.v" beforeDir="false" afterPath="$PROJECT_DIR$/Spanning_Tree_related.v" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bipartition_checker_proofs.v" beforeDir="false" afterPath="$PROJECT_DIR$/Bipartition_checker_proofs.v" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build_graphs.py" beforeDir="false" afterPath="$PROJECT_DIR$/build_graphs.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
