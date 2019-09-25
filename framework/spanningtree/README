@@ -1,0 +1,12 @@
+• old code from FTP adress https://www.cs.utexas.edu/users/boyer/ftp/
+• installed NQTHM 2nd edition, loaded all libraries and initiialized some variables for less output and no REDUCE-TERM-CLOCK
+• (load “ghsAB.events”)
+   ◇ wrapper der ausgabe aufbereitet und testet, ob alle knoten fertig sind
+      ▪ hier müssten vielleicht beweise rein
+   ◇ Matt Kaufmann: direct output without (r-loop)
+   ◇ Boyer: direct output from/to terminal
+• saved as mem `(saveinitmem “ghstest” :quiet t)'
+• Aufruf `clisp -q -M ghstest.mem < ghs-test.lisp' (Boyer)
+   ◇ graph wird initialisiert
+   ◇ wrapper, der schrittweise den algorithmus ausführt und nach jedem schritt testet, ob der algorithmus fertig ist
+   ◇ wenn algo fertig ist, dann erfolgt ausgabe zum terminal
