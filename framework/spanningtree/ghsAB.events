@@ -1,0 +1,870 @@
+#| A distributed spanning tree algorithm
+   with asynchronous communication
+   Wim H. Hesselink, July 2, 1997
+Dept. of Computing Science| phone +31 50 3633933
+University of Groningen   |    or +31 50 3633939
+P.O.Box 800               | fax   +31 50 3633800
+9700 AV Groningen         | email: wim@cs.rug.nl
+The Netherlands           | http://www.cs.rug.nl/~wim
+|#
+
+#| The definitions needed 
+   to understand the proof obligations 
+|#
+
+(boot-strap nqthm)
+
+(defn putassoc (var w z)
+      (if (nlistp z) (cons (cons var w) nil)
+          (if (equal var (caar z))
+              (cons (cons var w) (cdr z))
+              (cons (car z) (putassoc var w (cdr z))) ) ) )
+
+(prove-lemma assoc-put (rewrite)
+    (equal (assoc key (putassoc var w z))
+           (if (equal key var) (cons var w)
+               (assoc key z) ) ) ) ; triv
+
+(defn val (a p x) (cdr (assoc a (cdr (assoc p x)))))
+
+(defn putat (b q w x)  
+    (putassoc q (putassoc b w (cdr (assoc q x))) x))
+
+(prove-lemma val-putat (rewrite)
+    (equal (val a p (putat b q w x))
+           (if (and (equal a b) (equal p q))
+               w
+               (val a p x) ) ) ) ; [ 0.0 0.0 0.0 ]
+
+(disable val) (disable putat)
+
+(defn privstate (q x) 
+    (putassoc 'buffer nil (cdr (assoc q x))) )
+; hides the buffer in order to have private-exe below
+
+(defn evloc (flag p u pl x)
+    (eval$ flag u
+           (append pl (privstate p x)) ) )
+
+(defn modify (a p exp pl x)
+    (putat a p (evloc t p exp pl x) x) )
+
+(defn evmsg (p m pl x)
+    (cons (car m) (evloc 'list p (cdr m) pl x)) )
+
+(defn buffer (p x) (val 'buffer p x))
+
+(defn sendself (p m x)
+    (putat 'buffer p
+           (cons m (buffer p x))
+           x ) )
+
+(defn send1 (p q m x)
+    (if (equal p q) x
+        (putat 'buffer q
+               (cons m (buffer q x))
+               x ) ) )
+
+(defn mcast1 (p li m x)
+    (if (nlistp li) x
+        (send1 p (car li) m 
+               (mcast1 p (cdr li) m x) ) ) )
+
+(defn exe (p cmd pl x)
+    (cond ((nlistp cmd) x)
+          ((nlistp (car cmd))
+           (case (car cmd)
+                 (put (modify (cadr cmd) p 
+                              (caddr cmd) pl x ))
+                 (if (if (evloc t p (cadr cmd) pl x)
+                         (exe p (caddr cmd) pl x)
+                         (exe p (cadddr cmd) pl x) ))
+                 (delay (sendself p 
+                              (evmsg p (cdr cmd) pl x )
+                              x ))
+                 (send (send1 p 
+                              (evloc t p (cadr cmd) pl x)
+                              (evmsg p (cddr cmd) pl x)
+                              x ))
+                 (mcast (mcast1 p 
+                              (evloc t p (cadr cmd) pl x) 
+                              (evmsg p (cddr cmd) pl x)
+                              x ))
+                 (otherwise x) ) )
+          (t (exe p (cdr cmd) pl
+                  (exe p (car cmd) pl x) )) ) )
+
+(defn popbuffer (p x)
+    (putat 'buffer p (cdr (buffer p x)) x))
+(defn message (p x)    (car (buffer p x)) )
+(defn findcond (m d)   (caddr (assoc (car m) d)) )
+(defn findcmd (m d)    (cadddr (assoc (car m) d)) )
+
+(defn parameters (m p d)
+    (cons (cons 'self p)
+          (pairlist (cadr (assoc (car m) d)) (cdr m)) ) )
+
+(defn enabledm (m p d x)
+    (and (listp m)
+         (member (car m) (strip-cars d))
+         (evloc t p (findcond m d)
+                  (parameters m p d)
+                  x ) ) )
+
+(defn step (p decl x)
+    (let ((m (message p x)))
+         (if (enabledm m p decl x)
+             (exe p 
+                   (findcmd m decl)
+                   (parameters m p decl)
+                   (popbuffer p x) )
+             x ) ) )
+
+(defn enabledml (mlist p decl x)
+    (if (nlistp mlist) f
+        (or (enabledm (car mlist) p decl x) 
+            (enabledml (cdr mlist) p decl x) ) ) )
+; List mlist has an enabled message for process p.
+
+(defn enabledb (p decl x)
+    (enabledml (buffer p x) p decl x) )
+; The buffer of process p has an enabled message.
+
+(defn enabledany (plist decl x)
+    (if (nlistp plist) f
+        (or (enabledb (car plist) decl x)
+            (enabledany (cdr plist) decl x) ) ) )
+; List plist has a process with an enabled message.
+
+;;; The choice of an enabled message
+
+(defn drop (n x)
+    (if (or (zerop n) (nlistp x)) x
+        (drop (sub1 n) (cdr x)) ) )
+
+(defn take (n x)
+    (if (or (zerop n) (nlistp x)) nil
+        (cons (car x) (take (sub1 n) (cdr x))) ) )
+
+(prove-lemma append-take-drop (rewrite) 
+; Bird, Wadler: Introduction to Functional Programming
+    (equal (append (take n x) (drop n x)) x) )
+
+(defn swaps (n x)
+    (append (drop n x) (take n x)) )
+
+(defn swapbuf (n p x)
+    (putat 'buffer p (swaps n (buffer p x)) x) )
+
+(defn enabnr (mlist k p decl x)
+    (cond ((nlistp mlist) f)
+          ((enabledm (car mlist) p decl x) 
+           (if (or (zerop k) 
+                   (not (enabnr (cdr mlist) (sub1 k) 
+                                p decl x )) )
+               0
+               (add1 (enabnr (cdr mlist) (sub1 k) 
+                             p decl x )) ) )
+          (t (if (enabnr (cdr mlist) k p decl x)
+                 (add1 (enabnr (cdr mlist) k p decl x))
+                 f )) ) )
+#| the number of some enabled message in mlist, 
+   if one exists, otherwise f |#
+
+(defn swapbufena (k p decl x)
+    (if (enabledb p decl x)
+        (swapbuf (enabnr (buffer p x) k p decl x) p x)
+        x ) )
+#| swap the buffer such that the first message is
+   enabled |#
+
+(defn enabproc (plist decl x)
+    (if (or (nlistp plist) 
+            (enabledb (car plist) decl x) )
+        plist
+        (enabproc (cdr plist) decl x) ) )
+
+(defn favproc (ora plist decl x)
+    (car (enabproc (swaps ora plist) decl x)) )
+#| some process in plist with an enabled message, 
+   if such exist |#
+
+(defn genstep (ora plist decl x)
+    (if (enabledany plist decl x)
+        (let ((p (favproc (car ora) plist decl x)))
+             (step p decl 
+                   (swapbufena (cdr ora) p decl x) ) )
+        x ) )
+
+(lemma genstep-skip (rewrite)
+    (implies (not (enabledany plist decl x))
+             (equal (genstep ora plist decl x) x) )
+    ((enable genstep)) )
+
+(defn execution (n ora plist d x)
+    (if (zerop n) x
+        (execution (sub1 n) (cdr ora) plist d
+                   (genstep (car ora) plist d x) ) ) )
+
+#| to prove termination of such a nondeterministic
+   algorithm |#
+
+(constrain gstep-ena (rewrite)
+    (and (implies (ginv x)
+                  (ginv (gstep ora x)) )
+         (implies (and (ena x)
+                       (ginv x) )
+                  (lessp (avf (gstep ora x))
+                         (avf x) ) )
+         (implies (not (ena x))
+                  (equal (gstep ora x) x) ) )
+    ((ena (lambda (x) f))
+     (ginv (lambda (x) f))
+     (avf (lambda (x) 1))
+     (gstep (lambda (ora x) x)) ) )
+
+(defn gstep* (n ora x)
+    (if (zerop n) x
+        (gstep* (sub1 n) (cdr ora) 
+                (gstep (car ora) x) ) ) )
+
+(lemma avf-decreases (rewrite)
+    (implies (and (ena x)
+                  (ginv x) )
+             (lessp (avf (gstep ora x))
+                    (avf x) ) )
+    ((enable gstep-ena)) )
+
+(lemma gstep*-reflects (rewrite)
+    (implies (ena (gstep* n ora x))
+             (ena x) )  
+    ((enable gstep* gstep-ena)) )
+
+(lemma gstep*-terminates (rewrite)
+    (implies (and (ena (gstep* n ora x))
+                  (ginv x) )
+             (lessp n (avf x)) )
+    ((enable gstep*-reflects gstep-ena gstep*)
+     (induct (gstep* n ora x))
+     (use (avf-decreases (ora (car ora))))
+     (do-not-induct t) ) )
+
+;;; end of the model of asynchrony
+
+#| Weighted undirected graphs are represented in 
+   such a way that every node belongs to an edge and 
+   that (w g x y) = (w g y x) and (w g x x) = f , 
+   i.e. infinity. 
+   For an example graph, see below: (setq g1 .... |#
+
+(defn ncdr (u) (fix (cdr u)))
+
+(defn ww (g x y)
+    (if (assoc (cons x y) g)
+        (ncdr (assoc (cons x y) g))
+        f ) )
+
+(defn numorfalse (x)
+    (implies x (numberp x)) )
+
+(defn weightlist (g)
+    (if (nlistp g) nil
+        (cons (ncdr (car g))
+              (weightlist (cdr g)) ) ) )
+
+(prove-lemma assoc-in-weightlist (rewrite)
+    (implies (assoc u g)
+             (member (ncdr (assoc u g))
+                     (weightlist g) ) ) )
+
+(defn is-set (x)
+    (if (nlistp x) (equal x nil)
+        (and (is-set (cdr x))
+             (not (member (car x) (cdr x))) ) ) )
+
+(prove-lemma unique-weights0 (rewrite)
+    (implies (and (is-set (weightlist g))
+                  (not (equal x u))
+                  (equal (ww g x y) (ww g u v)) )
+             (not (ww g x y)) )
+    ((disable ncdr)) ) ; [ 0.0 0.5 0.3 ]
+
+(prove-lemma unique-weights1 (rewrite)
+    (implies (and (is-set (weightlist g))
+                  (not (equal y v))
+                  (equal (ww g x y) (ww g u v)) )
+             (not (ww g x y)) )
+    ((disable ncdr)) )
+
+(lemma unique-weights (rewrite)
+    (implies (and (is-set (weightlist g))
+                  (not (and (equal x u)
+                            (equal y v) ))
+                  (equal (ww g x y) (ww g u v)) )
+             (not (ww g x y)) )
+    ((enable unique-weights0 unique-weights1)) )
+
+(defn leqq (x y) 
+; less than or equal, where (false) = 'infinity.
+    (or (not y) 
+        (and x
+             (not (lessp y x)) ) ) )
+
+(prove-lemma leqq-reflexive (rewrite)
+    (leqq q q) )
+
+(prove-lemma leqq-transitive (rewrite)
+    (implies (and (leqq x y) (leqq y z))
+             (leqq x z) ) )
+
+(prove-lemma leqq-total (rewrite)
+    (implies (not (leqq w v)) (leqq v w)) )
+
+(prove-lemma leqq-false-right (rewrite)
+    (leqq y f) )
+
+(prove-lemma leqq-false-left (rewrite)
+    (implies w (not (leqq f w))) )
+
+(lemma leqq-anti-symmetric (rewrite)
+    (implies (and (leqq x y)
+                  (numorfalse x)
+                  (numorfalse y)
+                  (not (equal x y)) )
+             (not (leqq y x)) ) 
+    ((enable numorfalse leqq)) )
+
+(disable leqq) (disable ww)
+
+(defn minq (x y) (if (leqq x y) x y))
+
+(defn w (g x y)
+    (if (equal x y) f
+        (minq (ww g x y) (ww g y x)) ) )
+
+(prove-lemma w-self-edge (rewrite)
+    (not (w g x x)) )
+
+(prove-lemma w-symmetric (rewrite)
+    (equal (w g x y) (w g y x)) )
+
+(lemma axiom1-implied (rewrite)
+    (implies (and (is-set (weightlist g))
+                  (not (or (and (equal x u)
+                                (equal y v) )
+                           (and (equal x v)
+                                (equal y u) ) ))
+                  (equal (w g x y) (w g u v)) )
+             (not (w g x y)) ) 
+    ((use (unique-weights (x y) (y x) (u v) (v u))
+          (unique-weights (x y) (y x))
+          (unique-weights (u v) (v u))
+          (unique-weights) ) ; [ 0.0 0.5 0.1 ]
+     (enable w minq) (do-not-induct t) ) )
+
+(disable-theory (w w-symmetric w-self-edge))
+
+(defn nodes (g)
+    (if (nlistp g) nil
+        (add-to-set (caaar g) 
+            (add-to-set (cdaar g) 
+                (nodes (cdr g)) ) ) ) )
+
+(prove-lemma ww-nodes (rewrite)
+    (implies (ww g x y)
+             (and (member x (nodes g))
+                  (member y (nodes g)) ) )
+    ((enable ww)) ) ; [ 0.0 1.1 0.5 ]
+
+(lemma edge-has-nodes (rewrite)
+    (implies (w g x y)
+             (and (member x (nodes g))
+                  (member y (nodes g)) ) )
+    ((enable w minq ww-nodes) 
+     (do-not-induct t)) ) ; triv
+
+(defn boll (g x rad nodes) ; specification follows
+    (if (nlistp nodes) nil
+        (if (leqq rad (w g x (car nodes)))
+            (boll g x rad (cdr nodes))
+            (add-to-set (cons x (car nodes))
+                        (boll g x rad (cdr nodes)) ) ) ) )
+
+(prove-lemma member-boll (rewrite)
+    (equal (member p (boll g x rad nodes))
+           (and (equal (car p) x)
+                (member (cdr p) nodes)
+                (not (leqq rad (w g x (cdr p))) ) 
+                (listp p) ) ) ) ; [ 0.0 0.8 0.4 ]
+
+(defn edgeless0 (g rad nodes)
+    (if (nlistp nodes) nil
+        (union (boll g (car nodes) rad (nodes g))
+               (edgeless0 g rad (cdr nodes)) ) ) )
+#| the list of edges with w < rad in graph g and
+   car in nodes  |#
+
+(defn edgeless (g rad) (edgeless0 g rad (nodes g)) )
+
+(defn connected (x y ed) ; reachability in a directed graph
+    (if (nlistp ed) (equal x y)
+        (or (connected x y (cdr ed))
+            (and (listp (car ed))
+                 (connected x (caar ed) (cdr ed))
+                 (connected (cdar ed) y (cdr ed)) ) ) ) )
+
+(defn mintree (g q r)
+    (and (w g q r)
+         (not (connected q r (edgeless g (w g q r)))) ) )
+
+(defn edges (g) (edgeless g f))
+
+(defn connectedlist0 (a z ed)
+    (if (nlistp z) t
+        (and (connected a (car z) ed)
+             (connectedlist0 a (cdr z) ed) ) ) )
+
+(defn connectedlist (z ed)
+    (and (listp z)
+         (connectedlist0 (car z) z ed) ) )
+
+(defn connectedgraph (g)
+    (connectedlist (nodes g) (edges g)) )
+
+(defn nearest (g q lst)
+    (if (nlistp lst) q
+        (if (nlistp (cdr lst)) (car lst)
+            (let ((ca (nearest g q (cdr lst))))
+                 (if (leqq (w g q ca) 
+                           (w g q (car lst)) )
+                     ca
+                     (car lst) ) ) ) ) )
+
+(defn neardist (g q lst)
+    (w g q (nearest g q lst)) )
+
+(prove-lemma nearest-nearer (rewrite)
+    (implies (member r lst)
+             (leqq (w g q (nearest g q lst)) 
+                   (w g q r) ) ) )
+
+(defn nhb (g q nodes)
+    (if (nlistp nodes) nil
+        (if (w g q (car nodes))
+            (cons (car nodes) (nhb g q (cdr nodes)))
+            (nhb g q (cdr nodes)) ) ) )
+
+(defn initpriv (g ora q) ; ora guides nondeterminacy
+    (list (cons 'buffer '((wakeup)))
+          (cons 'ib q)
+          (cons 'te q)
+          (cons 'fnd f)
+          (cons 'srch f)
+          (cons 'mar f)
+          (cons 'terminated f)
+          (cons 'll 0)
+          (cons 'fc 0)
+          (cons 'ci ora)
+          (cons 'branch nil)
+          (cons 'explist nil)
+          (cons 'bas (nhb g q (nodes g)))
+          (cons 'bash (nhb g q (nodes g)))
+          (cons 'bw (neardist g q (nodes g)))
+          (cons 'be (nearest g q (nodes g))) ) )
+
+(defn initlist (g ora nodes) ; ora guides nondeterminacy
+    (if (nlistp nodes) nil
+        (cons (cons (car nodes) 
+                    (initpriv g (car ora) (car nodes)) )
+              (initlist g (cdr ora) (cdr nodes)) ) ) )
+
+(defn initstate (g ora) ; ora guides nondeterminacy
+    (initlist g ora (nodes g)) )
+
+; Two functions used in the algorithm
+
+(defn delete (a y)
+    (if (nlistp y) y
+        (if (equal a (car y))
+            (delete a (cdr y))
+            (cons (car y) (delete a (cdr y))) ) ) )
+
+(defn card-of (x)
+    (if (nlistp x) 0
+        (if (member (car x) (cdr x)) 
+            (card-of (cdr x))
+            (add1 (card-of (cdr x))) ) ) )
+
+;;; Our version of the algorithm of Gallager-Humblet-Spira
+    
+(defn initp ()
+    '((delay sendrep)
+      (delay search)
+      (put fnd (true))
+      (put be ib)
+      (put bw (false))
+      (put fc (add1 (add1 (card-of branch))))
+      (put explist branch)
+      (put srch (true))
+      (mcast branch init (fix ll) ci) ) )
+      
+(defn dcl-ghs (g)
+    (list '(wakeup () (true)
+         (if (equal ib self)
+             ((put ib be)
+              (put bas (delete be bas))
+              (send be connect self (fix ll)) ) ) )
+      (list 'connect '(j le) '(or (equal j ib) (lessp le ll))
+         (list 'if '(equal j ib)
+             (list '(put ll (add1 ll))
+              (list 'put 'ci (list 'w (list 'quote g) 'self 'j))
+              '(put mar (true))
+              (initp) )
+             (list '(put branch (add-to-set j branch))
+              '(put bas (delete j bas))
+              (list 'if (list 'leqq 'bw (list 'w (list 'quote g) 'j 'self))
+                  '(send j winit (fix ll) ci) 
+                  '((put explist (add-to-set j explist))
+                   (put fc (add1 fc))
+                   (send j init (fix ll) ci) ) ) ) ) )
+      (list 'init '(le id) '(not mar)
+         (list '(put ll le)
+          '(put ci id)
+          (initp) ) )
+      (list 'search '() '(true)
+         (list 'if (list 'leqq 'bw (list 'neardist (list 'quote g) 'self 'bas))
+             '((put srch (false))
+              (put fc (sub1 fc)) )
+             (list (list 'put 'te (list 'nearest (list 'quote g) 'self 'bas))
+              '(send te ask self (fix ll) ci) ) ) )
+      '(ask (j le id) (not (lessp ll le))
+         (if (equal ci id)
+             ((put bas (delete j bas))
+              (put bash (delete j bash))
+              (if (equal j te)
+                  ((put te self)
+                   (delay search) )
+                  (send j answer (true)) ) )
+             (send j answer (false)) ) )
+      (list 'answer '(b) '(true)
+         (list (list 'if 'b
+              '((put bas (delete te bas))
+               (put bash (delete te bash))
+               (delay search) )
+              (list (list 'if (list 'leqq 'bw (list 'w (list 'quote g) 'self 'te))
+                   'skip
+                   (list (list 'put 'bw (list 'w (list 'quote g) 'self 'te))
+                    '(put be te) ) )
+               '(put srch (false))
+               '(put fc (sub1 fc)) ) )
+          '(put te self) ) )
+      '(sendrep () (equal fc 1)
+         ((put fnd (false))
+          (put fc 0)
+          (send ib report self bw) ) )
+      '(report (j v)
+         (or (not (equal j ib))
+             (and mar (zerop fc)) )
+         (if (equal j ib)
+             ((put mar (false)) 
+              (if (not (leqq v bw))
+                  (delay change) 
+                  (if (not v) (delay halt)) ) )
+             ((put explist (delete j explist))
+              (put fc (sub1 fc))
+              (if (not (leqq bw v))
+                  ((put be j)
+                   (put bw v) ) ) ) ) )
+      '(halt () (true)
+         ((put terminated (true))
+          (mcast branch halt) ) )
+      '(winit (le id) (true)
+         (if (lessp ll le)
+             ((put ll le)
+              (put ci id)
+              (put be ib)
+              (mcast branch winit (fix ll) ci) ) ) ) 
+      '(change () (true)
+         ((if (member be branch)
+              (send be change)
+              (send be connect self (fix ll)) )
+          (put branch (delete be (add-to-set ib branch)))
+          (put bas (delete be bas))
+          (put ib be) ) ) ) )
+
+(defn stepghs (g p x) (step p (dcl-ghs g) x) )
+
+#| (defn genstep-ghs (ora g x)
+    (genstep ora (nodes g) (dcl-ghs g) x) )
+
+(defn ghs (n ora g x) 
+; takes n steps using oracle ora in graph g
+    (if (zerop n) x
+        (ghs (sub1 n) (cdr ora) g 
+             (genstep-ghs (car ora) g x) ) ) )
+|#
+
+(defn ghs (n ora g x)
+    (execution n ora (nodes g) (dcl-ghs g) x) )
+
+;;; end of the GHS algorithm
+
+;;; Now follow the definitions needed to understand
+;;; the main theorems at the end of the list of files
+
+(defn terminated (q x) (val 'terminated q x))
+(defn ib (q x)         (val 'ib q x))
+(defn branch (q x)     (val 'branch q x))
+(defn branch+ (q x)
+    (add-to-set (ib q x) (branch q x)) )
+
+(defn enabledany-ghs (g x)
+    (enabledany (nodes g) (dcl-ghs g) x) )
+
+(defn goodgraph (g)
+    (and (connectedgraph g)
+         (lessp 1 (card-of (nodes g)))
+         (listp (car g)) ; needed for purity
+         (is-set (weightlist g)) ) )
+#| (listp (car g)) is needed for the syntactic 
+manipulations used in the elimination of the ghost 
+variables. See ghsF: pure-dcl-ghs |#
+
+
+#|
+(r-loop) 
+; g1 is a graph with five nodes and six edges that 
+; needs message 'winit.
+(setq g1 
+ '(((a . b). 3)
+   ((a . d). 1)
+   ((b . e). 2)
+   ((c . d). 5)
+   ((a . c). 4)
+   ((e . c). 6) ) )
+(w g1 'a 'b)
+(nodes g1)
+(is-set (weightlist g1))     ; yields T
+(connectedgraph g1)          ; yields T (after some time!)
+(setq x0 (initstate g1 nil))
+(setq x1 (ghs 20 nil g1 x0))
+(equal x1 (ghs 1 nil g1 x1)) ; deadlock ?
+(setq x2 (ghs 20 nil g1 x1)) 
+(setq x3 (ghs 22 nil g1 x2)) 
+(setq x4 (ghs  1 nil g1 x3)) 
+(equal x4 x3)                ; yields F
+;  If the message 'connect sends instead of 'winit
+;  a nonexisting message 'wwinit in dcl-ghs
+;  then (ghs 20 nil g1 x0) deadlocks 
+;  and (equal x2 x3) yields T.
+(equal x4 (ghs 1 nil g1 x4)) ; yields T
+|#
+
+#| Elimination of ghost variables
+   This plays no role before ghsY.
+   It also contains the simulator for ghs0 |#
+
+(defn unghost0 (vs cmd)
+    (cond ((nlistp cmd) cmd)
+          ((nlistp (car cmd))
+           (case (car cmd)
+                 (put (if (member (cadr cmd) vs)
+                          cmd '(skip)))
+                 (if (list 'if
+                           (cadr cmd)
+                           (unghost0 vs (caddr cmd))
+                           (unghost0 vs (cadddr cmd)) ))
+                 (otherwise cmd) ) )
+          (t (cons (unghost0 vs (car cmd))
+                   (unghost0 vs (cdr cmd)) )) ) )
+
+(defn cleanup (cmd)
+    (cond ((nlistp cmd) '(skip))
+          ((nlistp (car cmd))
+           (if (equal (car cmd) 'if)
+               (let ((cm0 (cleanup (caddr cmd)))
+                     (cm1 (cleanup (cadddr cmd))) )
+                    (if (equal cm1 '(skip))
+                        (list 'if (cadr cmd) cm0)
+                        (list 'if (cadr cmd) cm0 cm1) ) )
+               cmd ) )
+          (t (let ((cm0 (cleanup (car cmd)))
+                   (cm1 (cleanup (cdr cmd))) )
+                  (cond ((equal cm0 '(skip)) cm1)
+                        ((equal cm1 '(skip)) cm0)
+                        ((nlistp (car cm1))
+                         (list cm0 cm1))
+                        (t (cons cm0 cm1)) ) )) ) )
+
+(lemma exe-cleanup (rewrite)
+    (equal (exe p (cleanup cmd) pl x) 
+           (exe p cmd pl x) )
+    ((enable exe cleanup)) ) ; [ 0.0 0.1 0.1 ]
+
+(defn unghost (vs cmd)
+    (cleanup (unghost0 vs cmd)) )
+
+(defn unghost-dcl (vs dcl)
+    (if (nlistp dcl) dcl
+        (cons (list (caar dcl)
+                    (cadar dcl)  ; formal parameters
+                    (caddar dcl) ; enabling condition
+                    (unghost vs (cadddar dcl)) ) ; command
+              (unghost-dcl vs (cdr dcl)) ) ) )
+
+(defn varset-ghs ()
+    '(buffer ib te mar terminated ll fc ci branch 
+      bas bw be) )
+
+(defn dcl-ghs0 (g)
+    (unghost-dcl (varset-ghs) (dcl-ghs g)) )
+;;; To see what this defines type (r-loop),
+;;; followed by (dcl-ghs0 'graph), see below
+
+(defn enabledany-ghs0 (g x)
+    (enabledany (nodes g) (dcl-ghs0 g) x) )
+
+(defn initpriv0 (g ora q) 
+    (list '(buffer . ((wakeup)))
+          (cons 'ib q)
+          (cons 'te q)
+          (cons 'mar f)
+          (cons 'terminated f)
+          (cons 'll 0)
+          (cons 'fc 0)
+          (cons 'ci ora)
+          (cons 'branch nil)
+          (cons 'bas (nhb g q (nodes g)))
+          (cons 'bw (neardist g q (nodes g)))
+          (cons 'be (nearest g q (nodes g))) ) )
+
+(defn initlist0 (g ora nodes) 
+    (if (nlistp nodes) nil
+        (cons (cons (car nodes) 
+                    (initpriv0 g (car ora) (car nodes)) )
+              (initlist0 g (cdr ora) (cdr nodes)) ) ) )
+
+(defn initstate0 (g ora) 
+    (initlist0 g ora (nodes g)) )
+
+(defn ghs0 (n ora g)
+    (execution n (cdr ora) (nodes g)
+               (dcl-ghs0 g)
+               (initstate0 g (car ora)) ) )
+
+#| (r-loop)
+(dcl-ghs0 'g) ; the program without ghost variables
+(setq g1 
+ '(((a . b). 3)
+   ((a . d). f)
+   ((b . e). 2)
+   ((c . d). 5)
+   ((a . c). 4)
+   ((e . c). 6) ) ) ; an example graph
+(w g1 'a 'b) ; yields 3
+(goodgraph g1) ; very inefficient ; yields T
+(setq x5 (ghs0 63 nil g1)) 
+; the first terminated state
+|#
+
+#| The construction of an execution trace:
+   the ordered list of pairs of acceptor and accepted
+   message.
+
+(defn step+ (p decl x)
+    (let ((x0 (car x)) (m (message p (car x))))
+         (if (enabledm m p decl x0)
+             (cons (exe p 
+                        (findcmd m decl)
+                        (parameters m p decl)
+                        (popbuffer p x0) )
+                   (append (cdr x) (list (cons p m))) )
+             x ) ) )
+
+(prove-lemma step+step (rewrite)
+    (equal (car (step+ p d x))
+           (step p d (car x)) ) )
+
+(defn swapbufena+ (ora p d x)
+    (cons (swapbufena ora p d (car x))
+          (cdr x) ) )
+
+(defn genstep+ (ora plis d x)
+    (let ((x0 (car x)))
+         (if (enabledany plis d x0)
+             (let ((p (favproc (car ora) plis d x0)))
+                  (step+ p d (swapbufena+ (cdr ora) 
+                                          p d x )) ) 
+             x ) ) )
+
+(lemma genstep+genstep (rewrite)
+    (equal (car (genstep+ ora plis d x))
+           (genstep ora plis d (car x)) ) 
+    ((enable step+step swapbufena+ genstep genstep+)
+     (do-not-induct t) ) )
+
+(defn execution+ (n ora plist d x)
+    (if (zerop n) x
+        (execution+ (sub1 n) (cdr ora) plist d
+                    (genstep+ (car ora) 
+                              plist d x ) ) ) )
+
+(lemma execution+execution (rewrite)
+    (equal (car (execution+ n ora plis d x))
+           (execution n ora plis d (car x)) ) 
+    ((enable execution+ execution genstep+genstep)) )
+
+(defn ghs0+ (n ora g)
+    (execution+ n (cdr ora) (nodes g)
+                (dcl-ghs0 g)
+                (list (initstate0 g (car ora))) ) )
+|#
+#| (r-loop)
+; setq g1 as above
+(setq x5 (ghs0+ 63 nil g1)) 
+(cdr x5)
+|#
+
+
+
+
+(defn get-nth (x n)
+	(if (leq n 0) (car x) (get-nth (cdr x) (sub1 n) ) ) )
+
+
+(defn get-terminated (output)
+	(if (listp output) 
+		(and (get-nth (car output) 2) (get-terminated (cdr output) ) ) 
+		T ) )
+
+(defn get-rest (output)
+	(if (listp output)
+		(append (list (cons (get-nth (car output) 0) (get-nth (car output) 1))) (get-rest (cdr output))) () ) )
+
+(defn myghs1 (output)
+	(if (nlistp output) () (cons (list (get-nth (car output) 0) (cdr (get-nth (car output) 2)) (cdr (get-nth (car output) 5)) ) (myghs1 (cdr output) ) ) ) )
+
+
+(defun nqthm-eval (form &key outfile (untranslate t) init-forms)
+  (when (not (or (null outfile)
+                 (stringp outfile)))
+    (error "The output file must be nil (which specifies standard output) or~%~
+            a string, but ~s is neither."
+           outfile))
+  (eval (cons 'progn init-forms))
+  (let ((tmp (error1-set (setq form (translate-and-chk form)))))
+    (cond ((null tmp)
+           (error "Unable to translate input form,~%~s."
+                  form))
+          (t (let* ((term (car tmp))
+                    (ans (reduce-term term nil)))
+               (cond ((eq ans (QUOTE *1*FAILED))
+                      (error "The following input form is not reducible:~%~s."
+                             form))
+                     (t (let ((ans (if untranslate
+                                       (untranslate ans)
+                                     ans)))
+                          (cond (t ans))))))))))
+
+(make-lib "ghsAB")
+

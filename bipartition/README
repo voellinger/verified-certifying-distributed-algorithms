@@ -1,3 +1,4 @@
 pip3 install graphviz
 Interpreter: /usr/bin/python3.7
-
+coqc Local_checker.v
+ghc Local_checker.hs

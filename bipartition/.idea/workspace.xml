@@ -2,41 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="42164631-3884-4162-a3cd-2d7349bd089a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/bipartition_thread1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/certificate.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/component.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/graph.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/message.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bipartition_checker_proofs.v" beforeDir="false" afterPath="$PROJECT_DIR$/Bipartition_checker_proofs.v" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build_graphs.py" beforeDir="false" afterPath="$PROJECT_DIR$/build_graphs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bipartition_checker.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bipartition_checker_proofs.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bipartition_related.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Help_Lemmata.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RUN" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Spanning_Tree_related.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build_graphs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>neigh</find>
-      <find>partition</find>
-      <find>Certificate</find>
-      <find>?</find>
-      <find>is_leader</find>
-      <find>import</find>
-      <find>self.nld</find>
-      <find>\n</find>
-      <find>print(</find>
-      <find>count_al</find>
-      <find>__neighbours</find>
-      <find>self.__lo</find>
-      <find>self.component.id</find>
-      <find>component.neighbours</find>
-      <find>.id</find>
-      <find>children</find>
-      <find>ST_</find>
-      <find>st_</find>
-      <find>self.neighbors</find>
-      <find>certadd</find>
-      <find>map_and</find>
-      <find>of node</find>
-    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -52,6 +37,7 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/venv/bin/python3" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
